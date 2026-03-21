@@ -4,565 +4,202 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a1628">
-<title>RxEasy — Doctor Login</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>RxEasy — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-
-:root{
-  --bg:#060d1a;
-  --bg2:#0a1628;
-  --card:#0d1e35;
-  --border:rgba(201,168,76,.18);
-  --border2:rgba(255,255,255,.07);
-  --gold:#c9a84c;
-  --gold2:#e8c96a;
-  --teal:#14b88a;
-  --teal2:#0fd4a0;
-  --tx:#e8f0f8;
-  --tx2:rgba(232,240,248,.55);
-  --tx3:rgba(232,240,248,.3);
-  --err:#ff6b6b;
-  --inp:#0a1628;
-}
-
-body{
-  font-family:'DM Sans',sans-serif;
-  background:var(--bg);
-  color:var(--tx);
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  position:relative;
-  overflow-x:hidden;
-}
-
-/* Background atmosphere */
-.bg-orb1{position:fixed;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(20,184,138,.07) 0%,transparent 70%);top:-150px;right:-150px;pointer-events:none}
-.bg-orb2{position:fixed;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.05) 0%,transparent 70%);bottom:-100px;left:-100px;pointer-events:none}
-.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(42,122,191,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(42,122,191,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
-
-/* Card */
-.card{
-  width:100%;
-  max-width:420px;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:24px;
-  padding:36px 32px;
-  position:relative;
-  z-index:1;
-  box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04),inset 0 1px 0 rgba(255,255,255,.07);
-  animation:cardIn .6s cubic-bezier(.34,1.2,.64,1) forwards;
-}
-@keyframes cardIn{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-
-/* Logo */
-.logo{text-align:center;margin-bottom:28px}
-.logo-emblem{
-  width:64px;height:64px;border-radius:16px;
-  background:linear-gradient(145deg,rgba(20,184,138,.15),rgba(201,168,76,.1));
-  border:1px solid var(--border);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  margin:0 auto 14px;
-  box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.08);
-}
-.logo-rx{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:#fff;line-height:1;letter-spacing:-1px}
+:root{--bg:#060d1a;--card:#0d1e35;--border:rgba(201,168,76,.18);--border2:rgba(255,255,255,.07);--teal:#14b88a;--tx:#e8f0f8;--tx2:rgba(232,240,248,.55);--tx3:rgba(232,240,248,.3);--err:#ff6b6b;--inp:#060d1a}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:32px 24px;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.logo{text-align:center;margin-bottom:24px}
+.logo-box{width:60px;height:60px;border-radius:14px;background:linear-gradient(145deg,rgba(20,184,138,.15),rgba(201,168,76,.1));border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.logo-rx{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:#fff}
 .logo-rx span{color:var(--teal)}
-.logo-line{width:32px;height:1px;background:var(--gold);opacity:.5;margin:3px auto 0}
-.logo-title{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;color:#fff;letter-spacing:-.3px}
-.logo-title span{color:var(--teal)}
-.logo-sub{font-size:.7rem;color:var(--tx3);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
-
-/* Tabs */
-.tabs{display:flex;background:rgba(255,255,255,.04);border-radius:12px;padding:4px;margin-bottom:28px;border:1px solid var(--border2)}
-.tab{flex:1;padding:9px;border-radius:9px;font-size:.78rem;font-weight:600;text-align:center;cursor:pointer;color:var(--tx2);transition:all .2s;border:none;background:none}
-.tab.active{background:var(--bg2);color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.3)}
-
-/* Form */
-.form{display:flex;flex-direction:column;gap:14px}
-.field{display:flex;flex-direction:column;gap:6px}
-.label{font-size:.72rem;font-weight:600;color:var(--tx2);letter-spacing:.3px;text-transform:uppercase}
-.inp{
-  background:var(--inp);
-  border:1px solid var(--border2);
-  border-radius:10px;
-  padding:11px 14px;
-  font-size:.85rem;
-  color:var(--tx);
-  font-family:'DM Sans',sans-serif;
-  outline:none;
-  transition:border-color .2s,box-shadow .2s;
-  width:100%;
-}
-.inp:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(20,184,138,.12)}
+.logo-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:#fff}
+.logo-name span{color:var(--teal)}
+.logo-sub{font-size:.63rem;color:var(--tx3);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+.tabs{display:flex;background:rgba(255,255,255,.04);border-radius:10px;padding:3px;margin-bottom:22px;border:1px solid var(--border2)}
+.tab{flex:1;padding:8px;border-radius:8px;font-size:.78rem;font-weight:600;text-align:center;cursor:pointer;color:var(--tx2);transition:all .2s;border:none;background:none;font-family:'DM Sans',sans-serif}
+.tab.on{background:rgba(255,255,255,.08);color:var(--tx)}
+.field{margin-bottom:13px}
+.lbl{display:block;font-size:.67rem;font-weight:700;color:var(--tx2);letter-spacing:.3px;text-transform:uppercase;margin-bottom:5px}
+.inp{background:var(--inp);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;font-size:.85rem;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;width:100%}
+.inp:focus{border-color:var(--teal)}
 .inp::placeholder{color:var(--tx3)}
-
-/* Two column row */
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-/* Submit button */
-.btn{
-  background:linear-gradient(135deg,var(--teal),#0da87a);
-  color:#051a0a;
-  border:none;
-  border-radius:12px;
-  padding:13px;
-  font-size:.88rem;
-  font-weight:700;
-  cursor:pointer;
-  font-family:'DM Sans',sans-serif;
-  transition:all .2s;
-  margin-top:4px;
-  position:relative;
-  overflow:hidden;
-}
-.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .2s}
-.btn:hover::before{opacity:1}
-.btn:active{transform:scale(.98)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:block;width:100%;background:linear-gradient(135deg,#14b88a,#0da87a);color:#051a0a;border:none;border-radius:11px;padding:13px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px}
 .btn:disabled{opacity:.6;cursor:not-allowed}
-
-/* Divider */
-.divider{display:flex;align-items:center;gap:10px;margin:4px 0}
+.divider{display:flex;align-items:center;gap:8px;margin:13px 0}
 .div-line{flex:1;height:1px;background:var(--border2)}
-.div-txt{font-size:.68rem;color:var(--tx3)}
-
-/* Google btn */
-.btn-google{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--border2);
-  border-radius:12px;
-  padding:12px;
-  font-size:.82rem;
-  font-weight:600;
-  color:var(--tx);
-  cursor:pointer;
-  font-family:'DM Sans',sans-serif;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:all .2s;
-}
-.btn-google:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.15)}
-.btn-google:active{transform:scale(.98)}
-.g-icon{width:18px;height:18px}
-
-/* Messages */
-.msg{padding:10px 14px;border-radius:9px;font-size:.78rem;font-weight:500;display:none;align-items:center;gap:8px}
-.msg.show{display:flex}
-.msg.err{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.25);color:var(--err)}
-.msg.ok{background:rgba(20,184,138,.1);border:1px solid rgba(20,184,138,.25);color:var(--teal2)}
-
-/* Footer */
-.footer{text-align:center;margin-top:20px;font-size:.65rem;color:var(--tx3);line-height:1.7;position:relative;z-index:1}
-.footer strong{color:var(--gold);font-weight:600}
-
-/* Loading spinner */
-.spin{width:16px;height:16px;border:2px solid rgba(5,26,10,.3);border-top-color:#051a0a;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* Password toggle */
-.inp-wrap{position:relative}
-.inp-wrap .inp{padding-right:40px}
-.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);cursor:pointer;font-size:.9rem;padding:2px}
-
-/* Terms */
-.terms{font-size:.67rem;color:var(--tx3);line-height:1.6;text-align:center}
-.terms a{color:var(--teal);text-decoration:none}
-
-/* Success screen */
-.success-screen{display:none;text-align:center;padding:20px 0}
-.success-screen.show{display:block}
-.success-icon{font-size:3rem;margin-bottom:12px;animation:bounce .5s ease}
-@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
-.success-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:6px}
-.success-sub{font-size:.78rem;color:var(--tx2);line-height:1.6}
+.div-txt{font-size:.63rem;color:var(--tx3)}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:11px;padding:12px;font-size:.82rem;font-weight:600;color:var(--tx);cursor:pointer;font-family:'DM Sans',sans-serif}
+.msg{padding:10px 13px;border-radius:9px;font-size:.75rem;font-weight:500;display:none;margin-bottom:12px}
+.msg.show{display:block}
+.err{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.25);color:var(--err)}
+.ok{background:rgba(20,184,138,.1);border:1px solid rgba(20,184,138,.25);color:var(--teal)}
+.hint{font-size:.65rem;color:var(--tx3);text-align:center;margin-top:10px}
+.hint a{color:var(--teal);text-decoration:none}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(5,26,10,.3);border-top-color:#051a0a;border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.footer{text-align:center;margin-top:18px;font-size:.6rem;color:var(--tx3)}
 </style>
 </head>
 <body>
-
-<div class="bg-orb1"></div>
-<div class="bg-orb2"></div>
-<div class="bg-grid"></div>
-
 <div class="card">
-
-  <!-- Logo -->
   <div class="logo">
-    <div class="logo-emblem">
-      <div class="logo-rx">R<span>x</span></div>
-      <div class="logo-line"></div>
-    </div>
-    <div class="logo-title">Rx<span>Easy</span></div>
-    <div class="logo-sub">by Dr. Usama Jamal · Pakistan GP Platform</div>
+    <div class="logo-box"><div class="logo-rx">R<span>x</span></div></div>
+    <div class="logo-name">Rx<span>Easy</span></div>
+    <div class="logo-sub">Pakistan GP Platform</div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('login')">Login</button>
-    <button class="tab" onclick="switchTab('signup')">Register</button>
+    <button class="tab on" id="tl" onclick="showTab('login')">Login</button>
+    <button class="tab" id="tr" onclick="showTab('reg')">Register</button>
   </div>
 
-  <!-- Messages -->
-  <div class="msg err" id="errMsg">⚠️ <span id="errTxt"></span></div>
-  <div class="msg ok" id="okMsg">✅ <span id="okTxt"></span></div>
+  <div id="em" class="msg err"></div>
+  <div id="om" class="msg ok"></div>
 
-  <!-- Success screen -->
-  <div class="success-screen" id="successScreen">
-    <div class="success-icon">✅</div>
-    <div class="success-title">Registration Successful!</div>
-    <div class="success-sub">Please check your email to verify your account,<br>then login to access RxEasy.</div>
-    <button class="btn" style="margin-top:20px;width:100%" onclick="switchTab('login')">Go to Login</button>
+  <!-- LOGIN -->
+  <div id="lf">
+    <div class="field"><label class="lbl">Email</label><input class="inp" type="email" id="le" placeholder="doctor@email.com"></div>
+    <div class="field"><label class="lbl">Password</label><input class="inp" type="password" id="lp" placeholder="••••••••"></div>
+    <button class="btn" id="lb" onclick="doLogin()">Login to RxEasy</button>
+    <div class="divider"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
+    <button class="gbtn" onclick="doGoogle()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+    <div class="hint"><a href="#" onclick="doReset(event)">Forgot password?</a></div>
   </div>
 
-  <!-- LOGIN FORM -->
-  <div id="loginForm">
-    <div class="form">
-      <div class="field">
-        <label class="label">Email Address</label>
-        <input class="inp" type="email" id="loginEmail" placeholder="doctor@email.com" autocomplete="email">
-      </div>
-      <div class="field">
-        <label class="label">Password</label>
-        <div class="inp-wrap">
-          <input class="inp" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
-          <button class="eye-btn" onclick="togglePw('loginPass',this)">👁️</button>
-        </div>
-      </div>
-      <button class="btn" id="loginBtn" onclick="doLogin()">
-        <span id="loginBtnTxt">Login to RxEasy</span>
-      </button>
-      <div class="divider"><div class="div-line"></div><div class="div-txt">or continue with</div><div class="div-line"></div></div>
-      <button class="btn-google" onclick="doGoogle()">
-        <svg class="g-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Continue with Google
-      </button>
-      <div class="terms">Forgot password? <a href="#" onclick="doReset()">Reset here</a></div>
+  <!-- REGISTER -->
+  <div id="rf" style="display:none">
+    <div class="field"><label class="lbl">Full Name *</label><input class="inp" type="text" id="rn" placeholder="Dr. Your Name"></div>
+    <div class="row2">
+      <div class="field"><label class="lbl">Qualification</label><select class="inp" id="rq"><option>MBBS</option><option>BDS</option><option>MBBS, FCPS</option><option>MBBS, MCPS</option><option>MD</option></select></div>
+      <div class="field"><label class="lbl">City</label><input class="inp" type="text" id="rc" placeholder="Lahore"></div>
     </div>
+    <div class="field"><label class="lbl">PMDC No. (optional)</label><input class="inp" type="text" id="rp" placeholder="PMDC-XXXXX"></div>
+    <div class="field"><label class="lbl">Email *</label><input class="inp" type="email" id="re" placeholder="doctor@email.com"></div>
+    <div class="field"><label class="lbl">Password * (min 8 chars)</label><input class="inp" type="password" id="rw" placeholder="••••••••"></div>
+    <button class="btn" id="rb" onclick="doRegister()">Create Doctor Account</button>
+    <div class="divider"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
+    <button class="gbtn" onclick="doGoogle()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Register with Google
+    </button>
   </div>
-
-  <!-- SIGNUP FORM -->
-  <div id="signupForm" style="display:none">
-    <div class="form">
-      <div class="field">
-        <label class="label">Full Name</label>
-        <input class="inp" type="text" id="regName" placeholder="Dr. Your Name" autocomplete="name">
-      </div>
-      <div class="row">
-        <div class="field">
-          <label class="label">Qualification</label>
-          <select class="inp" id="regQual">
-            <option value="MBBS">MBBS</option>
-            <option value="BDS">BDS</option>
-            <option value="MBBS, FCPS">MBBS, FCPS</option>
-            <option value="MBBS, MCPS">MBBS, MCPS</option>
-            <option value="MD">MD</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="label">City</label>
-          <input class="inp" type="text" id="regCity" placeholder="Lahore">
-        </div>
-      </div>
-      <div class="field">
-        <label class="label">PMDC Number <span style="color:var(--tx3);font-weight:400">(optional)</span></label>
-        <input class="inp" type="text" id="regPmdc" placeholder="PMDC-XXXXX">
-      </div>
-      <div class="field">
-        <label class="label">Clinic / Hospital Name <span style="color:var(--tx3);font-weight:400">(optional)</span></label>
-        <input class="inp" type="text" id="regClinic" placeholder="Your Clinic Name">
-      </div>
-      <div class="field">
-        <label class="label">Email Address</label>
-        <input class="inp" type="email" id="regEmail" placeholder="doctor@email.com" autocomplete="email">
-      </div>
-      <div class="field">
-        <label class="label">Password</label>
-        <div class="inp-wrap">
-          <input class="inp" type="password" id="regPass" placeholder="Min 8 characters" autocomplete="new-password">
-          <button class="eye-btn" onclick="togglePw('regPass',this)">👁️</button>
-        </div>
-      </div>
-      <button class="btn" id="regBtn" onclick="doRegister()">
-        <span id="regBtnTxt">Create Doctor Account</span>
-      </button>
-      <div class="divider"><div class="div-line"></div><div class="div-txt">or</div><div class="div-line"></div></div>
-      <button class="btn-google" onclick="doGoogle()">
-        <svg class="g-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Register with Google
-      </button>
-      <div class="terms">By registering you agree to use this platform for legitimate medical practice only.</div>
-    </div>
-  </div>
-
 </div>
-
-<div class="footer">
-  <strong>RxEasy</strong> · Pakistan GP Prescription Platform<br>
-  Built by Dr. Usama Jamal MBBS · PMDC Registered
-</div>
+<div class="footer">RxEasy · Dr. Usama Jamal MBBS · PMDC Registered</div>
 
 <script>
-// ═══ SUPABASE CONFIG ═══
-const SUPABASE_URL = 'https://epvfbxzuziihhcaaaizp.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
-const AUTH_URL = SUPABASE_URL + '/auth/v1';
-const REST_URL = SUPABASE_URL + '/rest/v1';
+var SB = 'https://epvfbxzuziihhcaaaizp.supabase.co';
+var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
 
-// ── Check if already logged in + handle OAuth callback ──
-window.addEventListener('load', async function() {
-  // Handle OAuth callback first
-  const hash = window.location.hash;
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get('code');
+function se(m){var e=document.getElementById('em');e.textContent=m;e.className='msg err show';document.getElementById('om').className='msg ok';}
+function so(m){var e=document.getElementById('om');e.textContent=m;e.className='msg ok show';document.getElementById('em').className='msg err';}
+function cm(){document.getElementById('em').className='msg err';document.getElementById('om').className='msg ok';}
 
-  if (hash && hash.includes('access_token')) {
-    try {
-      const params = new URLSearchParams(hash.substring(1));
-      const access_token = params.get('access_token');
-      const refresh_token = params.get('refresh_token') || '';
-      if (access_token) {
-        const parts = access_token.split('.');
-        const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
-        localStorage.setItem('sb_session', JSON.stringify({
-          access_token, refresh_token,
-          user: { id: payload.sub, email: payload.email,
-            user_metadata: { full_name: payload.user_metadata?.full_name || payload.email || '' }
-          }
-        }));
-        window.location.replace('index.html');
-        return;
-      }
-    } catch(e) { console.error('Hash token error:', e); }
-  }
-
-  if (code) {
-    try {
-      const res = await fetch(AUTH_URL + '/token?grant_type=pkce', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
-        body: JSON.stringify({ auth_code: code })
-      });
-      const data = await res.json();
-      if (data.access_token) {
-        const parts = data.access_token.split('.');
-        const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
-        localStorage.setItem('sb_session', JSON.stringify({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token || '',
-          user: {
-            id: data.user?.id || payload.sub,
-            email: data.user?.email || payload.email,
-            user_metadata: { full_name: data.user?.user_metadata?.full_name || payload.email || '' }
-          }
-        }));
-        window.location.replace('index.html');
-        return;
-      }
-    } catch(e) { console.error('PKCE error:', e); }
-  }
-
-  // Normal check — already logged in?
-  const session = getSession();
-  if (session && session.access_token) {
-    window.location.href = 'index.html';
-  }
-});
-
-function getSession() {
-  try {
-    const s = localStorage.getItem('sb_session');
-    return s ? JSON.parse(s) : null;
-  } catch(e) { return null; }
-}
-
-// ── Auth fetch helper ──
-async function authFetch(endpoint, body) {
-  const res = await fetch(AUTH_URL + endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY
-    },
-    body: JSON.stringify(body)
-  });
-  return { ok: res.ok, data: await res.json() };
-}
-
-// ── REST fetch helper ──
-async function restFetch(table, body, method, token) {
-  method = method || 'POST';
-  const res = await fetch(REST_URL + '/' + table, {
-    method: method,
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + token,
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify(body)
-  });
-  return res.ok;
-}
-
-// ── UI helpers ──
-function showErr(msg) {
-  document.getElementById('errTxt').textContent = msg;
-  document.getElementById('errMsg').classList.add('show');
-  document.getElementById('okMsg').classList.remove('show');
-}
-function showOk(msg) {
-  document.getElementById('okTxt').textContent = msg;
-  document.getElementById('okMsg').classList.add('show');
-  document.getElementById('errMsg').classList.remove('show');
-}
-function clearMsgs() {
-  document.getElementById('errMsg').classList.remove('show');
-  document.getElementById('okMsg').classList.remove('show');
-}
-function setLoading(btnId, txtId, loading, txt) {
-  const btn = document.getElementById(btnId);
-  const span = document.getElementById(txtId);
-  btn.disabled = loading;
-  span.innerHTML = loading ? '<span class="spin"></span> Please wait...' : txt;
-}
-function togglePw(id, btn) {
-  const inp = document.getElementById(id);
-  inp.type = inp.type === 'password' ? 'text' : 'password';
-  btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
-}
-function switchTab(tab) {
-  clearMsgs();
-  document.getElementById('successScreen').classList.remove('show');
-  if (tab === 'login') {
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('signupForm').style.display = 'none';
-    document.querySelectorAll('.tab')[0].classList.add('active');
-    document.querySelectorAll('.tab')[1].classList.remove('active');
+function showTab(t){
+  cm();
+  if(t==='login'){
+    document.getElementById('lf').style.display='block';
+    document.getElementById('rf').style.display='none';
+    document.getElementById('tl').className='tab on';
+    document.getElementById('tr').className='tab';
   } else {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('signupForm').style.display = 'block';
-    document.querySelectorAll('.tab')[0].classList.remove('active');
-    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('lf').style.display='none';
+    document.getElementById('rf').style.display='block';
+    document.getElementById('tl').className='tab';
+    document.getElementById('tr').className='tab on';
   }
 }
 
-// ── LOGIN ──
+// Check already logged in
+window.onload = function() {
+  try {
+    var s = JSON.parse(localStorage.getItem('sb_session')||'null');
+    if(s && s.access_token) window.location.href = 'index.html';
+  } catch(e){}
+};
+
 async function doLogin() {
-  clearMsgs();
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPass').value;
-  if (!email || !pass) { showErr('Please enter email and password'); return; }
-
-  setLoading('loginBtn', 'loginBtnTxt', true);
-  const { ok, data } = await authFetch('/token?grant_type=password', { email, password: pass });
-  setLoading('loginBtn', 'loginBtnTxt', false, 'Login to RxEasy');
-
-  if (!ok) {
-    showErr(data.error_description || data.msg || 'Login failed. Check your credentials.');
-    return;
-  }
-
-  // Save session
-  localStorage.setItem('sb_session', JSON.stringify({
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
-    user: data.user
-  }));
-
-  // Update last login
-  await fetch(REST_URL + '/doctor_profiles?id=eq.' + data.user.id, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + data.access_token
-    },
-    body: JSON.stringify({ last_login: new Date().toISOString() })
-  });
-
-  showOk('Welcome back, Doctor! Redirecting...');
-  setTimeout(() => window.location.href = 'index.html', 1200);
+  cm();
+  var email = document.getElementById('le').value.trim();
+  var pass  = document.getElementById('lp').value;
+  if(!email||!pass){se('Enter email and password');return;}
+  var btn = document.getElementById('lb');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Logging in...';
+  try {
+    var r = await fetch(SB+'/auth/v1/token?grant_type=password',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':KEY},
+      body:JSON.stringify({email:email,password:pass})
+    });
+    var d = await r.json();
+    if(!r.ok){se(d.error_description||d.msg||'Login failed');btn.disabled=false;btn.innerHTML='Login to RxEasy';return;}
+    localStorage.setItem('sb_session',JSON.stringify({access_token:d.access_token,refresh_token:d.refresh_token||'',user:d.user||{}}));
+    so('Welcome! Loading...');
+    setTimeout(function(){window.location.href='index.html';},800);
+  } catch(e){se('Network error');btn.disabled=false;btn.innerHTML='Login to RxEasy';}
 }
 
-// ── REGISTER ──
 async function doRegister() {
-  clearMsgs();
-  const name    = document.getElementById('regName').value.trim();
-  const email   = document.getElementById('regEmail').value.trim();
-  const pass    = document.getElementById('regPass').value;
-  const qual    = document.getElementById('regQual').value;
-  const city    = document.getElementById('regCity').value.trim();
-  const pmdc    = document.getElementById('regPmdc').value.trim();
-  const clinic  = document.getElementById('regClinic').value.trim();
-
-  if (!name) { showErr('Please enter your full name'); return; }
-  if (!email) { showErr('Please enter your email'); return; }
-  if (!pass || pass.length < 8) { showErr('Password must be at least 8 characters'); return; }
-
-  setLoading('regBtn', 'regBtnTxt', true);
-
-  // Sign up
-  const { ok, data } = await authFetch('/signup', {
-    email,
-    password: pass,
-    data: { full_name: name }
-  });
-
-  if (!ok) {
-    setLoading('regBtn', 'regBtnTxt', false, 'Create Doctor Account');
-    showErr(data.error_description || data.msg || 'Registration failed. Try again.');
-    return;
-  }
-
-  // Create doctor profile
-  if (data.user) {
-    const token = data.access_token || SUPABASE_ANON_KEY;
-    await restFetch('doctor_profiles', {
-      id: data.user.id,
-      full_name: name,
-      email: email,
-      qualification: qual,
-      city: city,
-      pmdc_number: pmdc || null,
-      clinic_name: clinic || null,
-      is_approved: true,
-      is_admin: false
-    }, 'POST', token);
-  }
-
-  setLoading('regBtn', 'regBtnTxt', false, 'Create Doctor Account');
-  document.getElementById('signupForm').style.display = 'none';
-  document.getElementById('successScreen').classList.add('show');
+  cm();
+  var name=document.getElementById('rn').value.trim();
+  var email=document.getElementById('re').value.trim();
+  var pass=document.getElementById('rw').value;
+  var qual=document.getElementById('rq').value;
+  var city=document.getElementById('rc').value.trim();
+  var pmdc=document.getElementById('rp').value.trim();
+  if(!name){se('Enter your full name');return;}
+  if(!email){se('Enter your email');return;}
+  if(!pass||pass.length<8){se('Password must be at least 8 characters');return;}
+  var btn=document.getElementById('rb');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creating account...';
+  try {
+    var r = await fetch(SB+'/auth/v1/signup',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':KEY},
+      body:JSON.stringify({email:email,password:pass,data:{full_name:name}})
+    });
+    var d = await r.json();
+    if(!r.ok){se(d.error_description||d.msg||'Registration failed');btn.disabled=false;btn.innerHTML='Create Doctor Account';return;}
+    if(d.user && d.access_token){
+      // Create profile
+      await fetch(SB+'/rest/v1/doctor_profiles',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+d.access_token,'Prefer':'return=minimal'},
+        body:JSON.stringify({id:d.user.id,full_name:name,email:email,qualification:qual,city:city||null,pmdc_number:pmdc||null,is_approved:true,is_admin:false})
+      });
+      localStorage.setItem('sb_session',JSON.stringify({access_token:d.access_token,refresh_token:d.refresh_token||'',user:d.user}));
+      so('Account created! Redirecting...');
+      setTimeout(function(){window.location.href='index.html';},1000);
+    } else {
+      so('Check your email to verify, then login.');
+      btn.disabled=false;btn.innerHTML='Create Doctor Account';
+    }
+  } catch(e){se('Network error');btn.disabled=false;btn.innerHTML='Create Doctor Account';}
 }
 
-// ── GOOGLE AUTH ──
-async function doGoogle() {
-  // Direct redirect to Google via Supabase — uses callback.html to handle response
-  const redirectTo = encodeURIComponent('https://rxeasy.vercel.app/callback.html');
-  window.location.href = SUPABASE_URL + '/auth/v1/authorize?provider=google&redirect_to=' + redirectTo;
-}
+function doGoogle() {
+  window.location.href = SB+'/auth/v1/authorize?provider=google&redirect_to='+encodeURIComponent('https://rxeasy.vercel.app/callback.html');
 }
 
-// ── PASSWORD RESET ──
-async function doReset() {
-  const email = document.getElementById('loginEmail').value.trim();
-  if (!email) { showErr('Enter your email address first'); return; }
-  clearMsgs();
-  const { ok } = await authFetch('/recover', { email });
-  if (ok) showOk('Password reset email sent! Check your inbox.');
-  else showErr('Could not send reset email. Check the address.');
+async function doReset(e) {
+  e.preventDefault(); cm();
+  var email=document.getElementById('le').value.trim();
+  if(!email){se('Enter your email first');return;}
+  var r=await fetch(SB+'/auth/v1/recover',{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify({email:email})});
+  if(r.ok) so('Reset email sent! Check your inbox.');
+  else se('Could not send reset email.');
 }
 
-// Enter key support
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    const loginVisible = document.getElementById('loginForm').style.display !== 'none';
-    if (loginVisible) doLogin();
-    else doRegister();
-  }
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  if(document.getElementById('lf').style.display!=='none') doLogin();
+  else doRegister();
 });
 </script>
 </body>
