@@ -3213,6 +3213,12 @@ async function loadProfile() {
     });
     var data = await res.json();
     _profile = data && data[0] ? data[0] : null;
+
+    // Sync localStorage with DB value (DB is master)
+    if (_profile) {
+      localStorage.setItem('rx_qc', _profile.query_count || 0);
+    }
+
     updateSubUI();
 
     // Show admin button if user is admin
@@ -3252,29 +3258,37 @@ function isPremium() {
 }
 
 function getQueryCount() {
-  if (_profile && _profile.query_count) return _profile.query_count;
+  // ONLY use database count — localStorage is just a cache
+  if (_profile) return _profile.query_count || 0;
   return parseInt(localStorage.getItem('rx_qc')||'0');
 }
 
 function canGenerateRx() {
+  // If profile hasn't loaded yet, block and wait
+  if (!_profile) return false;
   if (isPremium()) return true;
   return getQueryCount() < FREE_LIMIT;
 }
 
 async function incrementQuery() {
-  var n = getQueryCount() + 1;
-  localStorage.setItem('rx_qc', n);
-  if (_profile) {
-    _profile.query_count = n;
-    try {
-      var s = JSON.parse(localStorage.getItem('sb_session')||'null');
-      if (s) await fetch('https://epvfbxzuziihhcaaaizp.supabase.co/rest/v1/doctor_profiles?id=eq.'+s.user.id, {
+  if (!_profile) return;
+  var n = (_profile.query_count || 0) + 1;
+  _profile.query_count = n;
+  localStorage.setItem('rx_qc', n); // local cache only
+  try {
+    var s = JSON.parse(localStorage.getItem('sb_session')||'null');
+    if (s) {
+      await fetch('https://epvfbxzuziihhcaaaizp.supabase.co/rest/v1/doctor_profiles?id=eq.'+s.user.id, {
         method:'PATCH',
-        headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw','Authorization':'Bearer '+s.access_token,'Content-Type':'application/json'},
+        headers:{
+          'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw',
+          'Authorization':'Bearer '+s.access_token,
+          'Content-Type':'application/json'
+        },
         body:JSON.stringify({query_count:n})
       });
-    } catch(e) {}
-  }
+    }
+  } catch(e) { console.warn('Query count save failed:', e); }
   updateSubUI();
 }
 
@@ -3361,6 +3375,11 @@ async function sendMsg(){
   if(!q)return;
 
   // ── SUBSCRIPTION CHECK ──
+  // If profile not loaded yet, wait for it
+  if (!_profile) {
+    toast('⏳ Loading your account...');
+    await loadProfile();
+  }
   if (!canGenerateRx()) {
     showPaywall();
     return;
