@@ -306,25 +306,66 @@ body{
 
 <script>
 // ═══ HANDLE OAUTH CALLBACK ═══
-// When Google redirects back, extract session from URL hash
 (function() {
+  // Method 1: Token in URL hash (implicit flow)
   const hash = window.location.hash;
   if (hash && hash.includes('access_token')) {
     const params = new URLSearchParams(hash.substring(1));
     const access_token = params.get('access_token');
     const refresh_token = params.get('refresh_token');
     if (access_token) {
-      // Parse user from JWT
       try {
-        const payload = JSON.parse(atob(access_token.split('.')[1]));
+        const parts = access_token.split('.');
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
         localStorage.setItem('sb_session', JSON.stringify({
           access_token,
-          refresh_token,
-          user: { id: payload.sub, email: payload.email, user_metadata: { full_name: payload.user_metadata?.full_name || payload.email } }
+          refresh_token: refresh_token || '',
+          user: {
+            id: payload.sub,
+            email: payload.email,
+            user_metadata: { full_name: payload.user_metadata?.full_name || payload.email || '' }
+          }
         }));
-        window.location.href = 'index.html';
-      } catch(e) { console.error('OAuth parse error', e); }
+        // Clear hash then redirect
+        history.replaceState(null, '', window.location.pathname);
+        window.location.replace('index.html');
+        return;
+      } catch(e) { console.error('OAuth parse error:', e); }
     }
+  }
+
+  // Method 2: Code in URL params (PKCE flow)
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get('code');
+  if (code) {
+    // Exchange code for session via Supabase
+    const SB_URL = 'https://epvfbxzuziihhcaaaizp.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
+    fetch(SB_URL + '/auth/v1/token?grant_type=pkce', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
+      body: JSON.stringify({ auth_code: code })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.access_token) {
+        try {
+          const parts = data.access_token.split('.');
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          localStorage.setItem('sb_session', JSON.stringify({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token || '',
+            user: {
+              id: payload.sub,
+              email: payload.email || data.user?.email,
+              user_metadata: { full_name: data.user?.user_metadata?.full_name || payload.email || '' }
+            }
+          }));
+          window.location.replace('index.html');
+        } catch(e) { console.error('PKCE parse error:', e); }
+      }
+    })
+    .catch(e => console.error('Code exchange error:', e));
   }
 })();
 

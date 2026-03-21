@@ -3637,19 +3637,46 @@ function showAchievement(ach){
 
 // ── Init All Part 1 Features ──
 // ═══ AUTH GUARD ═══
-// Check login before anything loads
 (function() {
+  // First check if OAuth token is in URL hash or code in params
+  const hash = window.location.hash;
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get('code');
+
+  if (hash && hash.includes('access_token')) {
+    // Save token from hash
+    try {
+      const params = new URLSearchParams(hash.substring(1));
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token') || '';
+      if (access_token) {
+        const parts = access_token.split('.');
+        const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+        localStorage.setItem('sb_session', JSON.stringify({
+          access_token, refresh_token,
+          user: { id: payload.sub, email: payload.email,
+            user_metadata: { full_name: payload.user_metadata?.full_name || payload.email || '' }
+          }
+        }));
+        history.replaceState(null, '', window.location.pathname);
+      }
+    } catch(e) { console.error('Auth guard token parse:', e); }
+  }
+
+  // Now check session
   try {
     const session = JSON.parse(localStorage.getItem('sb_session') || 'null');
     if (!session || !session.access_token) {
+      // If there's a code param, let login.html handle it
+      if (code) { window.location.href = 'login.html?' + urlParams.toString(); return; }
       window.location.href = 'login.html';
-    } else {
-      // Show doctor name in header if available
-      const name = session.user?.user_metadata?.full_name || session.user?.email || '';
-      if (name) {
-        const dnm = document.getElementById('dnm');
-        if (dnm) dnm.textContent = name;
-      }
+      return;
+    }
+    // Show doctor name in header
+    const name = session.user?.user_metadata?.full_name || session.user?.email || '';
+    if (name) {
+      const dnm = document.getElementById('dnm');
+      if (dnm) dnm.textContent = name;
     }
   } catch(e) {
     window.location.href = 'login.html';
