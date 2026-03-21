@@ -511,14 +511,9 @@ async function doRegister() {
 
 // ── GOOGLE AUTH ──
 async function doGoogle() {
-  const res = await fetch(AUTH_URL + '/authorize?provider=google&redirect_to=' + encodeURIComponent(window.location.origin + '/index.html'), {
-    method: 'GET',
-    headers: { 'apikey': SUPABASE_ANON_KEY }
-  });
-  // Redirect to Google OAuth
-  const data = await res.json();
-  if (data.url) window.location.href = data.url;
-  else showErr('Google login unavailable. Please use email/password.');
+  // Direct redirect — most reliable method
+  const redirectTo = encodeURIComponent('https://rxeasy.vercel.app/index.html');
+  window.location.href = SUPABASE_URL + '/auth/v1/authorize?provider=google&redirect_to=' + redirectTo;
 }
 
 // ── PASSWORD RESET ──
