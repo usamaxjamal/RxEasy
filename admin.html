@@ -190,6 +190,10 @@ select.inp{cursor:pointer}
     <div class="sb-section">Doctors</div>
     <button class="sb-item" onclick="showPage('doctors')"><span class="ico">👨‍⚕️</span>All Doctors</button>
     <button class="sb-item" onclick="showPage('prescriptions')"><span class="ico">📝</span>Prescriptions</button>
+
+    <div class="sb-section">Subscriptions</div>
+    <button class="sb-item" onclick="showPage('subscriptions')"><span class="ico">💳</span>Requests <span class="cnt" id="pendingCount">0</span></button>
+    <button class="sb-item" onclick="showPage('premium-doctors')"><span class="ico">👑</span>Premium Doctors</button>
   </div>
   <div class="sb-user">
     <div class="sb-user-name" id="adminName">Dr. Usama Jamal</div>
@@ -327,6 +331,36 @@ select.inp{cursor:pointer}
         <table>
           <thead><tr><th>Doctor</th><th>Patient</th><th>Disease</th><th>Source</th><th>Date</th><th>Action</th></tr></thead>
           <tbody id="allRxTbl"><tr><td colspan="6"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- ════ SUBSCRIPTION REQUESTS ════ -->
+    <div class="page" id="page-subscriptions">
+      <div class="tbl-wrap">
+        <div class="tbl-top">
+          <div>
+            <div class="sec-title">Subscription Requests</div>
+            <div style="font-size:.65rem;color:var(--tx3);margin-top:2px">Review payment screenshots sent on WhatsApp</div>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Doctor</th><th>Email</th><th>WhatsApp</th><th>Requested</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="subRequestsTbl"><tr><td colspan="6"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════ PREMIUM DOCTORS ════ -->
+    <div class="page" id="page-premium-doctors">
+      <div class="tbl-wrap">
+        <div class="tbl-top">
+          <div class="sec-title">Premium Members</div>
+        </div>
+        <table>
+          <thead><tr><th>Doctor</th><th>Email</th><th>City</th><th>Premium Since</th><th>Expires</th><th>Action</th></tr></thead>
+          <tbody id="premiumDoctorsTbl"><tr><td colspan="6"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
         </table>
       </div>
     </div>
@@ -556,13 +590,57 @@ let allDrugs = [];
 
 // ═══ INIT ═══
 window.addEventListener('load', async function() {
+
+  // ── STEP 1: Must be logged in ──
   const s = localStorage.getItem('sb_session');
   if (!s) { window.location.href = 'login.html'; return; }
   session = JSON.parse(s);
-  document.getElementById('adminName').textContent = session.user?.user_metadata?.full_name || session.user?.email || 'Admin';
-  await loadDashboard();
-  await loadDiseases();
-  await loadDrugs();
+
+  // ── STEP 2: Verify is_admin from Supabase ──
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/doctor_profiles?id=eq.' + session.user.id, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + session.access_token }
+    });
+    const data = await res.json();
+    const profile = data && data[0] ? data[0] : null;
+
+    // ── STEP 3: Block non-admins completely ──
+    if (!profile || !profile.is_admin) {
+      document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#060d1a;font-family:'DM Sans',sans-serif;padding:20px">
+          <div style="text-align:center;max-width:340px">
+            <div style="font-size:3.5rem;margin-bottom:16px">🚫</div>
+            <div style="font-size:1.2rem;font-weight:700;color:#e8f0f8;margin-bottom:10px">Access Denied</div>
+            <div style="font-size:.78rem;color:rgba(232,240,248,.5);line-height:1.8;margin-bottom:28px">
+              You don't have admin privileges.<br>
+              Only Dr. Usama Jamal can access this panel.
+            </div>
+            <button onclick="window.location.href='index.html'"
+              style="background:linear-gradient(135deg,#14b88a,#0da87a);color:#051a0a;border:none;border-radius:12px;padding:13px 32px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
+              ← Back to RxEasy
+            </button>
+          </div>
+        </div>`;
+      return;
+    }
+
+    // ── STEP 4: Admin confirmed — load panel ──
+    document.getElementById('adminName').textContent = profile.full_name || session.user?.email || 'Admin';
+    await loadDashboard();
+    await loadPendingCount();
+    await loadDiseases();
+    await loadDrugs();
+
+  } catch(e) {
+    document.body.innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#060d1a;font-family:'DM Sans',sans-serif">
+        <div style="text-align:center;color:#e8f0f8;padding:20px">
+          <div style="font-size:2rem;margin-bottom:12px">⚠️</div>
+          <div style="font-size:.85rem;color:rgba(232,240,248,.6);margin-bottom:20px">Could not verify admin access.<br>Check your connection and try again.</div>
+          <button onclick="location.reload()" style="background:#14b88a;color:#051a0a;border:none;border-radius:10px;padding:11px 24px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🔄 Retry</button>
+        </div>
+      </div>`;
+  }
 });
 
 // ═══ AUTH HEADER ═══
@@ -605,7 +683,9 @@ function showPage(name) {
     drugs: ['Drugs Formulary', 'Manage drug entries'],
     treatments: ['Treatment Protocols', 'Link diseases to drugs'],
     doctors: ['Registered Doctors', 'Manage doctor accounts'],
-    prescriptions: ['Prescription Log', 'All generated prescriptions']
+    prescriptions: ['Prescription Log', 'All generated prescriptions'],
+    subscriptions: ['Subscription Requests', 'Approve/reject payment requests'],
+    'premium-doctors': ['Premium Members', 'All active premium doctors']
   };
   document.getElementById('pageTitle').textContent = titles[name][0];
   document.getElementById('pageSub').textContent = titles[name][1];
@@ -614,6 +694,8 @@ function showPage(name) {
   if (name === 'treatments') loadTreatments();
   if (name === 'doctors') loadDoctors();
   if (name === 'prescriptions') loadAllRx();
+  if (name === 'subscriptions') loadSubscriptions();
+  if (name === 'premium-doctors') loadPremiumDoctors();
 }
 
 function toggleSidebar() {
@@ -1023,6 +1105,61 @@ function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ═══ SUBSCRIPTION MANAGEMENT ═══
+async function loadSubscriptions() {
+  const tbl = document.getElementById('subRequestsTbl');
+  if (!tbl) return;
+  try {
+    const data = await sb('subscription_requests', '?order=requested_at.desc&status=eq.pending');
+    const cnt = document.getElementById('pendingCount');
+    if (cnt) cnt.textContent = Array.isArray(data) ? data.length : '0';
+    if (!Array.isArray(data) || data.length === 0) {
+      tbl.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-ico">💳</div><div class="empty-txt">No pending requests</div></div></td></tr>';
+      return;
+    }
+    tbl.innerHTML = data.map(function(r) { return '<tr><td class="td-name">'+esc(r.doctor_name||'Unknown')+'</td><td class="td-mono" style="font-size:.68rem">'+esc(r.doctor_email||'—')+'</td><td><a href="https://wa.me/'+((r.whatsapp_number||'').replace(/[^0-9]/g,''))+'" target="_blank" style="color:var(--teal)">'+esc(r.whatsapp_number||'—')+'</a></td><td class="td-mono" style="font-size:.65rem">'+new Date(r.requested_at).toLocaleDateString('en-PK')+'</td><td><span class="badge badge-gold">Pending</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-teal btn-sm" onclick="approveSub(''+r.id+'',''+r.doctor_id+'')">✅ Approve</button><button class="btn btn-red btn-sm" onclick="rejectSub(''+r.id+'')">❌ Reject</button></div></td></tr>'; }).join('');
+  } catch(e) { tbl.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:20px">Run subscription schema SQL first</td></tr>'; }
+}
+
+async function approveSub(reqId, doctorId) {
+  if (!confirm('Approve? This gives 1 year premium access.')) return;
+  var now = new Date();
+  var expires = new Date(now); expires.setFullYear(expires.getFullYear()+1);
+  try {
+    await sb('doctor_profiles','?id=eq.'+doctorId,'PATCH',{is_premium:true,premium_since:now.toISOString(),premium_expires:expires.toISOString()});
+    await sb('subscription_requests','?id=eq.'+reqId,'PATCH',{status:'approved',reviewed_at:now.toISOString()});
+    toast('✅ Premium activated until '+expires.toLocaleDateString('en-PK'));
+    loadSubscriptions(); loadPremiumDoctors();
+  } catch(e) { toast('❌ Error: '+e.message); }
+}
+
+async function rejectSub(reqId) {
+  if (!confirm('Reject this request?')) return;
+  await sb('subscription_requests','?id=eq.'+reqId,'PATCH',{status:'rejected',reviewed_at:new Date().toISOString()});
+  toast('Request rejected'); loadSubscriptions();
+}
+
+async function loadPremiumDoctors() {
+  var tbl = document.getElementById('premiumDoctorsTbl');
+  if (!tbl) return;
+  try {
+    var data = await sb('doctor_profiles','?is_premium=eq.true&order=premium_since.desc');
+    if (!Array.isArray(data)||data.length===0){tbl.innerHTML='<tr><td colspan="6"><div class="empty"><div class="empty-ico">👑</div><div class="empty-txt">No premium members yet</div></div></td></tr>';return;}
+    tbl.innerHTML = data.map(function(d){var exp=d.premium_expires?new Date(d.premium_expires):null;var expired=exp&&exp<new Date();return '<tr><td class="td-name">'+esc(d.full_name||'Unknown')+'</td><td class="td-mono" style="font-size:.68rem">'+esc(d.email||'—')+'</td><td>'+esc(d.city||'—')+'</td><td class="td-mono" style="font-size:.65rem">'+(d.premium_since?new Date(d.premium_since).toLocaleDateString('en-PK'):'—')+'</td><td class="td-mono" style="font-size:.65rem;color:'+(expired?'var(--red)':'var(--teal)')+'">'+(exp?exp.toLocaleDateString('en-PK'):'—')+'</td><td><button class="btn btn-red btn-sm" onclick="revokePremium(''+d.id+'')">Revoke</button></td></tr>';}).join('');
+  } catch(e) { tbl.innerHTML = '<tr><td colspan="6" style="color:var(--tx3);text-align:center;padding:20px">Error loading</td></tr>'; }
+}
+
+async function revokePremium(id) {
+  if (!confirm('Revoke premium?')) return;
+  await sb('doctor_profiles','?id=eq.'+id,'PATCH',{is_premium:false});
+  toast('Premium revoked'); loadPremiumDoctors();
+}
+
+async function loadPendingCount() {
+  try { var data=await sb('subscription_requests','?status=eq.pending'); var cnt=document.getElementById('pendingCount'); if(cnt&&Array.isArray(data)) cnt.textContent=data.length; } catch(e){}
+}
+
 
 function doLogout() {
   localStorage.removeItem('sb_session');

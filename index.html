@@ -1683,6 +1683,43 @@ body { padding-bottom: 0 !important; }
   border-radius:20px; padding:2px 7px; font-size:.52rem; font-weight:700; color:#14b88a;
 }
 
+
+/* ═══ SUBSCRIPTION SYSTEM ═══ */
+#paywallOverlay{position:fixed;inset:0;background:rgba(4,14,28,.92);backdrop-filter:blur(8px);z-index:5000;display:none;align-items:center;justify-content:center;padding:20px}
+#paywallOverlay.show{display:flex}
+.paywall-card{background:linear-gradient(160deg,#0a1628 0%,#0d1e35 60%,#0f2a4a 100%);border:1px solid rgba(201,168,76,.3);border-radius:24px;padding:32px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.05);animation:pwIn .4s cubic-bezier(.34,1.2,.64,1)}
+@keyframes pwIn{from{opacity:0;transform:scale(.88) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.pw-crown{font-size:3rem;margin-bottom:8px;animation:crownBounce 1s ease infinite alternate}
+@keyframes crownBounce{from{transform:translateY(0) rotate(-5deg)}to{transform:translateY(-6px) rotate(5deg)}}
+.pw-title{font-family:"Playfair Display",serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:6px}
+.pw-title span{color:#14b88a}
+.pw-sub{font-size:.78rem;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:20px}
+.pw-price-box{background:linear-gradient(135deg,rgba(20,184,138,.12),rgba(201,168,76,.08));border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:14px 18px;margin-bottom:20px}
+.pw-price{font-family:"Playfair Display",serif;font-size:2.2rem;font-weight:800;color:#c9a84c;line-height:1}
+.pw-price-sub{font-size:.65rem;color:rgba(255,255,255,.45);margin-top:3px;letter-spacing:.5px}
+.pw-features{text-align:left;margin-bottom:20px;display:flex;flex-direction:column;gap:8px}
+.pw-feat{display:flex;align-items:center;gap:9px;font-size:.75rem;color:rgba(255,255,255,.8)}
+.pw-feat .tick{color:#14b88a;font-size:.9rem;flex-shrink:0}
+.pw-steps{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;margin-bottom:18px;text-align:left}
+.pw-steps-title{font-size:.65rem;color:#c9a84c;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.pw-step{display:flex;gap:10px;margin-bottom:8px;font-size:.72rem;color:rgba(255,255,255,.7);line-height:1.5}
+.pw-step:last-child{margin-bottom:0}
+.pw-step-num{width:20px;height:20px;border-radius:50%;background:rgba(20,184,138,.2);border:1px solid rgba(20,184,138,.3);color:#14b88a;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.pw-wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#25d366,#1da851);color:#fff;border:none;border-radius:12px;padding:13px;font-size:.88rem;font-weight:700;cursor:pointer;width:100%;font-family:"Plus Jakarta Sans",sans-serif;margin-bottom:10px;transition:all .2s}
+.pw-wa-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.pw-close{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:10px;padding:10px;font-size:.75rem;cursor:pointer;width:100%;font-family:"Plus Jakarta Sans",sans-serif;transition:all .2s}
+.pw-close:hover{background:rgba(255,255,255,.09);color:rgba(255,255,255,.8)}
+.pw-query-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:4px 12px;font-size:.65rem;color:#c9a84c;font-weight:600;margin-bottom:14px}
+
+/* Query counter in header */
+#queryCounterBadge{display:none;align-items:center;gap:4px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:3px 9px;font-size:.6rem;color:#c9a84c;font-weight:700;cursor:pointer}
+#queryCounterBadge.show{display:flex}
+#queryCounterBadge.warn{background:rgba(192,57,43,.12);border-color:rgba(192,57,43,.25);color:#e74c3c}
+
+/* Premium badge in header */
+#premiumBadge{display:none;align-items:center;gap:4px;background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.08));border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:3px 9px;font-size:.6rem;color:#c9a84c;font-weight:700}
+#premiumBadge.show{display:flex}
+
 </style>
 
 <script>
@@ -3123,6 +3160,12 @@ async function sendMsg(){
   const qi=document.getElementById('qi');
   const q=qi.value.trim();
   if(!q)return;
+
+  // ── SUBSCRIPTION CHECK ──
+  if (!canGenerateRx()) {
+    showPaywall();
+    return;
+  }
   qi.value='';rsz(qi);
   document.getElementById('wc')&&(document.getElementById('wc').style.display='none');
   addHist(q);
@@ -3273,6 +3316,7 @@ Query: ${q}`;
     // Step 2: If DB didn't find it, use AI with strict prompt (fallback)
     if (!finalTxt) {
       finalTxt = await callAI(prompt, 1800);
+      await incrementQueryCount();
       if (supabaseConfigured()) toast('⚠️ AI-generated (add to DB for accuracy)');
     }
 
