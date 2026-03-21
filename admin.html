@@ -3,1173 +3,638 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0a1628">
-<title>RxEasy Admin Panel</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#060d1a">
+<title>RxEasy Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#060d1a;--bg2:#0a1628;--card:#0d1e35;--card2:#0f2240;
-  --border:rgba(201,168,76,.15);--border2:rgba(255,255,255,.07);
-  --gold:#c9a84c;--teal:#14b88a;--teal2:#0fd4a0;
-  --red:#e74c3c;--orange:#e67e22;--blue:#3498db;
-  --tx:#e8f0f8;--tx2:rgba(232,240,248,.6);--tx3:rgba(232,240,248,.3);
-  --inp:#060d1a;--sidebar:220px;
-}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex}
+:root{--bg:#060d1a;--card:#0d1e35;--border:rgba(255,255,255,.08);--teal:#14b88a;--gold:#c9a84c;--red:#e74c3c;--blue:#3498db;--tx:#e8f0f8;--tx2:rgba(232,240,248,.6);--tx3:rgba(232,240,248,.3)}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
 
-/* ── Sidebar ── */
-.sidebar{
-  width:var(--sidebar);flex-shrink:0;background:var(--bg2);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;
-  position:fixed;top:0;left:0;height:100vh;z-index:100;
-  transition:transform .3s;
-}
-.sb-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
-.sb-logo-rx{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:#fff}
-.sb-logo-rx span{color:var(--teal)}
-.sb-logo-sub{font-size:.6rem;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
-.sb-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.25);border-radius:6px;padding:2px 7px;font-size:.6rem;font-weight:700;color:var(--gold);margin-top:6px;letter-spacing:.5px}
+/* Loading screen */
+#loadScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px}
+.spin{width:36px;height:36px;border:3px solid rgba(20,184,138,.2);border-top-color:var(--teal);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 
-.sb-nav{flex:1;padding:12px 10px;overflow-y:auto}
-.sb-section{font-size:.58rem;color:var(--tx3);letter-spacing:2px;text-transform:uppercase;padding:10px 8px 5px;font-weight:700}
-.sb-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;color:var(--tx2);font-size:.8rem;font-weight:500;transition:all .18s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
-.sb-item:hover{background:rgba(255,255,255,.05);color:var(--tx)}
-.sb-item.active{background:rgba(20,184,138,.12);color:var(--teal);border:1px solid rgba(20,184,138,.2)}
-.sb-item .ico{font-size:1rem;width:22px;text-align:center}
-.sb-item .cnt{background:var(--red);color:#fff;font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:auto}
+/* Top bar */
+.topbar{background:#0a1628;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.topbar-logo{font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;color:#fff}
+.topbar-logo span{color:var(--teal)}
+.topbar-badge{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);border-radius:6px;padding:2px 8px;font-size:.6rem;font-weight:700;color:var(--gold)}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tb-btn{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:.72rem;font-weight:600;color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif}
+.tb-btn:active{transform:scale(.96)}
+.tb-open{background:linear-gradient(135deg,var(--teal),#0da87a);color:#051a0a;border:none}
 
-.sb-user{padding:12px 14px;border-top:1px solid var(--border)}
-.sb-user-name{font-size:.78rem;font-weight:600;color:var(--tx)}
-.sb-user-role{font-size:.62rem;color:var(--gold);margin-top:1px}
-.sb-logout{display:flex;align-items:center;gap:6px;color:var(--tx3);font-size:.7rem;cursor:pointer;margin-top:8px;background:none;border:none;padding:0;font-family:'DM Sans',sans-serif}
-.sb-logout:hover{color:var(--red)}
+/* Nav tabs */
+.navtabs{display:flex;gap:2px;padding:10px 12px;background:#0a1628;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.navtabs::-webkit-scrollbar{display:none}
+.navtab{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:9px;font-size:.72rem;font-weight:600;cursor:pointer;white-space:nowrap;color:var(--tx2);background:none;border:none;font-family:'DM Sans',sans-serif;transition:all .18s}
+.navtab.active{background:rgba(20,184,138,.12);color:var(--teal);border:1px solid rgba(20,184,138,.2)}
+.navtab:active{transform:scale(.95)}
+.nb{background:var(--red);color:#fff;font-size:.55rem;font-weight:700;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center}
 
-/* ── Main content ── */
-.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+/* Content */
+.content{padding:14px;max-width:700px;margin:0 auto}
 
-/* ── Top bar ── */
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.topbar-title{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:#fff}
-.topbar-sub{font-size:.68rem;color:var(--tx3);margin-top:1px}
-.topbar-actions{display:flex;gap:8px;align-items:center}
+/* Stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.stat-ico{position:absolute;right:10px;top:10px;font-size:1.5rem;opacity:.15}
+.stat-val{font-size:1.7rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1}
+.stat-lbl{font-size:.62rem;color:var(--tx2);margin-top:4px}
+.teal .stat-val{color:var(--teal)}
+.gold .stat-val{color:var(--gold)}
+.blue .stat-val{color:var(--blue)}
+.red .stat-val{color:var(--red)}
 
-/* ── Content area ── */
-.content{padding:24px;flex:1}
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px}
+.card-hdr{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:.85rem;font-weight:700}
+.card-body{padding:12px 14px}
 
-/* ── Stat cards ── */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-.stat-card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
-.stat-card:hover{border-color:var(--border)}
-.stat-card::after{content:attr(data-icon);position:absolute;right:12px;top:12px;font-size:1.8rem;opacity:.12}
-.stat-val{font-size:2rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--tx);line-height:1}
-.stat-lbl{font-size:.65rem;color:var(--tx2);margin-top:5px;font-weight:500}
-.stat-card.teal .stat-val{color:var(--teal)}
-.stat-card.gold .stat-val{color:var(--gold)}
-.stat-card.blue .stat-val{color:var(--blue)}
-.stat-card.red .stat-val{color:var(--red)}
-
-/* ── Section header ── */
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.sec-title{font-size:.92rem;font-weight:700;color:var(--tx)}
-.sec-sub{font-size:.65rem;color:var(--tx3);margin-top:2px}
-
-/* ── Buttons ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .18s}
-.btn:active{transform:scale(.97)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:9px;font-size:.75rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .18s}
+.btn:active{transform:scale(.96)}
 .btn-teal{background:linear-gradient(135deg,var(--teal),#0da87a);color:#051a0a}
-.btn-teal:hover{filter:brightness(1.08)}
-.btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--tx2)}
-.btn-ghost:hover{background:rgba(255,255,255,.09);color:var(--tx)}
-.btn-red{background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.25);color:var(--red)}
-.btn-red:hover{background:rgba(231,76,60,.2)}
-.btn-sm{padding:5px 11px;font-size:.7rem;border-radius:7px}
-.btn-icon{width:32px;height:32px;padding:0;justify-content:center;border-radius:8px}
+.btn-red{background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.3);color:var(--red)}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--tx2)}
+.btn-sm{padding:5px 10px;font-size:.68rem;border-radius:7px}
 
-/* ── Table ── */
-.tbl-wrap{background:var(--card);border:1px solid var(--border2);border-radius:16px;overflow:hidden;margin-bottom:24px}
-.tbl-top{padding:14px 18px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;gap:10px}
-.search-inp{background:var(--inp);border:1px solid var(--border2);border-radius:9px;padding:7px 12px;font-size:.78rem;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;width:220px;transition:border-color .2s}
-.search-inp:focus{border-color:var(--teal)}
-.search-inp::placeholder{color:var(--tx3)}
-table{width:100%;border-collapse:collapse}
-th{padding:10px 16px;text-align:left;font-size:.65rem;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border2);white-space:nowrap}
-td{padding:11px 16px;font-size:.78rem;color:var(--tx2);border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(255,255,255,.02);color:var(--tx)}
+/* Table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:8px 10px;text-align:left;font-size:.6rem;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.tbl td{padding:10px;font-size:.75rem;color:var(--tx2);border-bottom:1px solid rgba(255,255,255,.03)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
 .td-name{font-weight:600;color:var(--tx)}
-.td-mono{font-family:'JetBrains Mono',monospace;font-size:.7rem}
 
-/* ── Badge ── */
-.badge{display:inline-flex;padding:2px 8px;border-radius:20px;font-size:.62rem;font-weight:700}
+/* Badge */
+.badge{display:inline-flex;padding:2px 7px;border-radius:20px;font-size:.6rem;font-weight:700}
 .badge-teal{background:rgba(20,184,138,.12);color:var(--teal);border:1px solid rgba(20,184,138,.2)}
 .badge-gold{background:rgba(201,168,76,.12);color:var(--gold);border:1px solid rgba(201,168,76,.2)}
 .badge-red{background:rgba(231,76,60,.12);color:var(--red);border:1px solid rgba(231,76,60,.2)}
-.badge-blue{background:rgba(52,152,219,.12);color:var(--blue);border:1px solid rgba(52,152,219,.2)}
-.badge-gray{background:rgba(255,255,255,.06);color:var(--tx3);border:1px solid var(--border2)}
+.badge-gray{background:rgba(255,255,255,.06);color:var(--tx3);border:1px solid var(--border)}
 
-/* ── Modal ── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
-.modal-bg.show{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;width:100%;max-width:580px;box-shadow:0 24px 80px rgba(0,0,0,.6)}
-.modal-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-size:.95rem;font-weight:700;color:var(--tx)}
-.modal-close{background:none;border:none;color:var(--tx3);font-size:1.2rem;cursor:pointer;padding:2px 6px;border-radius:6px}
-.modal-close:hover{color:var(--tx);background:rgba(255,255,255,.06)}
-.modal-body{padding:20px 24px}
-.modal-foot{padding:14px 24px;border-top:1px solid var(--border2);display:flex;gap:8px;justify-content:flex-end}
+/* Search */
+.search{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:.78rem;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;width:100%;margin-bottom:10px}
+.search:focus{border-color:var(--teal)}
+.search::placeholder{color:var(--tx3)}
 
-/* ── Form fields ── */
-.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.label{font-size:.68rem;font-weight:700;color:var(--tx2);letter-spacing:.3px;text-transform:uppercase}
-.inp{background:var(--inp);border:1px solid var(--border2);border-radius:9px;padding:9px 12px;font-size:.82rem;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;width:100%}
+/* Form */
+.field{margin-bottom:12px}
+.lbl{display:block;font-size:.65rem;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px}
+.inp{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:.82rem;color:var(--tx);font-family:'DM Sans',sans-serif;outline:none;width:100%;transition:border-color .2s}
 .inp:focus{border-color:var(--teal)}
 .inp::placeholder{color:var(--tx3)}
-textarea.inp{resize:vertical;min-height:70px}
 select.inp{cursor:pointer}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+textarea.inp{resize:vertical;min-height:60px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-/* ── Toast ── */
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:.78rem;font-weight:600;color:var(--tx);z-index:999;display:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
-#toast.show{display:block;animation:toastIn .3s ease}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:500;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-bg.show{display:flex}
+.modal{background:#0d1e35;border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;padding:20px}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-title{font-size:.92rem;font-weight:700}
+.modal-close{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--tx3);cursor:pointer;font-size:.85rem}
+.modal-foot{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
 
-/* ── Empty state ── */
-.empty{text-align:center;padding:48px 24px;color:var(--tx3)}
-.empty-ico{font-size:2.5rem;margin-bottom:10px}
-.empty-txt{font-size:.82rem}
+/* Toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0d1e35;border:1px solid var(--border);border-radius:10px;padding:9px 16px;font-size:.76rem;font-weight:600;color:var(--tx);z-index:999;display:none;white-space:nowrap}
+#toast.show{display:block}
 
-/* ── Loading ── */
-.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--teal);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* Empty */
+.empty{text-align:center;padding:32px;color:var(--tx3);font-size:.8rem}
 
-/* ── Tabs ── */
-.page{display:none}.page.active{display:block}
+/* Quick actions */
+.qa-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.qa{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s}
+.qa:active{transform:scale(.95)}
+.qa-ico{font-size:1.4rem;margin-bottom:5px}
+.qa-lbl{font-size:.65rem;font-weight:700;line-height:1.3}
 
-/* ── Doctor card ── */
-.doc-card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;transition:border-color .2s}
-.doc-card:hover{border-color:var(--border)}
-.doc-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,rgba(20,184,138,.2),rgba(201,168,76,.15));border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
-.doc-info{flex:1}
-.doc-name{font-size:.85rem;font-weight:700;color:var(--tx)}
-.doc-meta{font-size:.67rem;color:var(--tx3);margin-top:2px}
-.doc-actions{display:flex;gap:6px}
+/* Doc card */
+.doc-card{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:8px}
+.doc-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(20,184,138,.2),rgba(42,122,191,.15));display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.doc-info{flex:1;min-width:0}
+.doc-name{font-size:.78rem;font-weight:700;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-meta{font-size:.62rem;color:var(--tx3);margin-top:1px}
 
-/* Responsive */
-@media(max-width:768px){
-  .sidebar{transform:translateX(-100%)}
-  .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0}
-  .stats-row{grid-template-columns:1fr 1fr}
-  .row2,.row3{grid-template-columns:1fr}
-  .topbar{padding:12px 16px}
-  .content{padding:16px}
-}
+/* Page sections */
+.page{display:none}
+.page.active{display:block}
 </style>
 </head>
 <body>
 
-<!-- ── SIDEBAR ── -->
-<div class="sidebar" id="sidebar">
-  <div class="sb-logo">
-    <div class="sb-logo-rx">Rx<span>Easy</span></div>
-    <div class="sb-logo-sub">Admin Panel</div>
-    <div class="sb-badge">⚡ ADMIN</div>
-  </div>
-  <div class="sb-nav">
-    <div class="sb-section">Overview</div>
-    <button class="sb-item active" onclick="showPage('dashboard')"><span class="ico">📊</span>Dashboard</button>
+<!-- Loading screen -->
+<div id="loadScreen">
+  <div class="spin"></div>
+  <div style="font-size:.8rem;color:var(--tx3)">Verifying access...</div>
+</div>
 
-    <div class="sb-section">Database</div>
-    <button class="sb-item" onclick="showPage('diseases')"><span class="ico">🦠</span>Diseases</button>
-    <button class="sb-item" onclick="showPage('drugs')"><span class="ico">💊</span>Drugs</button>
-    <button class="sb-item" onclick="showPage('treatments')"><span class="ico">📋</span>Treatments</button>
+<!-- Main content (hidden until auth verified) -->
+<div id="mainContent" style="display:none">
 
-    <div class="sb-section">Doctors</div>
-    <button class="sb-item" onclick="showPage('doctors')"><span class="ico">👨‍⚕️</span>All Doctors</button>
-    <button class="sb-item" onclick="showPage('prescriptions')"><span class="ico">📝</span>Prescriptions</button>
-
-    <div class="sb-section">Subscriptions</div>
-    <button class="sb-item" onclick="showPage('subscriptions')"><span class="ico">💳</span>Requests <span class="cnt" id="pendingCount">0</span></button>
-    <button class="sb-item" onclick="showPage('premium-doctors')"><span class="ico">👑</span>Premium Doctors</button>
-  </div>
-  <div class="sb-user">
-    <div class="sb-user-name" id="adminName">Dr. Usama Jamal</div>
-    <div class="sb-user-role">✦ Administrator</div>
-    <button class="sb-logout" onclick="doLogout()">🚪 Logout</button>
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-logo">Rx<span>Easy</span></div>
+  <div class="topbar-badge">⚡ ADMIN</div>
+  <div class="topbar-right">
+    <button class="tb-btn tb-open" onclick="window.open('index.html','_blank')">Open App ↗</button>
+    <button class="tb-btn" onclick="doLogout()">Logout</button>
   </div>
 </div>
 
-<!-- ── MAIN ── -->
-<div class="main">
+<!-- Nav tabs -->
+<div class="navtabs">
+  <button class="navtab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+  <button class="navtab" onclick="showTab('diseases')">🦠 Diseases</button>
+  <button class="navtab" onclick="showTab('drugs')">💊 Drugs</button>
+  <button class="navtab" onclick="showTab('doctors')">👨‍⚕️ Doctors</button>
+  <button class="navtab" onclick="showTab('subscriptions')">💳 Subscriptions <span class="nb" id="pendingBadge">0</span></button>
+</div>
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <div>
-      <div class="topbar-title" id="pageTitle">Dashboard</div>
-      <div class="topbar-sub" id="pageSub">RxEasy Admin Panel</div>
+<!-- Content -->
+<div class="content">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="tab-dashboard">
+    <div class="stats">
+      <div class="stat teal" data-icon="🦠"><div class="stat-ico">🦠</div><div class="stat-val" id="s-dis">—</div><div class="stat-lbl">Diseases</div></div>
+      <div class="stat gold" data-icon="💊"><div class="stat-ico">💊</div><div class="stat-val" id="s-drg">—</div><div class="stat-lbl">Drugs</div></div>
+      <div class="stat blue" data-icon="👨‍⚕️"><div class="stat-ico">👨‍⚕️</div><div class="stat-val" id="s-doc">—</div><div class="stat-lbl">Doctors</div></div>
+      <div class="stat red" data-icon="👑"><div class="stat-ico">👑</div><div class="stat-val" id="s-prm">—</div><div class="stat-lbl">Premium</div></div>
     </div>
-    <div class="topbar-actions">
-      <button class="btn btn-ghost btn-sm" onclick="toggleSidebar()">☰</button>
-      <button class="btn btn-teal btn-sm" onclick="window.open('index.html')">Open RxEasy ↗</button>
+    <div class="qa-grid">
+      <div class="qa" onclick="showTab('diseases');openModal('diseaseModal')">
+        <div class="qa-ico">➕</div>
+        <div class="qa-lbl" style="color:var(--teal)">Add Disease</div>
+      </div>
+      <div class="qa" onclick="showTab('drugs');openModal('drugModal')">
+        <div class="qa-ico">💊</div>
+        <div class="qa-lbl" style="color:var(--gold)">Add Drug</div>
+      </div>
+      <div class="qa" onclick="showTab('subscriptions')">
+        <div class="qa-ico">💳</div>
+        <div class="qa-lbl" style="color:var(--blue)">Subscriptions</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Registered Doctors</div></div>
+      <div class="card-body" id="dashDoctors"><div class="empty">Loading...</div></div>
     </div>
   </div>
 
-  <div class="content">
-
-    <!-- ════ DASHBOARD ════ -->
-    <div class="page active" id="page-dashboard">
-      <div class="stats-row">
-        <div class="stat-card teal" data-icon="🦠">
-          <div class="stat-val" id="s-diseases">—</div>
-          <div class="stat-lbl">Diseases in DB</div>
-        </div>
-        <div class="stat-card gold" data-icon="💊">
-          <div class="stat-val" id="s-drugs">—</div>
-          <div class="stat-lbl">Drugs in DB</div>
-        </div>
-        <div class="stat-card blue" data-icon="👨‍⚕️">
-          <div class="stat-val" id="s-doctors">—</div>
-          <div class="stat-lbl">Registered Doctors</div>
-        </div>
-        <div class="stat-card red" data-icon="📝">
-          <div class="stat-val" id="s-rx">—</div>
-          <div class="stat-lbl">Prescriptions Today</div>
-        </div>
+  <!-- DISEASES -->
+  <div class="page" id="tab-diseases">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">🦠 Diseases</div>
+        <button class="btn btn-teal btn-sm" onclick="openModal('diseaseModal')">➕ Add</button>
       </div>
-
-      <div class="sec-hdr">
-        <div>
-          <div class="sec-title">Quick Actions</div>
-          <div class="sec-sub">Common admin tasks</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
-        <div class="stat-card" style="cursor:pointer" onclick="showPage('diseases');openDiseaseModal()" data-icon="">
-          <div style="font-size:1.6rem;margin-bottom:8px">➕</div>
-          <div class="stat-lbl" style="color:var(--teal);font-weight:700;font-size:.8rem">Add New Disease</div>
-          <div class="stat-lbl" style="margin-top:3px">Add to the database</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer" onclick="showPage('drugs');openDrugModal()" data-icon="">
-          <div style="font-size:1.6rem;margin-bottom:8px">💊</div>
-          <div class="stat-lbl" style="color:var(--gold);font-weight:700;font-size:.8rem">Add New Drug</div>
-          <div class="stat-lbl" style="margin-top:3px">Add to formulary</div>
-        </div>
-        <div class="stat-card" style="cursor:pointer" onclick="showPage('doctors')" data-icon="">
-          <div style="font-size:1.6rem;margin-bottom:8px">👨‍⚕️</div>
-          <div class="stat-lbl" style="color:var(--blue);font-weight:700;font-size:.8rem">View Doctors</div>
-          <div class="stat-lbl" style="margin-top:3px">Manage registered</div>
-        </div>
-      </div>
-
-      <div class="tbl-wrap">
-        <div class="tbl-top">
-          <div class="sec-title">Recent Prescriptions</div>
-        </div>
-        <table>
-          <thead><tr><th>Doctor</th><th>Patient</th><th>Disease</th><th>Source</th><th>Time</th></tr></thead>
-          <tbody id="recentRxTbl"><tr><td colspan="5"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
-        </table>
+      <div class="card-body">
+        <input class="search" placeholder="Search diseases..." oninput="filterDiseases(this.value)">
+        <div id="diseasesList"><div class="empty">Loading...</div></div>
       </div>
     </div>
+  </div>
 
-    <!-- ════ DISEASES ════ -->
-    <div class="page" id="page-diseases">
-      <div class="tbl-wrap">
-        <div class="tbl-top">
-          <input class="search-inp" type="text" placeholder="🔍 Search diseases..." oninput="filterDiseases(this.value)">
-          <button class="btn btn-teal btn-sm" onclick="openDiseaseModal()">➕ Add Disease</button>
-        </div>
-        <table>
-          <thead><tr><th>#</th><th>Disease Name</th><th>Category</th><th>ICD-10</th><th>Actions</th></tr></thead>
-          <tbody id="diseasesTbl"><tr><td colspan="5"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
-        </table>
+  <!-- DRUGS -->
+  <div class="page" id="tab-drugs">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">💊 Drugs</div>
+        <button class="btn btn-teal btn-sm" onclick="openModal('drugModal')">➕ Add</button>
+      </div>
+      <div class="card-body">
+        <input class="search" placeholder="Search drugs..." oninput="filterDrugs(this.value)">
+        <div id="drugsList"><div class="empty">Loading...</div></div>
       </div>
     </div>
+  </div>
 
-    <!-- ════ DRUGS ════ -->
-    <div class="page" id="page-drugs">
-      <div class="tbl-wrap">
-        <div class="tbl-top">
-          <input class="search-inp" type="text" placeholder="🔍 Search drugs..." oninput="filterDrugs(this.value)">
-          <button class="btn btn-teal btn-sm" onclick="openDrugModal()">➕ Add Drug</button>
-        </div>
-        <table>
-          <thead><tr><th>#</th><th>Generic Name</th><th>Brand Names</th><th>Class</th><th>Dose (Adult)</th><th>Actions</th></tr></thead>
-          <tbody id="drugsTbl"><tr><td colspan="6"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
-        </table>
+  <!-- DOCTORS -->
+  <div class="page" id="tab-doctors">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">👨‍⚕️ All Doctors</div></div>
+      <div class="card-body" id="doctorsList"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- SUBSCRIPTIONS -->
+  <div class="page" id="tab-subscriptions">
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">💳 Pending Requests</div></div>
+      <div class="card-body" id="subsList"><div class="empty">No pending requests</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">👑 Premium Members</div></div>
+      <div class="card-body" id="premiumList"><div class="empty">Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">⚡ Grant Premium Manually</div></div>
+      <div class="card-body">
+        <div class="field"><label class="lbl">Doctor Email</label><input class="inp" id="grantEmail" placeholder="doctor@email.com"></div>
+        <button class="btn btn-teal" onclick="grantPremium()" style="width:100%">✅ Grant 1 Year Premium</button>
       </div>
     </div>
+  </div>
 
-    <!-- ════ TREATMENTS ════ -->
-    <div class="page" id="page-treatments">
-      <div class="tbl-wrap">
-        <div class="tbl-top">
-          <div class="sec-title">Treatment Protocols</div>
-          <button class="btn btn-teal btn-sm" onclick="openTreatmentModal()">➕ Add Treatment</button>
-        </div>
-        <table>
-          <thead><tr><th>Disease</th><th>Drug</th><th>Population</th><th>Line</th><th>Dose</th><th>Freq</th><th>Duration</th><th>Actions</th></tr></thead>
-          <tbody id="treatmentsTbl"><tr><td colspan="8"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
+</div><!-- /content -->
+</div><!-- /mainContent -->
 
-    <!-- ════ DOCTORS ════ -->
-    <div class="page" id="page-doctors">
-      <div id="doctorsList"><div class="empty"><div class="spin"></div></div></div>
-    </div>
-
-    <!-- ════ PRESCRIPTIONS ════ -->
-    <div class="page" id="page-prescriptions">
-      <div class="tbl-wrap">
-        <div class="tbl-top">
-          <div class="sec-title">All Prescriptions</div>
-        </div>
-        <table>
-          <thead><tr><th>Doctor</th><th>Patient</th><th>Disease</th><th>Source</th><th>Date</th><th>Action</th></tr></thead>
-          <tbody id="allRxTbl"><tr><td colspan="6"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-
-    <!-- ════ SUBSCRIPTION REQUESTS ════ -->
-    <div class="page" id="page-subscriptions">
-      <div class="tbl-wrap">
-        <div class="tbl-top">
-          <div>
-            <div class="sec-title">Subscription Requests</div>
-            <div style="font-size:.65rem;color:var(--tx3);margin-top:2px">Review payment screenshots sent on WhatsApp</div>
-          </div>
-        </div>
-        <table>
-          <thead><tr><th>Doctor</th><th>Email</th><th>WhatsApp</th><th>Requested</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="subRequestsTbl"><tr><td colspan="6"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ════ PREMIUM DOCTORS ════ -->
-    <div class="page" id="page-premium-doctors">
-      <div class="tbl-wrap">
-        <div class="tbl-top">
-          <div class="sec-title">Premium Members</div>
-        </div>
-        <table>
-          <thead><tr><th>Doctor</th><th>Email</th><th>City</th><th>Premium Since</th><th>Expires</th><th>Action</th></tr></thead>
-          <tbody id="premiumDoctorsTbl"><tr><td colspan="6"><div class="empty"><div class="spin"></div></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-  </div><!-- /content -->
-</div><!-- /main -->
-
-<!-- ════ DISEASE MODAL ════ -->
+<!-- DISEASE MODAL -->
 <div class="modal-bg" id="diseaseModal">
   <div class="modal">
     <div class="modal-hdr">
-      <div class="modal-title" id="disModalTitle">➕ Add New Disease</div>
+      <div class="modal-title" id="disMTitle">➕ Add Disease</div>
       <button class="modal-close" onclick="closeModal('diseaseModal')">✕</button>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="dis_id">
-      <div class="field">
-        <label class="label">Disease Name *</label>
-        <input class="inp" id="dis_name" placeholder="e.g. Allergic Conjunctivitis">
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label class="label">Category *</label>
-          <select class="inp" id="dis_cat">
-            <option>Eye</option><option>ENT</option><option>Respiratory</option>
-            <option>GI / Abdomen</option><option>Dermatology</option><option>Infections</option>
-            <option>Cardiovascular</option><option>Endocrine</option><option>Neurology</option>
-            <option>MSK / Pain</option><option>Psychiatry</option><option>Urology</option>
-            <option>Gynecology</option><option>Surgery / Emergency</option><option>Other</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="label">ICD-10 Code</label>
-          <input class="inp" id="dis_icd" placeholder="e.g. H10.1">
-        </div>
-      </div>
-      <div class="field">
-        <label class="label">Aliases (search terms, comma separated)</label>
-        <input class="inp" id="dis_aliases" placeholder="e.g. red eye allergy, itchy eye, eye allergy">
-      </div>
-      <div class="field">
-        <label class="label">Clinical Notes for GP</label>
-        <textarea class="inp" id="dis_notes" placeholder="Key clinical features, pearls, what to look for..."></textarea>
-      </div>
-      <div class="field">
-        <label class="label">Referral Criteria</label>
-        <textarea class="inp" id="dis_referral" placeholder="When to refer to specialist..."></textarea>
-      </div>
+    <input type="hidden" id="dis_id">
+    <div class="field"><label class="lbl">Disease Name *</label><input class="inp" id="dis_name" placeholder="e.g. Allergic Conjunctivitis"></div>
+    <div class="row2">
+      <div class="field"><label class="lbl">Category *</label><select class="inp" id="dis_cat"><option>Eye</option><option>ENT</option><option>Respiratory</option><option>GI / Abdomen</option><option>Dermatology</option><option>Infections</option><option>Cardiovascular</option><option>Endocrine</option><option>Neurology</option><option>MSK / Pain</option><option>Psychiatry</option><option>Urology</option><option>Gynecology</option><option>Surgery / Emergency</option><option>Other</option></select></div>
+      <div class="field"><label class="lbl">ICD-10</label><input class="inp" id="dis_icd" placeholder="e.g. H10.1"></div>
     </div>
+    <div class="field"><label class="lbl">Search Aliases (comma separated)</label><input class="inp" id="dis_aliases" placeholder="e.g. red eye, itchy eye, eye allergy"></div>
+    <div class="field"><label class="lbl">Clinical Notes</label><textarea class="inp" id="dis_notes" placeholder="Key clinical features for GP..."></textarea></div>
+    <div class="field"><label class="lbl">Referral Criteria</label><input class="inp" id="dis_referral" placeholder="When to refer..."></div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('diseaseModal')">Cancel</button>
-      <button class="btn btn-teal" onclick="saveDisease()" id="disSaveBtn">💾 Save Disease</button>
+      <button class="btn btn-teal" onclick="saveDisease()">💾 Save</button>
     </div>
   </div>
 </div>
 
-<!-- ════ DRUG MODAL ════ -->
+<!-- DRUG MODAL -->
 <div class="modal-bg" id="drugModal">
   <div class="modal">
     <div class="modal-hdr">
-      <div class="modal-title" id="drugModalTitle">➕ Add New Drug</div>
+      <div class="modal-title" id="drugMTitle">➕ Add Drug</div>
       <button class="modal-close" onclick="closeModal('drugModal')">✕</button>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="drug_id">
-      <div class="row2">
-        <div class="field">
-          <label class="label">Generic Name *</label>
-          <input class="inp" id="drug_name" placeholder="e.g. Olopatadine">
-        </div>
-        <div class="field">
-          <label class="label">Drug Class *</label>
-          <input class="inp" id="drug_class" placeholder="e.g. Antihistamine Eye Drop">
-        </div>
-      </div>
-      <div class="field">
-        <label class="label">Brand Names in Pakistan (comma separated) *</label>
-        <input class="inp" id="drug_brands" placeholder="e.g. Patanol, Olopat, Alomide">
-      </div>
-      <div class="field">
-        <label class="label">Available Formulations (comma separated)</label>
-        <input class="inp" id="drug_forms" placeholder="e.g. Eye drops 0.1%, Tab 10mg, Syp 5mg/5ml">
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label class="label">Adult Dose</label>
-          <input class="inp" id="drug_adult" placeholder="e.g. 1 drop BD x 7 days">
-        </div>
-        <div class="field">
-          <label class="label">Child Dose</label>
-          <input class="inp" id="drug_child" placeholder="e.g. 1 drop BD (>3 yrs)">
-        </div>
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label class="label">Pregnancy</label>
-          <input class="inp" id="drug_preg" placeholder="e.g. Category B — safe / AVOID">
-        </div>
-        <div class="field">
-          <label class="label">Renal Impairment</label>
-          <input class="inp" id="drug_renal" placeholder="e.g. Dose adjust if eGFR <30">
-        </div>
-      </div>
-      <div class="field">
-        <label class="label">Side Effects</label>
-        <input class="inp" id="drug_se" placeholder="e.g. Mild stinging, headache">
-      </div>
-      <div class="field">
-        <label class="label">Contraindications</label>
-        <input class="inp" id="drug_ci" placeholder="e.g. Hypersensitivity, glaucoma">
-      </div>
+    <input type="hidden" id="drug_id">
+    <div class="row2">
+      <div class="field"><label class="lbl">Generic Name *</label><input class="inp" id="drug_name" placeholder="e.g. Olopatadine"></div>
+      <div class="field"><label class="lbl">Drug Class</label><input class="inp" id="drug_class" placeholder="e.g. Antihistamine"></div>
     </div>
+    <div class="field"><label class="lbl">Brand Names (comma separated) *</label><input class="inp" id="drug_brands" placeholder="e.g. Patanol, Olopat"></div>
+    <div class="field"><label class="lbl">Formulations (comma separated)</label><input class="inp" id="drug_forms" placeholder="e.g. Eye drops 0.1%, Tab 10mg"></div>
+    <div class="row2">
+      <div class="field"><label class="lbl">Adult Dose</label><input class="inp" id="drug_adult" placeholder="e.g. 1 drop BD x 7 days"></div>
+      <div class="field"><label class="lbl">Child Dose</label><input class="inp" id="drug_child" placeholder="e.g. 1 drop BD"></div>
+    </div>
+    <div class="field"><label class="lbl">Side Effects</label><input class="inp" id="drug_se" placeholder="e.g. Mild stinging, headache"></div>
+    <div class="field"><label class="lbl">Contraindications</label><input class="inp" id="drug_ci" placeholder="e.g. Hypersensitivity, glaucoma"></div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('drugModal')">Cancel</button>
-      <button class="btn btn-teal" onclick="saveDrug()" id="drugSaveBtn">💾 Save Drug</button>
+      <button class="btn btn-teal" onclick="saveDrug()">💾 Save</button>
     </div>
   </div>
 </div>
 
-<!-- ════ TREATMENT MODAL ════ -->
-<div class="modal-bg" id="treatmentModal">
-  <div class="modal">
-    <div class="modal-hdr">
-      <div class="modal-title">➕ Add Treatment Protocol</div>
-      <button class="modal-close" onclick="closeModal('treatmentModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label class="label">Disease *</label>
-        <select class="inp" id="tx_disease"><option value="">Select disease...</option></select>
-      </div>
-      <div class="field">
-        <label class="label">Drug *</label>
-        <select class="inp" id="tx_drug"><option value="">Select drug...</option></select>
-      </div>
-      <div class="row3">
-        <div class="field">
-          <label class="label">Population *</label>
-          <select class="inp" id="tx_pop">
-            <option value="adult">Adult</option>
-            <option value="child">Child</option>
-            <option value="pregnancy">Pregnancy</option>
-            <option value="elderly">Elderly</option>
-            <option value="renal">Renal</option>
-            <option value="hepatic">Hepatic</option>
-            <option value="all">All</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="label">Line</label>
-          <select class="inp" id="tx_line">
-            <option value="first">First Line</option>
-            <option value="second">Second Line</option>
-            <option value="alternative">Alternative</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="label">Order #</label>
-          <input class="inp" type="number" id="tx_order" value="1" min="1" max="10">
-        </div>
-      </div>
-      <div class="row3">
-        <div class="field">
-          <label class="label">Dose *</label>
-          <input class="inp" id="tx_dose" placeholder="e.g. 1 drop">
-        </div>
-        <div class="field">
-          <label class="label">Frequency *</label>
-          <input class="inp" id="tx_freq" placeholder="e.g. BD, TDS, OD">
-        </div>
-        <div class="field">
-          <label class="label">Duration *</label>
-          <input class="inp" id="tx_dur" placeholder="e.g. 7 days">
-        </div>
-      </div>
-      <div class="row2">
-        <div class="field">
-          <label class="label">Route</label>
-          <select class="inp" id="tx_route">
-            <option value="oral">Oral</option>
-            <option value="eye">Eye (Ophthalmic)</option>
-            <option value="topical">Topical</option>
-            <option value="nasal">Nasal</option>
-            <option value="ear">Ear</option>
-            <option value="IV">IV</option>
-            <option value="IM">IM</option>
-            <option value="inhaled">Inhaled</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="label">Formulation to Use</label>
-          <input class="inp" id="tx_form" placeholder="e.g. Eye drops 0.1%, Tab 10mg">
-        </div>
-      </div>
-      <div class="field">
-        <label class="label">Special Instructions</label>
-        <input class="inp" id="tx_special" placeholder="e.g. Take 30 min before meals, refrigerate">
-      </div>
-      <div class="field" style="flex-direction:row;align-items:center;gap:10px">
-        <input type="checkbox" id="tx_mandatory" checked style="width:16px;height:16px">
-        <label class="label" for="tx_mandatory" style="text-transform:none;font-size:.8rem;margin:0">Mandatory drug (uncheck if conditional/optional)</label>
-      </div>
-      <div class="field" id="condField" style="display:none">
-        <label class="label">Condition for Use</label>
-        <input class="inp" id="tx_condition" placeholder="e.g. Only if nausea present">
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('treatmentModal')">Cancel</button>
-      <button class="btn btn-teal" onclick="saveTreatment()" id="txSaveBtn">💾 Save Treatment</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
 <div id="toast"></div>
 
 <script>
-// ═══ CONFIG ═══
-const SB_URL  = 'https://epvfbxzuziihhcaaaizp.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
-const REST    = SB_URL + '/rest/v1';
+var SB  = 'https://epvfbxzuziihhcaaaizp.supabase.co';
+var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
+var session = null;
+var allDiseases = [];
+var allDrugs = [];
 
-let session = null;
-let allDiseases = [];
-let allDrugs = [];
-
-// ═══ INIT ═══
+// ── AUTH CHECK ──
 window.addEventListener('load', async function() {
-
-  // ── STEP 1: Must be logged in ──
-  const s = localStorage.getItem('sb_session');
+  var s = localStorage.getItem('sb_session');
   if (!s) { window.location.href = 'login.html'; return; }
   session = JSON.parse(s);
 
-  // ── STEP 2: Verify is_admin from Supabase ──
   try {
-    // Try with user token first, fallback to service key
-    var userId = session.user && session.user.id ? session.user.id : null;
-    if (!userId) { window.location.href = 'login.html'; return; }
-    var res = await fetch(SB_URL + '/rest/v1/doctor_profiles?id=eq.' + userId + '&select=id,full_name,email,is_admin,is_premium', {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    var uid = session.user && session.user.id;
+    if (!uid) { window.location.href = 'login.html'; return; }
+
+    var res = await fetch(SB+'/rest/v1/doctor_profiles?id=eq.'+uid+'&select=is_admin,full_name,email', {
+      headers: {'apikey': KEY, 'Authorization': 'Bearer '+KEY}
     });
     var data = await res.json();
+    var profile = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
-    // If empty array, profile doesn't exist yet
-    if (Array.isArray(data) && data.length === 0) {
-      document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#060d1a;font-family:DM Sans,sans-serif;padding:20px"><div style="text-align:center;max-width:340px"><div style="font-size:3rem;margin-bottom:16px">🚫</div><div style="font-size:1.1rem;font-weight:700;color:#e8f0f8;margin-bottom:10px">Access Denied</div><div style="font-size:.76rem;color:rgba(232,240,248,.5);line-height:1.8;margin-bottom:24px">No profile found. Please run the admin SQL first:<br><code style="background:rgba(255,255,255,.08);padding:4px 8px;border-radius:6px;font-size:.7rem;display:block;margin-top:8px">UPDATE doctor_profiles SET is_admin = TRUE WHERE email = 'usamaxjamal@gmail.com';</code></div><button onclick="window.location.href='index.html'" style="background:#14b88a;color:#051a0a;border:none;border-radius:10px;padding:12px 28px;font-weight:700;cursor:pointer">← Back</button></div></div>';
-      return;
-    }
-
-    const profile = data && data[0] ? data[0] : null;
-
-    // ── STEP 3: Block non-admins completely ──
     if (!profile || !profile.is_admin) {
-      document.body.innerHTML = `
-        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#060d1a;font-family:'DM Sans',sans-serif;padding:20px">
-          <div style="text-align:center;max-width:340px">
-            <div style="font-size:3.5rem;margin-bottom:16px">🚫</div>
-            <div style="font-size:1.2rem;font-weight:700;color:#e8f0f8;margin-bottom:10px">Access Denied</div>
-            <div style="font-size:.78rem;color:rgba(232,240,248,.5);line-height:1.8;margin-bottom:28px">
-              You don't have admin privileges.<br>
-              Only Dr. Usama Jamal can access this panel.
-            </div>
-            <button onclick="window.location.href='index.html'"
-              style="background:linear-gradient(135deg,#14b88a,#0da87a);color:#051a0a;border:none;border-radius:12px;padding:13px 32px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
-              ← Back to RxEasy
-            </button>
-          </div>
-        </div>`;
+      document.getElementById('loadScreen').innerHTML = '<div style="text-align:center;padding:40px;max-width:320px;margin:auto"><div style="font-size:3rem;margin-bottom:14px">🚫</div><div style="font-size:1rem;font-weight:700;color:#e8f0f8;margin-bottom:8px">Access Denied</div><div style="font-size:.75rem;color:rgba(232,240,248,.5);line-height:1.7;margin-bottom:20px">Admin access required.<br>Only Dr. Usama Jamal can access this.</div><button onclick="window.location.href='index.html'" style="background:#14b88a;color:#051a0a;border:none;border-radius:10px;padding:11px 24px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif">← Back to RxEasy</button></div>';
       return;
     }
 
-    // ── STEP 4: Admin confirmed — load panel ──
-    document.getElementById('adminName').textContent = profile.full_name || session.user?.email || 'Admin';
-    await loadDashboard();
-    await loadPendingCount();
-    await loadDiseases();
-    await loadDrugs();
+    // Admin verified — show panel
+    document.getElementById('loadScreen').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    loadDashboard();
+    loadDiseases();
+    loadDrugs();
+    loadPendingCount();
 
   } catch(e) {
-    document.body.innerHTML = `
-      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#060d1a;font-family:'DM Sans',sans-serif">
-        <div style="text-align:center;color:#e8f0f8;padding:20px">
-          <div style="font-size:2rem;margin-bottom:12px">⚠️</div>
-          <div style="font-size:.85rem;color:rgba(232,240,248,.6);margin-bottom:20px">Could not verify admin access.<br>Check your connection and try again.</div>
-          <button onclick="location.reload()" style="background:#14b88a;color:#051a0a;border:none;border-radius:10px;padding:11px 24px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🔄 Retry</button>
-        </div>
-      </div>`;
+    document.getElementById('loadScreen').innerHTML = '<div style="text-align:center;padding:40px"><div style="font-size:2rem;margin-bottom:12px">⚠️</div><div style="font-size:.8rem;color:rgba(232,240,248,.5);margin-bottom:16px">Connection error</div><button onclick="location.reload()" style="background:#14b88a;color:#051a0a;border:none;border-radius:10px;padding:10px 20px;font-weight:700;cursor:pointer">Retry</button></div>';
   }
 });
 
-// ═══ AUTH HEADER ═══
-function hdrs(extra) {
-  const h = {
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + (session ? session.access_token : SB_KEY),
-    'Content-Type': 'application/json'
-  };
-  return Object.assign(h, extra || {});
+// ── HELPERS ──
+function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+
+function toast(msg, dur) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show';
+  setTimeout(function() { t.className = ''; }, dur || 2500);
 }
 
-// ═══ FETCH HELPER ═══
 async function sb(table, params, method, body) {
-  params = params || '';
-  method = method || 'GET';
-  const opts = { method, headers: hdrs(method !== 'GET' ? {'Prefer':'return=representation'} : {}) };
-  if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(REST + '/' + table + params, opts);
-  if (method === 'DELETE' || (res.status === 204)) return true;
+  params = params || ''; method = method || 'GET';
+  var opts = { method: method, headers: { 'apikey': KEY, 'Authorization': 'Bearer '+KEY, 'Content-Type': 'application/json' } };
+  if (method !== 'GET' && body) {
+    opts.headers['Prefer'] = 'return=representation';
+    opts.body = JSON.stringify(body);
+  }
+  var res = await fetch(SB+'/rest/v1/'+table+params, opts);
+  if (res.status === 204 || method === 'DELETE') return true;
   return res.json();
 }
 
-// ═══ TOAST ═══
-function toast(msg, dur) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur || 2500);
-}
-
-// ═══ PAGE NAVIGATION ═══
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  const titles = {
-    dashboard: ['Dashboard', 'Overview of RxEasy'],
-    diseases: ['Diseases Database', 'Manage disease entries'],
-    drugs: ['Drugs Formulary', 'Manage drug entries'],
-    treatments: ['Treatment Protocols', 'Link diseases to drugs'],
-    doctors: ['Registered Doctors', 'Manage doctor accounts'],
-    prescriptions: ['Prescription Log', 'All generated prescriptions'],
-    subscriptions: ['Subscription Requests', 'Approve/reject payment requests'],
-    'premium-doctors': ['Premium Members', 'All active premium doctors']
-  };
-  document.getElementById('pageTitle').textContent = titles[name][0];
-  document.getElementById('pageSub').textContent = titles[name][1];
-
-  // Load data for pages
-  if (name === 'treatments') loadTreatments();
+// ── TABS ──
+function showTab(name) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.navtab').forEach(function(t) { t.classList.remove('active'); });
+  var pg = document.getElementById('tab-'+name);
+  if (pg) pg.classList.add('active');
+  var tabs = document.querySelectorAll('.navtab');
+  tabs.forEach(function(t) {
+    if (t.textContent.toLowerCase().includes(name) || t.getAttribute('onclick').includes("'"+name+"'")) t.classList.add('active');
+  });
   if (name === 'doctors') loadDoctors();
-  if (name === 'prescriptions') loadAllRx();
   if (name === 'subscriptions') loadSubscriptions();
-  if (name === 'premium-doctors') loadPremiumDoctors();
 }
 
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-}
+// ── MODALS ──
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-bg').forEach(function(m) {
+  m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('show'); });
+});
 
-// ═══ DASHBOARD ═══
+// ── DASHBOARD ──
 async function loadDashboard() {
   try {
-    const [dis, drg, docs, rxs] = await Promise.all([
-      sb('diseases', '?select=count', 'GET'),
-      sb('drugs', '?select=count', 'GET'),
-      sb('doctor_profiles', '?select=count', 'GET'),
-      sb('prescription_logs', '?select=count&created_at=gte.' + new Date().toISOString().split('T')[0], 'GET')
+    var results = await Promise.all([
+      sb('diseases','?select=count','GET'),
+      sb('drugs','?select=count','GET'),
+      sb('doctor_profiles','?select=count','GET'),
+      sb('doctor_profiles','?is_premium=eq.true&select=count','GET')
     ]);
-    document.getElementById('s-diseases').textContent = Array.isArray(dis) ? dis.length : '—';
-    document.getElementById('s-drugs').textContent = Array.isArray(drg) ? drg.length : '—';
-    document.getElementById('s-doctors').textContent = Array.isArray(docs) ? docs.length : '—';
-    document.getElementById('s-rx').textContent = Array.isArray(rxs) ? rxs.length : '0';
+    document.getElementById('s-dis').textContent = Array.isArray(results[0]) ? results[0].length : '—';
+    document.getElementById('s-drg').textContent = Array.isArray(results[1]) ? results[1].length : '—';
+    document.getElementById('s-doc').textContent = Array.isArray(results[2]) ? results[2].length : '—';
+    document.getElementById('s-prm').textContent = Array.isArray(results[3]) ? results[3].length : '—';
   } catch(e) {}
-  loadRecentRx();
+  loadDashDoctors();
 }
 
-async function loadRecentRx() {
-  const tbl = document.getElementById('recentRxTbl');
+async function loadDashDoctors() {
+  var el = document.getElementById('dashDoctors');
   try {
-    const data = await sb('prescription_logs', '?order=created_at.desc&limit=10&select=*,doctor_profiles(full_name)');
-    if (!Array.isArray(data) || data.length === 0) {
-      tbl.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="empty-ico">📝</div><div class="empty-txt">No prescriptions yet</div></div></td></tr>';
-      return;
-    }
-    tbl.innerHTML = data.map(r => `
-      <tr>
-        <td class="td-name">${esc(r.doctor_profiles?.full_name || 'Unknown')}</td>
-        <td>${esc(r.patient_name || '—')}</td>
-        <td>${esc(r.disease_name || '—')}</td>
-        <td><span class="badge ${r.source==='database'?'badge-teal':'badge-gold'}">${r.source||'ai'}</span></td>
-        <td class="td-mono">${new Date(r.created_at).toLocaleString('en-PK',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-      </tr>`).join('');
-  } catch(e) {
-    tbl.innerHTML = '<tr><td colspan="5" style="color:var(--tx3);text-align:center;padding:20px">Could not load — admin access required</td></tr>';
-  }
+    var data = await sb('doctor_profiles','?order=created_at.desc&limit=10');
+    if (!Array.isArray(data) || data.length === 0) { el.innerHTML = '<div class="empty">No doctors yet</div>'; return; }
+    el.innerHTML = data.map(function(d) {
+      return '<div class="doc-card"><div class="doc-av">👨‍⚕️</div><div class="doc-info"><div class="doc-name">'+esc(d.full_name||'Unknown')+'</div><div class="doc-meta">'+esc(d.email||'—')+' · '+(d.is_premium?'👑 Premium':'Free')+'</div></div>'+(d.is_admin?'<span class="badge badge-gold">Admin</span>':'')+'</div>';
+    }).join('');
+  } catch(e) { el.innerHTML = '<div class="empty">Error loading</div>'; }
 }
 
-// ═══ DISEASES ═══
+// ── DISEASES ──
 async function loadDiseases() {
-  const tbl = document.getElementById('diseasesTbl');
+  var el = document.getElementById('diseasesList');
   try {
-    allDiseases = await sb('diseases', '?order=category.asc,name.asc');
+    allDiseases = await sb('diseases','?order=category.asc,name.asc');
     renderDiseases(allDiseases);
-  } catch(e) {
-    tbl.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="empty-txt">Error loading diseases</div></div></td></tr>';
-  }
+  } catch(e) { el.innerHTML = '<div class="empty">Error loading diseases</div>'; }
 }
 
 function renderDiseases(data) {
-  const tbl = document.getElementById('diseasesTbl');
-  if (!data || data.length === 0) {
-    tbl.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="empty-ico">🦠</div><div class="empty-txt">No diseases yet</div></div></td></tr>';
-    return;
-  }
-  tbl.innerHTML = data.map((d,i) => `
-    <tr>
-      <td class="td-mono" style="color:var(--tx3)">${i+1}</td>
-      <td class="td-name">${esc(d.name)}</td>
-      <td><span class="badge badge-blue">${esc(d.category||'—')}</span></td>
-      <td class="td-mono">${esc(d.icd10||'—')}</td>
-      <td>
-        <div style="display:flex;gap:5px">
-          <button class="btn btn-ghost btn-sm btn-icon" onclick='editDisease(${JSON.stringify(d)})'>✏️</button>
-          <button class="btn btn-red btn-sm btn-icon" onclick="delDisease('${d.id}')">🗑️</button>
-        </div>
-      </td>
-    </tr>`).join('');
+  var el = document.getElementById('diseasesList');
+  if (!Array.isArray(data) || data.length === 0) { el.innerHTML = '<div class="empty">No diseases yet</div>'; return; }
+  el.innerHTML = data.map(function(d) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div style="flex:1"><div style="font-size:.78rem;font-weight:600;color:var(--tx)">'+esc(d.name)+'</div><div style="font-size:.62rem;color:var(--tx3);margin-top:1px">'+esc(d.category||'—')+(d.icd10?' · '+d.icd10:'')+'</div></div><button class="btn btn-ghost btn-sm" onclick='editDisease('+JSON.stringify(d)+')'>✏️</button><button class="btn btn-red btn-sm" onclick="delDisease(''+d.id+'')">🗑️</button></div>';
+  }).join('');
 }
 
 function filterDiseases(q) {
-  const filtered = allDiseases.filter(d =>
-    d.name.toLowerCase().includes(q.toLowerCase()) ||
-    (d.category||'').toLowerCase().includes(q.toLowerCase())
-  );
-  renderDiseases(filtered);
+  renderDiseases(allDiseases.filter(function(d) { return !q || d.name.toLowerCase().includes(q.toLowerCase()) || (d.category||'').toLowerCase().includes(q.toLowerCase()); }));
 }
 
-function openDiseaseModal(dis) {
-  document.getElementById('dis_id').value = '';
-  document.getElementById('dis_name').value = '';
-  document.getElementById('dis_cat').value = 'Eye';
-  document.getElementById('dis_icd').value = '';
-  document.getElementById('dis_aliases').value = '';
-  document.getElementById('dis_notes').value = '';
-  document.getElementById('dis_referral').value = '';
-  document.getElementById('disModalTitle').textContent = '➕ Add New Disease';
-  document.getElementById('diseaseModal').classList.add('show');
+function openDiseaseModal() {
+  document.getElementById('dis_id').value='';
+  document.getElementById('dis_name').value='';
+  document.getElementById('dis_cat').value='Eye';
+  document.getElementById('dis_icd').value='';
+  document.getElementById('dis_aliases').value='';
+  document.getElementById('dis_notes').value='';
+  document.getElementById('dis_referral').value='';
+  document.getElementById('disMTitle').textContent='➕ Add Disease';
+  openModal('diseaseModal');
 }
 
 function editDisease(d) {
-  document.getElementById('dis_id').value = d.id;
-  document.getElementById('dis_name').value = d.name || '';
-  document.getElementById('dis_cat').value = d.category || 'Other';
-  document.getElementById('dis_icd').value = d.icd10 || '';
-  document.getElementById('dis_aliases').value = (d.aliases || []).join(', ');
-  document.getElementById('dis_notes').value = d.notes || '';
-  document.getElementById('dis_referral').value = d.referral_criteria || '';
-  document.getElementById('disModalTitle').textContent = '✏️ Edit Disease';
-  document.getElementById('diseaseModal').classList.add('show');
+  document.getElementById('dis_id').value = d.id||'';
+  document.getElementById('dis_name').value = d.name||'';
+  document.getElementById('dis_cat').value = d.category||'Other';
+  document.getElementById('dis_icd').value = d.icd10||'';
+  document.getElementById('dis_aliases').value = (d.aliases||[]).join(', ');
+  document.getElementById('dis_notes').value = d.notes||'';
+  document.getElementById('dis_referral').value = d.referral_criteria||'';
+  document.getElementById('disMTitle').textContent='✏️ Edit Disease';
+  openModal('diseaseModal');
 }
 
 async function saveDisease() {
-  const id   = document.getElementById('dis_id').value;
-  const name = document.getElementById('dis_name').value.trim();
+  var id = document.getElementById('dis_id').value;
+  var name = document.getElementById('dis_name').value.trim();
   if (!name) { toast('⚠️ Disease name required'); return; }
-
-  const body = {
-    name,
+  var body = {
+    name: name,
     category: document.getElementById('dis_cat').value,
-    icd10: document.getElementById('dis_icd').value.trim() || null,
-    aliases: document.getElementById('dis_aliases').value.split(',').map(s=>s.trim()).filter(Boolean),
-    notes: document.getElementById('dis_notes').value.trim() || null,
-    referral_criteria: document.getElementById('dis_referral').value.trim() || null
+    icd10: document.getElementById('dis_icd').value.trim()||null,
+    aliases: document.getElementById('dis_aliases').value.split(',').map(function(s){return s.trim();}).filter(Boolean),
+    notes: document.getElementById('dis_notes').value.trim()||null,
+    referral_criteria: document.getElementById('dis_referral').value.trim()||null
   };
-
-  const btn = document.getElementById('disSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving...';
-
   try {
-    if (id) {
-      await sb('diseases', '?id=eq.' + id, 'PATCH', body);
-      toast('✅ Disease updated!');
-    } else {
-      await sb('diseases', '', 'POST', body);
-      toast('✅ Disease added!');
-    }
+    if (id) await sb('diseases','?id=eq.'+id,'PATCH',body);
+    else await sb('diseases','','POST',body);
+    toast(id ? '✅ Disease updated!' : '✅ Disease added!');
     closeModal('diseaseModal');
-    await loadDiseases();
-  } catch(e) { toast('❌ Error: ' + e.message); }
-  btn.disabled = false; btn.textContent = '💾 Save Disease';
+    loadDiseases();
+  } catch(e) { toast('❌ Error saving'); }
 }
 
 async function delDisease(id) {
-  if (!confirm('Delete this disease? Treatment protocols for it will also be deleted.')) return;
-  await sb('diseases', '?id=eq.' + id, 'DELETE');
-  toast('🗑️ Disease deleted');
-  await loadDiseases();
+  if (!confirm('Delete this disease?')) return;
+  await sb('diseases','?id=eq.'+id,'DELETE');
+  toast('🗑️ Deleted'); loadDiseases();
 }
 
-// ═══ DRUGS ═══
+// ── DRUGS ──
 async function loadDrugs() {
-  const tbl = document.getElementById('drugsTbl');
+  var el = document.getElementById('drugsList');
   try {
-    allDrugs = await sb('drugs', '?order=generic_name.asc');
+    allDrugs = await sb('drugs','?order=generic_name.asc');
     renderDrugs(allDrugs);
-    // Populate drug select in treatment modal
-    const sel = document.getElementById('tx_drug');
-    sel.innerHTML = '<option value="">Select drug...</option>' +
-      allDrugs.map(d => `<option value="${d.id}">${esc(d.generic_name)}</option>`).join('');
-  } catch(e) {
-    tbl.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-txt">Error loading drugs</div></div></td></tr>';
-  }
+  } catch(e) { el.innerHTML = '<div class="empty">Error loading drugs</div>'; }
 }
 
 function renderDrugs(data) {
-  const tbl = document.getElementById('drugsTbl');
-  if (!data || data.length === 0) {
-    tbl.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-ico">💊</div><div class="empty-txt">No drugs yet</div></div></td></tr>';
-    return;
-  }
-  tbl.innerHTML = data.map((d,i) => `
-    <tr>
-      <td class="td-mono" style="color:var(--tx3)">${i+1}</td>
-      <td class="td-name">${esc(d.generic_name)}</td>
-      <td style="font-size:.7rem;color:var(--tx3)">${(d.brand_names||[]).slice(0,3).join(', ')}</td>
-      <td><span class="badge badge-gray" style="font-size:.58rem">${esc(d.drug_class||'—')}</span></td>
-      <td class="td-mono" style="font-size:.68rem">${esc(d.standard_dose_adult||'—')}</td>
-      <td>
-        <div style="display:flex;gap:5px">
-          <button class="btn btn-ghost btn-sm btn-icon" onclick='editDrug(${JSON.stringify(d)})'>✏️</button>
-          <button class="btn btn-red btn-sm btn-icon" onclick="delDrug('${d.id}')">🗑️</button>
-        </div>
-      </td>
-    </tr>`).join('');
+  var el = document.getElementById('drugsList');
+  if (!Array.isArray(data) || data.length === 0) { el.innerHTML = '<div class="empty">No drugs yet</div>'; return; }
+  el.innerHTML = data.map(function(d) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div style="flex:1"><div style="font-size:.78rem;font-weight:600;color:var(--tx)">'+esc(d.generic_name)+'</div><div style="font-size:.62rem;color:var(--tx3);margin-top:1px">'+((d.brand_names||[]).slice(0,2).join(', '))+(d.drug_class?' · '+esc(d.drug_class):'')+'</div></div><button class="btn btn-ghost btn-sm" onclick='editDrug('+JSON.stringify(d)+')'>✏️</button><button class="btn btn-red btn-sm" onclick="delDrug(''+d.id+'')">🗑️</button></div>';
+  }).join('');
 }
 
 function filterDrugs(q) {
-  const filtered = allDrugs.filter(d =>
-    d.generic_name.toLowerCase().includes(q.toLowerCase()) ||
-    (d.brand_names||[]).some(b => b.toLowerCase().includes(q.toLowerCase())) ||
-    (d.drug_class||'').toLowerCase().includes(q.toLowerCase())
-  );
-  renderDrugs(filtered);
-}
-
-function openDrugModal() {
-  document.getElementById('drug_id').value = '';
-  ['drug_name','drug_class','drug_brands','drug_forms','drug_adult','drug_child','drug_preg','drug_renal','drug_se','drug_ci'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('drugModalTitle').textContent = '➕ Add New Drug';
-  document.getElementById('drugModal').classList.add('show');
+  renderDrugs(allDrugs.filter(function(d) { return !q || d.generic_name.toLowerCase().includes(q.toLowerCase()) || (d.brand_names||[]).some(function(b){return b.toLowerCase().includes(q.toLowerCase());}); }));
 }
 
 function editDrug(d) {
-  document.getElementById('drug_id').value = d.id;
-  document.getElementById('drug_name').value = d.generic_name || '';
-  document.getElementById('drug_class').value = d.drug_class || '';
+  document.getElementById('drug_id').value = d.id||'';
+  document.getElementById('drug_name').value = d.generic_name||'';
+  document.getElementById('drug_class').value = d.drug_class||'';
   document.getElementById('drug_brands').value = (d.brand_names||[]).join(', ');
   document.getElementById('drug_forms').value = (d.formulations||[]).join(', ');
-  document.getElementById('drug_adult').value = d.standard_dose_adult || '';
-  document.getElementById('drug_child').value = d.standard_dose_child || '';
-  document.getElementById('drug_preg').value = d.standard_dose_pregnancy || '';
-  document.getElementById('drug_renal').value = d.standard_dose_renal || '';
-  document.getElementById('drug_se').value = d.side_effects || '';
-  document.getElementById('drug_ci').value = d.contraindications || '';
-  document.getElementById('drugModalTitle').textContent = '✏️ Edit Drug';
-  document.getElementById('drugModal').classList.add('show');
+  document.getElementById('drug_adult').value = d.standard_dose_adult||'';
+  document.getElementById('drug_child').value = d.standard_dose_child||'';
+  document.getElementById('drug_se').value = d.side_effects||'';
+  document.getElementById('drug_ci').value = d.contraindications||'';
+  document.getElementById('drugMTitle').textContent='✏️ Edit Drug';
+  openModal('drugModal');
 }
 
 async function saveDrug() {
-  const id   = document.getElementById('drug_id').value;
-  const name = document.getElementById('drug_name').value.trim();
+  var id = document.getElementById('drug_id').value;
+  var name = document.getElementById('drug_name').value.trim();
   if (!name) { toast('⚠️ Generic name required'); return; }
-
-  const body = {
+  var body = {
     generic_name: name,
-    drug_class: document.getElementById('drug_class').value.trim() || null,
-    brand_names: document.getElementById('drug_brands').value.split(',').map(s=>s.trim()).filter(Boolean),
-    formulations: document.getElementById('drug_forms').value.split(',').map(s=>s.trim()).filter(Boolean),
-    standard_dose_adult: document.getElementById('drug_adult').value.trim() || null,
-    standard_dose_child: document.getElementById('drug_child').value.trim() || null,
-    standard_dose_pregnancy: document.getElementById('drug_preg').value.trim() || null,
-    standard_dose_renal: document.getElementById('drug_renal').value.trim() || null,
-    side_effects: document.getElementById('drug_se').value.trim() || null,
-    contraindications: document.getElementById('drug_ci').value.trim() || null
+    drug_class: document.getElementById('drug_class').value.trim()||null,
+    brand_names: document.getElementById('drug_brands').value.split(',').map(function(s){return s.trim();}).filter(Boolean),
+    formulations: document.getElementById('drug_forms').value.split(',').map(function(s){return s.trim();}).filter(Boolean),
+    standard_dose_adult: document.getElementById('drug_adult').value.trim()||null,
+    standard_dose_child: document.getElementById('drug_child').value.trim()||null,
+    side_effects: document.getElementById('drug_se').value.trim()||null,
+    contraindications: document.getElementById('drug_ci').value.trim()||null
   };
-
-  const btn = document.getElementById('drugSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving...';
-
   try {
-    if (id) {
-      await sb('drugs', '?id=eq.' + id, 'PATCH', body);
-      toast('✅ Drug updated!');
-    } else {
-      await sb('drugs', '', 'POST', body);
-      toast('✅ Drug added!');
-    }
+    if (id) await sb('drugs','?id=eq.'+id,'PATCH',body);
+    else await sb('drugs','','POST',body);
+    toast(id ? '✅ Drug updated!' : '✅ Drug added!');
     closeModal('drugModal');
-    await loadDrugs();
-  } catch(e) { toast('❌ Error: ' + e.message); }
-  btn.disabled = false; btn.textContent = '💾 Save Drug';
+    loadDrugs();
+  } catch(e) { toast('❌ Error saving'); }
 }
 
 async function delDrug(id) {
   if (!confirm('Delete this drug?')) return;
-  await sb('drugs', '?id=eq.' + id, 'DELETE');
-  toast('🗑️ Drug deleted');
-  await loadDrugs();
+  await sb('drugs','?id=eq.'+id,'DELETE');
+  toast('🗑️ Deleted'); loadDrugs();
 }
 
-// ═══ TREATMENTS ═══
-async function loadTreatments() {
-  const tbl = document.getElementById('treatmentsTbl');
-  // Populate disease select
-  const sel = document.getElementById('tx_disease');
-  sel.innerHTML = '<option value="">Select disease...</option>' +
-    allDiseases.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
-  try {
-    const data = await sb('disease_treatments', '?order=disease_id.asc,drug_order.asc&select=*,diseases(name),drugs(generic_name)');
-    if (!Array.isArray(data) || data.length === 0) {
-      tbl.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">No treatments yet</div></div></td></tr>';
-      return;
-    }
-    tbl.innerHTML = data.map(t => `
-      <tr>
-        <td class="td-name">${esc(t.diseases?.name||'—')}</td>
-        <td>${esc(t.drugs?.generic_name||'—')}</td>
-        <td><span class="badge badge-${t.population==='child'?'blue':t.population==='pregnancy'?'red':'gray'}">${t.population}</span></td>
-        <td><span class="badge badge-${t.line==='first'?'teal':'gold'}">${t.line}</span></td>
-        <td class="td-mono">${esc(t.dose||'—')}</td>
-        <td class="td-mono">${esc(t.frequency||'—')}</td>
-        <td class="td-mono">${esc(t.duration||'—')}</td>
-        <td><button class="btn btn-red btn-sm btn-icon" onclick="delTreatment('${t.id}')">🗑️</button></td>
-      </tr>`).join('');
-  } catch(e) { tbl.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--tx3);padding:20px">Error loading treatments</td></tr>'; }
-}
-
-function openTreatmentModal() {
-  ['tx_dose','tx_freq','tx_dur','tx_form','tx_special','tx_condition'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('tx_order').value = '1';
-  document.getElementById('tx_pop').value = 'adult';
-  document.getElementById('tx_line').value = 'first';
-  document.getElementById('tx_route').value = 'oral';
-  document.getElementById('tx_mandatory').checked = true;
-  document.getElementById('condField').style.display = 'none';
-  document.getElementById('treatmentModal').classList.add('show');
-}
-
-document.getElementById('tx_mandatory').addEventListener('change', function() {
-  document.getElementById('condField').style.display = this.checked ? 'none' : 'block';
-});
-
-async function saveTreatment() {
-  const diseaseId = document.getElementById('tx_disease').value;
-  const drugId    = document.getElementById('tx_drug').value;
-  const dose      = document.getElementById('tx_dose').value.trim();
-  const freq      = document.getElementById('tx_freq').value.trim();
-  const dur       = document.getElementById('tx_dur').value.trim();
-  if (!diseaseId || !drugId || !dose || !freq || !dur) { toast('⚠️ Fill all required fields'); return; }
-
-  const body = {
-    disease_id: diseaseId,
-    drug_id: drugId,
-    population: document.getElementById('tx_pop').value,
-    line: document.getElementById('tx_line').value,
-    drug_order: parseInt(document.getElementById('tx_order').value) || 1,
-    is_mandatory: document.getElementById('tx_mandatory').checked,
-    condition_for_use: document.getElementById('tx_condition').value.trim() || null,
-    dose, frequency: freq, duration: dur,
-    route: document.getElementById('tx_route').value,
-    formulation_to_use: document.getElementById('tx_form').value.trim() || null,
-    special_instructions: document.getElementById('tx_special').value.trim() || null
-  };
-
-  const btn = document.getElementById('txSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving...';
-  try {
-    await sb('disease_treatments', '', 'POST', body);
-    toast('✅ Treatment protocol added!');
-    closeModal('treatmentModal');
-    loadTreatments();
-  } catch(e) { toast('❌ Error saving'); }
-  btn.disabled = false; btn.textContent = '💾 Save Treatment';
-}
-
-async function delTreatment(id) {
-  if (!confirm('Delete this treatment protocol?')) return;
-  await sb('disease_treatments', '?id=eq.' + id, 'DELETE');
-  toast('🗑️ Deleted');
-  loadTreatments();
-}
-
-// ═══ DOCTORS ═══
+// ── DOCTORS ──
 async function loadDoctors() {
-  const list = document.getElementById('doctorsList');
+  var el = document.getElementById('doctorsList');
   try {
-    const data = await sb('doctor_profiles', '?order=created_at.desc');
-    if (!Array.isArray(data) || data.length === 0) {
-      list.innerHTML = '<div class="empty"><div class="empty-ico">👨‍⚕️</div><div class="empty-txt">No doctors registered yet</div></div>';
-      return;
-    }
-    list.innerHTML = data.map(d => `
-      <div class="doc-card">
-        <div class="doc-avatar">👨‍⚕️</div>
-        <div class="doc-info">
-          <div class="doc-name">${esc(d.full_name||'Unknown')}</div>
-          <div class="doc-meta">${esc(d.qualification||'MBBS')} · ${esc(d.city||'—')} · ${esc(d.email||'—')}</div>
-          <div class="doc-meta" style="margin-top:3px">
-            ${d.pmdc_number ? '🏥 PMDC: '+esc(d.pmdc_number)+' · ' : ''}
-            Joined: ${new Date(d.created_at).toLocaleDateString('en-PK')}
-          </div>
-        </div>
-        <div class="doc-actions">
-          ${d.is_admin ? '<span class="badge badge-gold">Admin</span>' : ''}
-          <button class="btn btn-ghost btn-sm" onclick="toggleAdmin('${d.id}',${!d.is_admin})">${d.is_admin?'Remove Admin':'Make Admin'}</button>
-        </div>
-      </div>`).join('');
-  } catch(e) {
-    list.innerHTML = '<div class="empty"><div class="empty-txt">Could not load doctors — check admin permissions</div></div>';
-  }
+    var data = await sb('doctor_profiles','?order=created_at.desc');
+    if (!Array.isArray(data)||data.length===0){el.innerHTML='<div class="empty">No doctors yet</div>';return;}
+    el.innerHTML = data.map(function(d) {
+      return '<div class="doc-card"><div class="doc-av">👨‍⚕️</div><div class="doc-info"><div class="doc-name">'+esc(d.full_name||'Unknown')+'</div><div class="doc-meta">'+esc(d.email||'—')+' · '+esc(d.city||'—')+'</div><div class="doc-meta" style="margin-top:2px">'+(d.is_premium?'<span class="badge badge-gold">👑 Premium</span>':'<span class="badge badge-gray">Free</span>')+' '+(d.is_admin?'<span class="badge badge-teal">Admin</span>':'')+'</div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn btn-ghost btn-sm" onclick="toggleAdmin(''+d.id+'','+(!d.is_admin)+')">'+(d.is_admin?'Remove Admin':'Make Admin')+'</button>'+(d.is_premium?'<button class="btn btn-red btn-sm" onclick="revokePremium(''+d.id+'')">Revoke</button>':'<button class="btn btn-teal btn-sm" onclick="grantPremiumById(''+d.id+'')">Grant 👑</button>')+'</div></div>';
+    }).join('');
+  } catch(e) { el.innerHTML = '<div class="empty">Error loading</div>'; }
 }
 
 async function toggleAdmin(id, makeAdmin) {
-  await sb('doctor_profiles', '?id=eq.' + id, 'PATCH', { is_admin: makeAdmin });
-  toast(makeAdmin ? '✅ Admin granted' : '✅ Admin removed');
+  await sb('doctor_profiles','?id=eq.'+id,'PATCH',{is_admin:makeAdmin});
+  toast(makeAdmin?'✅ Admin granted':'✅ Admin removed');
   loadDoctors();
 }
 
-// ═══ ALL PRESCRIPTIONS ═══
-async function loadAllRx() {
-  const tbl = document.getElementById('allRxTbl');
-  try {
-    const data = await sb('prescription_logs', '?order=created_at.desc&limit=50&select=*,doctor_profiles(full_name)');
-    if (!Array.isArray(data) || data.length === 0) {
-      tbl.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-ico">📝</div><div class="empty-txt">No prescriptions yet</div></div></td></tr>';
-      return;
-    }
-    tbl.innerHTML = data.map(r => `
-      <tr>
-        <td class="td-name">${esc(r.doctor_profiles?.full_name||'Unknown')}</td>
-        <td>${esc(r.patient_name||'—')}</td>
-        <td>${esc(r.disease_name||'—')}</td>
-        <td><span class="badge ${r.source==='database'?'badge-teal':'badge-gold'}">${r.source||'ai'}</span></td>
-        <td class="td-mono">${new Date(r.created_at).toLocaleDateString('en-PK')}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="viewRx(${r.id})">View</button></td>
-      </tr>`).join('');
-  } catch(e) {
-    tbl.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:20px">Could not load — admin access required</td></tr>';
-  }
-}
-
-// ═══ MODALS ═══
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-document.querySelectorAll('.modal-bg').forEach(m => {
-  m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('show'); });
-});
-
-// ═══ HELPERS ═══
-function esc(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ═══ SUBSCRIPTION MANAGEMENT ═══
-async function loadSubscriptions() {
-  const tbl = document.getElementById('subRequestsTbl');
-  if (!tbl) return;
-  try {
-    const data = await sb('subscription_requests', '?order=requested_at.desc&status=eq.pending');
-    const cnt = document.getElementById('pendingCount');
-    if (cnt) cnt.textContent = Array.isArray(data) ? data.length : '0';
-    if (!Array.isArray(data) || data.length === 0) {
-      tbl.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-ico">💳</div><div class="empty-txt">No pending requests</div></div></td></tr>';
-      return;
-    }
-    tbl.innerHTML = data.map(function(r) { return '<tr><td class="td-name">'+esc(r.doctor_name||'Unknown')+'</td><td class="td-mono" style="font-size:.68rem">'+esc(r.doctor_email||'—')+'</td><td><a href="https://wa.me/'+((r.whatsapp_number||'').replace(/[^0-9]/g,''))+'" target="_blank" style="color:var(--teal)">'+esc(r.whatsapp_number||'—')+'</a></td><td class="td-mono" style="font-size:.65rem">'+new Date(r.requested_at).toLocaleDateString('en-PK')+'</td><td><span class="badge badge-gold">Pending</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-teal btn-sm" onclick="approveSub(''+r.id+'',''+r.doctor_id+'')">✅ Approve</button><button class="btn btn-red btn-sm" onclick="rejectSub(''+r.id+'')">❌ Reject</button></div></td></tr>'; }).join('');
-  } catch(e) { tbl.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:20px">Run subscription schema SQL first</td></tr>'; }
-}
-
-async function approveSub(reqId, doctorId) {
-  if (!confirm('Approve? This gives 1 year premium access.')) return;
-  var now = new Date();
-  var expires = new Date(now); expires.setFullYear(expires.getFullYear()+1);
-  try {
-    await sb('doctor_profiles','?id=eq.'+doctorId,'PATCH',{is_premium:true,premium_since:now.toISOString(),premium_expires:expires.toISOString()});
-    await sb('subscription_requests','?id=eq.'+reqId,'PATCH',{status:'approved',reviewed_at:now.toISOString()});
-    toast('✅ Premium activated until '+expires.toLocaleDateString('en-PK'));
-    loadSubscriptions(); loadPremiumDoctors();
-  } catch(e) { toast('❌ Error: '+e.message); }
-}
-
-async function rejectSub(reqId) {
-  if (!confirm('Reject this request?')) return;
-  await sb('subscription_requests','?id=eq.'+reqId,'PATCH',{status:'rejected',reviewed_at:new Date().toISOString()});
-  toast('Request rejected'); loadSubscriptions();
-}
-
-async function loadPremiumDoctors() {
-  var tbl = document.getElementById('premiumDoctorsTbl');
-  if (!tbl) return;
-  try {
-    var data = await sb('doctor_profiles','?is_premium=eq.true&order=premium_since.desc');
-    if (!Array.isArray(data)||data.length===0){tbl.innerHTML='<tr><td colspan="6"><div class="empty"><div class="empty-ico">👑</div><div class="empty-txt">No premium members yet</div></div></td></tr>';return;}
-    tbl.innerHTML = data.map(function(d){var exp=d.premium_expires?new Date(d.premium_expires):null;var expired=exp&&exp<new Date();return '<tr><td class="td-name">'+esc(d.full_name||'Unknown')+'</td><td class="td-mono" style="font-size:.68rem">'+esc(d.email||'—')+'</td><td>'+esc(d.city||'—')+'</td><td class="td-mono" style="font-size:.65rem">'+(d.premium_since?new Date(d.premium_since).toLocaleDateString('en-PK'):'—')+'</td><td class="td-mono" style="font-size:.65rem;color:'+(expired?'var(--red)':'var(--teal)')+'">'+(exp?exp.toLocaleDateString('en-PK'):'—')+'</td><td><button class="btn btn-red btn-sm" onclick="revokePremium(''+d.id+'')">Revoke</button></td></tr>';}).join('');
-  } catch(e) { tbl.innerHTML = '<tr><td colspan="6" style="color:var(--tx3);text-align:center;padding:20px">Error loading</td></tr>'; }
+async function grantPremiumById(id) {
+  var now = new Date(); var exp = new Date(now); exp.setFullYear(exp.getFullYear()+1);
+  await sb('doctor_profiles','?id=eq.'+id,'PATCH',{is_premium:true,premium_since:now.toISOString(),premium_expires:exp.toISOString()});
+  toast('✅ Premium granted for 1 year!'); loadDoctors(); loadDashboard();
 }
 
 async function revokePremium(id) {
   if (!confirm('Revoke premium?')) return;
   await sb('doctor_profiles','?id=eq.'+id,'PATCH',{is_premium:false});
-  toast('Premium revoked'); loadPremiumDoctors();
+  toast('Premium revoked'); loadDoctors();
 }
 
+// ── SUBSCRIPTIONS ──
 async function loadPendingCount() {
-  try { var data=await sb('subscription_requests','?status=eq.pending'); var cnt=document.getElementById('pendingCount'); if(cnt&&Array.isArray(data)) cnt.textContent=data.length; } catch(e){}
+  try {
+    var data = await sb('subscription_requests','?status=eq.pending');
+    var n = Array.isArray(data) ? data.length : 0;
+    document.getElementById('pendingBadge').textContent = n;
+    document.getElementById('pendingBadge').style.display = n > 0 ? 'inline' : 'none';
+  } catch(e) {}
 }
 
+async function loadSubscriptions() {
+  var el = document.getElementById('subsList');
+  try {
+    var data = await sb('subscription_requests','?status=eq.pending&order=requested_at.desc');
+    if (!Array.isArray(data)||data.length===0){el.innerHTML='<div class="empty">No pending requests</div>';return;}
+    el.innerHTML = data.map(function(r) {
+      return '<div class="doc-card"><div class="doc-av">💳</div><div class="doc-info"><div class="doc-name">'+esc(r.doctor_name||'Unknown')+'</div><div class="doc-meta">'+esc(r.doctor_email||'—')+'</div><div class="doc-meta"><a href="https://wa.me/'+((r.whatsapp_number||'').replace(/\D/g,''))+'" target="_blank" style="color:var(--teal)">WhatsApp: '+esc(r.whatsapp_number||'—')+'</a></div></div><div style="display:flex;flex-direction:column;gap:4px"><button class="btn btn-teal btn-sm" onclick="approveSub(''+r.id+'',''+r.doctor_id+'')">✅ Approve</button><button class="btn btn-red btn-sm" onclick="rejectSub(''+r.id+'')">❌ Reject</button></div></div>';
+    }).join('');
+  } catch(e) { el.innerHTML = '<div class="empty">Error — run subscription schema SQL first</div>'; }
+  loadPremiumDoctors();
+}
+
+async function approveSub(reqId, doctorId) {
+  if (!confirm('Approve? Gives 1 year premium.')) return;
+  var now = new Date(); var exp = new Date(now); exp.setFullYear(exp.getFullYear()+1);
+  await sb('doctor_profiles','?id=eq.'+doctorId,'PATCH',{is_premium:true,premium_since:now.toISOString(),premium_expires:exp.toISOString()});
+  try { await sb('subscription_requests','?id=eq.'+reqId,'PATCH',{status:'approved',reviewed_at:now.toISOString()}); } catch(e) {}
+  toast('✅ Premium activated!'); loadSubscriptions(); loadPendingCount();
+}
+
+async function rejectSub(reqId) {
+  if (!confirm('Reject request?')) return;
+  try { await sb('subscription_requests','?id=eq.'+reqId,'PATCH',{status:'rejected',reviewed_at:new Date().toISOString()}); } catch(e) {}
+  toast('Rejected'); loadSubscriptions();
+}
+
+async function loadPremiumDoctors() {
+  var el = document.getElementById('premiumList');
+  try {
+    var data = await sb('doctor_profiles','?is_premium=eq.true&order=premium_since.desc');
+    if (!Array.isArray(data)||data.length===0){el.innerHTML='<div class="empty">No premium members yet</div>';return;}
+    el.innerHTML = data.map(function(d) {
+      var exp = d.premium_expires ? new Date(d.premium_expires) : null;
+      var expired = exp && exp < new Date();
+      return '<div class="doc-card"><div class="doc-av">👑</div><div class="doc-info"><div class="doc-name">'+esc(d.full_name||'Unknown')+'</div><div class="doc-meta">'+esc(d.email||'—')+'</div><div class="doc-meta" style="color:'+(expired?'var(--red)':'var(--teal)')+'">Expires: '+(exp?exp.toLocaleDateString('en-PK'):'—')+'</div></div><button class="btn btn-red btn-sm" onclick="revokePremium(''+d.id+'')">Revoke</button></div>';
+    }).join('');
+  } catch(e) {}
+}
+
+async function grantPremium() {
+  var email = document.getElementById('grantEmail').value.trim();
+  if (!email) { toast('⚠️ Enter doctor email'); return; }
+  var now = new Date(); var exp = new Date(now); exp.setFullYear(exp.getFullYear()+1);
+  var data = await sb('doctor_profiles','?email=eq.'+encodeURIComponent(email));
+  if (!Array.isArray(data)||data.length===0){toast('❌ Doctor not found — they must register first');return;}
+  await sb('doctor_profiles','?email=eq.'+encodeURIComponent(email),'PATCH',{is_premium:true,premium_since:now.toISOString(),premium_expires:exp.toISOString()});
+  toast('✅ Premium granted to '+email+'!');
+  document.getElementById('grantEmail').value='';
+  loadDashboard(); loadPremiumDoctors();
+}
 
 function doLogout() {
   localStorage.removeItem('sb_session');
