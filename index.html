@@ -2744,6 +2744,47 @@ function autoChildMode(){
 
 // ═══ DARK MODE ═══
 function doLogout(){
+  if(!confirm('Logout from RxEasy?')) return;
+  localStorage.removeItem('sb_session');
+  localStorage.removeItem('rx_qc');
+  window.location.href='login.html';
+}
+
+function uploadAvatar(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var avatar = document.getElementById('docAvatar');
+    if (avatar) {
+      avatar.style.backgroundImage = 'url('+e.target.result+')';
+      avatar.style.backgroundSize = 'cover';
+      avatar.style.backgroundPosition = 'center';
+      avatar.textContent = '';
+    }
+    localStorage.setItem('rx_avatar', e.target.result);
+    toast('✅ Profile photo updated!');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Load saved avatar
+(function() {
+  var saved = localStorage.getItem('rx_avatar');
+  if (saved) {
+    document.addEventListener('DOMContentLoaded', function() {
+      var avatar = document.getElementById('docAvatar');
+      if (avatar) {
+        avatar.style.backgroundImage = 'url('+saved+')';
+        avatar.style.backgroundSize = 'cover';
+        avatar.style.backgroundPosition = 'center';
+        avatar.textContent = '';
+      }
+    });
+  }
+})();
+
+function doLogout_old(){
   if(confirm('Logout from RxEasy?')){
     localStorage.removeItem('sb_session');
     window.location.href='login.html';
@@ -3240,29 +3281,63 @@ async function incrementQuery() {
 function updateSubUI() {
   var qb = document.getElementById('queryCounterBadge');
   var pb = document.getElementById('premiumBadge');
-  if (!qb || !pb) return;
+  var premBtn = document.getElementById('getPremiumBtn');
+  var adminBtn = document.getElementById('adminPanelSbBtn');
+  var adminBadge = document.getElementById('adminBadgeSb');
+  var docStatus = document.getElementById('docStatus');
+  var docName = document.getElementById('docName');
+  var adminPanelBtn = document.getElementById('adminPanelBtn');
+
+  // Update doctor name
+  if (docName && _profile) {
+    docName.textContent = _profile.full_name || _profile.email || 'Doctor';
+  }
+
   if (isPremium()) {
-    qb.classList.remove('show');
-    pb.classList.add('show');
+    // Premium user
+    if (qb) { qb.style.display='none'; }
+    if (pb) { pb.style.display='flex'; }
+    if (premBtn) premBtn.style.display = 'none';
+    if (docStatus) docStatus.textContent = '👑 Premium Member';
+    if (docStatus) docStatus.style.color = '#c9a84c';
   } else {
+    // Free user
     var left = Math.max(0, FREE_LIMIT - getQueryCount());
-    qb.textContent = '⚡ ' + left + ' free ' + (left===1?'query':'queries') + ' left';
-    qb.classList.add('show');
-    qb.classList.toggle('warn', left===0);
-    pb.classList.remove('show');
+    if (qb) {
+      qb.textContent = '⚡ ' + left + ' free ' + (left===1?'query':'queries') + ' left';
+      qb.style.display = 'flex';
+      qb.style.cssText += left===0 ? ';color:#e74c3c' : '';
+    }
+    if (pb) pb.style.display = 'none';
+    if (premBtn) premBtn.style.display = 'flex';
+    if (docStatus) docStatus.textContent = '⚡ Free — ' + left + ' queries left';
+  }
+
+  // Admin controls
+  if (_profile && _profile.is_admin) {
+    if (adminBtn) adminBtn.style.display = 'block';
+    if (adminBadge) adminBadge.style.display = 'block';
+    if (adminPanelBtn) adminPanelBtn.style.display = 'block';
   }
 }
 
 function showPaywall() {
   var el = document.getElementById('pwQueryBadge');
-  if (el) el.textContent = '⚡ '+getQueryCount()+'/'+FREE_LIMIT+' free queries used';
+  var used = getQueryCount();
+  if (el) el.textContent = used + '/' + FREE_LIMIT + ' free queries used';
   var ov = document.getElementById('paywallOverlay');
-  if (ov) ov.classList.add('show');
+  if (ov) {
+    ov.style.display = 'flex';
+    ov.classList.add('show');
+  }
 }
 
 function closePaywall() {
   var ov = document.getElementById('paywallOverlay');
-  if (ov) ov.classList.remove('show');
+  if (ov) {
+    ov.classList.remove('show');
+    ov.style.display = 'none';
+  }
 }
 
 function openWhatsApp() {
@@ -6407,11 +6482,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   </div><!-- /sb-body -->
 
-  <!-- Sidebar Footer -->
-  <div class="sb-footer">
-    <div class="sb-footer-brand">Rx<span>Easy</span> <span style="font-size:.55rem;color:rgba(201,168,76,.5);font-family:'Plus Jakarta Sans',sans-serif;font-weight:600">v4.0</span></div>
-    <div class="sb-footer-powered">Powered by <strong>Dr. Usama Jamal</strong> · MBBS/MD</div>
-    <div class="sb-footer-copy">© 2025 All Rights Reserved · RxEasy AI Platform</div>
+  <!-- Sidebar Footer — Doctor Profile -->
+  <div class="sb-footer" style="padding:12px 14px;border-top:1px solid rgba(255,255,255,.07)">
+
+    <!-- Doctor Profile Card -->
+    <div id="doctorProfileCard" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div id="docAvatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(20,184,138,.3),rgba(42,122,191,.2));border:1.5px solid rgba(20,184,138,.3);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;cursor:pointer" onclick="document.getElementById('avatarInput').click()">👨‍⚕️</div>
+        <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+        <div style="flex:1;min-width:0">
+          <div id="docName" style="font-size:.75rem;font-weight:700;color:#e8f0f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Loading...</div>
+          <div id="docStatus" style="font-size:.58rem;color:rgba(232,240,248,.4);margin-top:1px">Free Account</div>
+        </div>
+        <div id="adminBadgeSb" style="display:none;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);border-radius:6px;padding:1px 5px;font-size:.52rem;color:#c9a84c;font-weight:700">ADMIN</div>
+      </div>
+    </div>
+
+    <!-- Get Premium Button (hidden for premium users) -->
+    <button id="getPremiumBtn" onclick="showPaywall()" style="width:100%;background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.08));border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:9px;font-size:.72rem;font-weight:700;color:#c9a84c;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:7px;display:flex;align-items:center;justify-content:center;gap:5px">
+      👑 Get Full Access — Rs.500/year
+    </button>
+
+    <!-- Admin Panel Button (hidden for non-admins) -->
+    <button id="adminPanelSbBtn" onclick="window.open('admin.html','_blank')" style="display:none;width:100%;background:rgba(42,122,191,.12);border:1px solid rgba(42,122,191,.25);border-radius:10px;padding:8px;font-size:.7rem;font-weight:700;color:#2a7abf;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:7px">
+      ⚡ Admin Panel
+    </button>
+
+    <!-- Logout -->
+    <button onclick="doLogout()" style="width:100%;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.15);border-radius:10px;padding:8px;font-size:.7rem;font-weight:600;color:rgba(192,57,43,.8);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px">
+      🚪 Logout
+    </button>
   </div>
 </div>
 
@@ -7457,31 +7557,68 @@ Try it: rxeasy.dr-usama.com</textarea>
   margin-top: auto;
 ">
   <div style="font-family:'Playfair Display',serif; font-size:.78rem; color:rgba(255,255,255,.75); font-weight:700; letter-spacing:.3px; margin-bottom:3px;">
-    Rx<span style="color:#14b88a">Easy</span> <span style="color:rgba(201,168,76,.7); font-size:.6rem;">v4.0</span>
+    Rx<span style="color:#14b88a">Easy</span>
   </div>
-  <div style="font-size:.58rem; color:rgba(255,255,255,.35); letter-spacing:.3px; margin-bottom:4px; font-family:'Plus Jakarta Sans',sans-serif;">
-    Powered by <strong style="color:rgba(255,255,255,.55);">Dr. Usama Jamal</strong> &nbsp;·&nbsp; MBBS/MD, Adam University, Kyrgyzstan
+  <div style="font-size:.58rem; color:rgba(255,255,255,.35); letter-spacing:.3px; font-family:'Plus Jakarta Sans',sans-serif;">
+    by Dr. Usama Jamal · MBBS · GP Pakistan
   </div>
-  <div style="font-size:.53rem; color:rgba(255,255,255,.22); letter-spacing:.5px; font-family:'JetBrains Mono',mono
-<!-- PAYWALL -->
-<div id="paywallOverlay" style="position:fixed;inset:0;background:rgba(4,14,28,.93);backdrop-filter:blur(8px);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px">
-  <div style="background:linear-gradient(160deg,#0a1628,#0d1e35);border:1px solid rgba(201,168,76,.3);border-radius:22px;padding:28px 20px;max-width:350px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7)">
-    <div style="font-size:2.6rem;margin-bottom:6px">👑</div>
-    <div style="font-family:Playfair Display,serif;font-size:1.35rem;font-weight:800;color:#fff;margin-bottom:5px">Unlock Full <span style="color:#14b88a">Access</span></div>
-    <div id="pwQueryBadge" style="display:inline-block;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:3px 12px;font-size:.62rem;color:#c9a84c;font-weight:600;margin-bottom:11px">3/3 free queries used</div>
-    <div style="font-size:.74rem;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:16px">You have used your 3 free queries. Upgrade to RxEasy Premium for unlimited prescriptions.</div>
-    <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:11px;padding:13px;margin-bottom:16px">
-      <div style="font-size:1.9rem;font-weight:800;color:#c9a84c;font-family:Playfair Display,serif">Rs. 500</div>
-      <div style="font-size:.6rem;color:rgba(255,255,255,.4);margin-top:2px">PER YEAR - UNLIMITED ACCESS</div>
+<!-- FLOATING GET FULL ACCESS BUTTON -->
+<div id="getAccessBtn" onclick="showPaywall()" style="display:none;position:fixed;bottom:80px;right:14px;z-index:800;background:linear-gradient(135deg,#c9a84c,#e8c96a);color:#0a0800;border:none;border-radius:50px;padding:9px 16px;font-size:.72rem;font-weight:800;cursor:pointer;box-shadow:0 6px 24px rgba(201,168,76,.4);font-family:Plus Jakarta Sans,sans-serif;align-items:center;gap:5px;animation:pulseGold 2s infinite">
+  👑 Get Full Access
+</div>
+<style>
+@keyframes pulseGold{0%,100%{box-shadow:0 6px 24px rgba(201,168,76,.4)}50%{box-shadow:0 6px 32px rgba(201,168,76,.7)}}
+</style>
+
+<!-- PREMIUM POPUP -->
+<div id="paywallOverlay" onclick="if(event.target===this)closePaywall()" style="position:fixed;inset:0;background:rgba(4,14,28,.88);backdrop-filter:blur(12px);z-index:9000;display:none;align-items:flex-end;justify-content:center;padding:0">
+  <div style="background:linear-gradient(170deg,#0a1628 0%,#0d1e35 50%,#0f2a4a 100%);border:1px solid rgba(201,168,76,.25);border-radius:24px 24px 0 0;padding:8px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 -20px 60px rgba(0,0,0,.6);animation:slideUp2 .35s cubic-bezier(.34,1.1,.64,1)">
+    <style>@keyframes slideUp2{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}</style>
+    <!-- Handle bar -->
+    <div style="width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 20px"></div>
+    <!-- Content -->
+    <div style="padding:0 22px 32px;text-align:center">
+      <!-- Crown animation -->
+      <div style="font-size:3.2rem;margin-bottom:10px;filter:drop-shadow(0 4px 12px rgba(201,168,76,.4))">👑</div>
+      <div style="font-family:Playfair Display,serif;font-size:1.6rem;font-weight:800;color:#fff;margin-bottom:5px;line-height:1.2">Unlock Full <span style="color:#14b88a">Access</span></div>
+      <div id="pwQueryBadge" style="display:inline-flex;align-items:center;gap:5px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:4px 14px;font-size:.63rem;color:#c9a84c;font-weight:700;margin:10px 0 14px">⚡ 3/3 free queries used</div>
+      <div style="font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.75;margin-bottom:20px">You've used your 3 free queries.<br>Get <strong style="color:#fff">unlimited prescriptions</strong> + all features for just Rs.500/year.</div>
+
+      <!-- Features -->
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 16px;margin-bottom:18px;text-align:left">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> Unlimited Rx</div>
+          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> All tools</div>
+          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> Patient records</div>
+          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> Urdu support</div>
+          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> PDF export</div>
+          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> Priority updates</div>
+        </div>
+      </div>
+
+      <!-- Price -->
+      <div style="background:linear-gradient(135deg,rgba(20,184,138,.1),rgba(201,168,76,.08));border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:16px;margin-bottom:20px">
+        <div style="font-size:2.4rem;font-weight:800;color:#c9a84c;font-family:Playfair Display,serif;line-height:1">Rs. 500</div>
+        <div style="font-size:.62rem;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:.8px">PER YEAR · ONE TIME PAYMENT · FULL ACCESS</div>
+      </div>
+
+      <!-- Steps -->
+      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px 16px;margin-bottom:20px;text-align:left">
+        <div style="font-size:.63rem;color:#c9a84c;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">How to Subscribe</div>
+        <div style="font-size:.72rem;color:rgba(255,255,255,.7);line-height:2">
+          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:4px"><span style="background:rgba(20,184,138,.2);color:#14b88a;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;flex-shrink:0;margin-top:2px">1</span><span>Send <strong style="color:#14b88a">Rs.500</strong> via JazzCash/EasyPaisa to <strong style="color:#fff">0319-5681808</strong> (Usama Jamal/NayaPay)</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:4px"><span style="background:rgba(20,184,138,.2);color:#14b88a;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;flex-shrink:0;margin-top:2px">2</span><span>Take a screenshot of payment confirmation</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:4px"><span style="background:rgba(20,184,138,.2);color:#14b88a;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;flex-shrink:0;margin-top:2px">3</span><span>WhatsApp screenshot to <strong style="color:#fff">0319-5681808</strong> with your registered email</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="background:rgba(20,184,138,.2);color:#14b88a;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;flex-shrink:0;margin-top:2px">4</span><span>Premium activated within <strong style="color:#14b88a">24 hours</strong> ✅</span></div>
+        </div>
+      </div>
+
+      <!-- WhatsApp button -->
+      <button onclick="openWhatsApp()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(135deg,#25d366,#1da851);color:#fff;border:none;border-radius:14px;padding:15px;font-size:.9rem;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:Plus Jakarta Sans,sans-serif;box-shadow:0 6px 20px rgba(37,211,102,.3)">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        Send Payment Screenshot on WhatsApp
+      </button>
+      <button onclick="closePaywall()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);border-radius:12px;padding:12px;font-size:.75rem;cursor:pointer;font-family:Plus Jakarta Sans,sans-serif;transition:all .2s">Maybe Later — Continue Browsing</button>
     </div>
-    <div style="text-align:left;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;margin-bottom:15px;font-size:.69rem;color:rgba(255,255,255,.7);line-height:1.8">
-      <strong style="color:#c9a84c;display:block;margin-bottom:6px">How to Subscribe:</strong>
-      1. Send Rs.500 via JazzCash/EasyPaisa to <strong style="color:#fff">0319-5681808</strong> (Usama Jamal/NayaPay)<br>
-      2. Screenshot the payment<br>
-      3. WhatsApp to <strong style="color:#fff">0319-5681808</strong> with your email<br>
-      4. Premium activated within <strong style="color:#14b88a">24 hours</strong>
-    </div>
-    <button onclick="openWhatsApp()" style="width:100%;background:linear-gradient(135deg,#25d366,#1da851);color:#fff;border:none;border-radius:10px;padding:12px;font-size:.83rem;font-weight:700;cursor:pointer;margin-bottom:8px;font-family:Plus Jakarta Sans,sans-serif">📲 Send Payment on WhatsApp</button>
-    <button onclick="closePaywall()" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);border-radius:10px;padding:10px;font-size:.72rem;cursor:pointer;font-family:Plus Jakarta Sans,sans-serif">Maybe Later</button>
   </div>
 </div>
