@@ -552,9 +552,10 @@ async function doRegister() {
 
 // ── GOOGLE AUTH ──
 async function doGoogle() {
-  // Direct redirect — most reliable method
-  const redirectTo = encodeURIComponent('https://rxeasy.vercel.app/index.html');
+  // Direct redirect to Google via Supabase — uses callback.html to handle response
+  const redirectTo = encodeURIComponent('https://rxeasy.vercel.app/callback.html');
   window.location.href = SUPABASE_URL + '/auth/v1/authorize?provider=google&redirect_to=' + redirectTo;
+}
 }
 
 // ── PASSWORD RESET ──
