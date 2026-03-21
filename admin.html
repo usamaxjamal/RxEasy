@@ -599,8 +599,10 @@ window.addEventListener('load', async function() {
   // ── STEP 2: Verify is_admin from Supabase ──
   try {
     // Try with user token first, fallback to service key
-    var res = await fetch(SB_URL + '/rest/v1/doctor_profiles?id=eq.' + session.user.id + '&select=id,full_name,email,is_admin,is_premium', {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + session.access_token }
+    var userId = session.user && session.user.id ? session.user.id : null;
+    if (!userId) { window.location.href = 'login.html'; return; }
+    var res = await fetch(SB_URL + '/rest/v1/doctor_profiles?id=eq.' + userId + '&select=id,full_name,email,is_admin,is_premium', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
     });
     var data = await res.json();
 
