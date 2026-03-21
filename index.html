@@ -1929,6 +1929,10 @@ function installPWA() {
       </div>
     </div>
     <div id="liveClock" style="font-size:.5rem;color:rgba(255,255,255,.4);font-family:'JetBrains Mono',monospace;letter-spacing:.4px;margin-left:auto;padding-right:2px"></div>
+    <div style="display:flex;gap:4px;align-items:center;margin-left:6px">
+      <div id="premiumBadge" style="display:none;align-items:center;gap:3px;background:linear-gradient(135deg,rgba(201,168,76,.2),rgba(201,168,76,.1));border:1px solid rgba(201,168,76,.35);border-radius:20px;padding:3px 8px;font-size:.58rem;color:#c9a84c;font-weight:700;cursor:pointer">👑 Premium</div>
+      <div id="queryCounterBadge" onclick="showPaywall()" style="display:none;align-items:center;gap:3px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:3px 8px;font-size:.58rem;color:#c9a84c;font-weight:700;cursor:pointer">⚡ 3 free left</div>
+    </div>
   </div>
   <div class="flags">
     <div class="flg on" id="f-adult" onclick="setFlag('adult')">👤 Adult</div>
@@ -7433,3 +7437,25 @@ Try it: rxeasy.dr-usama.com</textarea>
     Powered by <strong style="color:rgba(255,255,255,.55);">Dr. Usama Jamal</strong> &nbsp;·&nbsp; MBBS/MD, Adam University, Kyrgyzstan
   </div>
   <div style="font-size:.53rem; color:rgba(255,255,255,.22); letter-spacing:.5px; font-family:'JetBrains Mono',mono
+<!-- PAYWALL -->
+<div id="paywallOverlay" style="position:fixed;inset:0;background:rgba(4,14,28,.93);backdrop-filter:blur(8px);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:linear-gradient(160deg,#0a1628,#0d1e35);border:1px solid rgba(201,168,76,.3);border-radius:22px;padding:28px 20px;max-width:350px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7)">
+    <div style="font-size:2.6rem;margin-bottom:6px">👑</div>
+    <div style="font-family:Playfair Display,serif;font-size:1.35rem;font-weight:800;color:#fff;margin-bottom:5px">Unlock Full <span style="color:#14b88a">Access</span></div>
+    <div id="pwQueryBadge" style="display:inline-block;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:3px 12px;font-size:.62rem;color:#c9a84c;font-weight:600;margin-bottom:11px">3/3 free queries used</div>
+    <div style="font-size:.74rem;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:16px">You have used your 3 free queries. Upgrade to RxEasy Premium for unlimited prescriptions.</div>
+    <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:11px;padding:13px;margin-bottom:16px">
+      <div style="font-size:1.9rem;font-weight:800;color:#c9a84c;font-family:Playfair Display,serif">Rs. 500</div>
+      <div style="font-size:.6rem;color:rgba(255,255,255,.4);margin-top:2px">PER YEAR - UNLIMITED ACCESS</div>
+    </div>
+    <div style="text-align:left;background:rgba(255,255,255,.04);border-radius:10px;padding:12px;margin-bottom:15px;font-size:.69rem;color:rgba(255,255,255,.7);line-height:1.8">
+      <strong style="color:#c9a84c;display:block;margin-bottom:6px">How to Subscribe:</strong>
+      1. Send Rs.500 via JazzCash/EasyPaisa to <strong style="color:#fff">0319-5681808</strong> (Usama Jamal/NayaPay)<br>
+      2. Screenshot the payment<br>
+      3. WhatsApp to <strong style="color:#fff">0319-5681808</strong> with your email<br>
+      4. Premium activated within <strong style="color:#14b88a">24 hours</strong>
+    </div>
+    <button onclick="openWhatsApp()" style="width:100%;background:linear-gradient(135deg,#25d366,#1da851);color:#fff;border:none;border-radius:10px;padding:12px;font-size:.83rem;font-weight:700;cursor:pointer;margin-bottom:8px;font-family:Plus Jakarta Sans,sans-serif">📲 Send Payment on WhatsApp</button>
+    <button onclick="closePaywall()" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);border-radius:10px;padding:10px;font-size:.72rem;cursor:pointer;font-family:Plus Jakarta Sans,sans-serif">Maybe Later</button>
+  </div>
+</div>
