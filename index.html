@@ -3155,6 +3155,100 @@ async function callAI(prompt, maxTokens) {
 function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return h;}
 
 // ═══ SEND MESSAGE / GENERATE RX ═══
+// ═══ SUBSCRIPTION ENGINE ═══
+var FREE_LIMIT = 3;
+var _profile = null;
+
+async function loadProfile() {
+  try {
+    var s = JSON.parse(localStorage.getItem('sb_session')||'null');
+    if (!s || !s.access_token) return;
+    var res = await fetch('https://epvfbxzuziihhcaaaizp.supabase.co/rest/v1/doctor_profiles?id=eq.'+s.user.id, {
+      headers: {'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw','Authorization':'Bearer '+s.access_token}
+    });
+    var data = await res.json();
+    _profile = data && data[0] ? data[0] : null;
+    updateSubUI();
+  } catch(e) { console.warn('Profile load:', e); }
+}
+
+function isPremium() {
+  if (!_profile) return false;
+  if (_profile.is_admin) return true;
+  if (!_profile.is_premium) return false;
+  if (_profile.premium_expires) return new Date(_profile.premium_expires) > new Date();
+  return true;
+}
+
+function getQueryCount() {
+  if (_profile && _profile.query_count) return _profile.query_count;
+  return parseInt(localStorage.getItem('rx_qc')||'0');
+}
+
+function canGenerateRx() {
+  if (isPremium()) return true;
+  return getQueryCount() < FREE_LIMIT;
+}
+
+async function incrementQuery() {
+  var n = getQueryCount() + 1;
+  localStorage.setItem('rx_qc', n);
+  if (_profile) {
+    _profile.query_count = n;
+    try {
+      var s = JSON.parse(localStorage.getItem('sb_session')||'null');
+      if (s) await fetch('https://epvfbxzuziihhcaaaizp.supabase.co/rest/v1/doctor_profiles?id=eq.'+s.user.id, {
+        method:'PATCH',
+        headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw','Authorization':'Bearer '+s.access_token,'Content-Type':'application/json'},
+        body:JSON.stringify({query_count:n})
+      });
+    } catch(e) {}
+  }
+  updateSubUI();
+}
+
+function updateSubUI() {
+  var qb = document.getElementById('queryCounterBadge');
+  var pb = document.getElementById('premiumBadge');
+  if (!qb || !pb) return;
+  if (isPremium()) {
+    qb.classList.remove('show');
+    pb.classList.add('show');
+  } else {
+    var left = Math.max(0, FREE_LIMIT - getQueryCount());
+    qb.textContent = '⚡ ' + left + ' free ' + (left===1?'query':'queries') + ' left';
+    qb.classList.add('show');
+    qb.classList.toggle('warn', left===0);
+    pb.classList.remove('show');
+  }
+}
+
+function showPaywall() {
+  var el = document.getElementById('pwQueryBadge');
+  if (el) el.textContent = '⚡ '+getQueryCount()+'/'+FREE_LIMIT+' free queries used';
+  var ov = document.getElementById('paywallOverlay');
+  if (ov) ov.classList.add('show');
+}
+
+function closePaywall() {
+  var ov = document.getElementById('paywallOverlay');
+  if (ov) ov.classList.remove('show');
+}
+
+function openWhatsApp() {
+  try {
+    var s = JSON.parse(localStorage.getItem('sb_session')||'null');
+    var email = s ? (s.user.email || 'my email') : 'my email';
+    var msg = encodeURIComponent('Hello Dr. Usama, I want to subscribe to RxEasy Premium. My registered email is: '+email+'. Payment screenshot attached.');
+    window.open('https://wa.me/923195681808?text='+msg,'_blank');
+  } catch(e) { window.open('https://wa.me/923195681808','_blank'); }
+}
+
+// Load profile when app starts
+document.addEventListener('DOMContentLoaded', function() {
+  loadProfile();
+});
+
 async function sendMsg(){
 
   const qi=document.getElementById('qi');
@@ -3316,7 +3410,7 @@ Query: ${q}`;
     // Step 2: If DB didn't find it, use AI with strict prompt (fallback)
     if (!finalTxt) {
       finalTxt = await callAI(prompt, 1800);
-      await incrementQueryCount();
+      await incrementQuery();
       if (supabaseConfigured()) toast('⚠️ AI-generated (add to DB for accuracy)');
     }
 

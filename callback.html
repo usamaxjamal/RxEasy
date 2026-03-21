@@ -7,128 +7,144 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#060d1a;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'DM Sans',sans-serif}
-.wrap{text-align:center;color:#e8f0f8}
-.spin{width:40px;height:40px;border:3px solid rgba(20,184,138,.2);border-top-color:#14b88a;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+.wrap{text-align:center;color:#e8f0f8;padding:20px}
+.spin{width:44px;height:44px;border:3px solid rgba(20,184,138,.2);border-top-color:#14b88a;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.txt{font-size:.9rem;color:rgba(232,240,248,.6)}
-.err{color:#ff6b6b;font-size:.82rem;margin-top:12px;display:none}
+.txt{font-size:.9rem;color:rgba(232,240,248,.7);margin-bottom:8px}
+.sub{font-size:.72rem;color:rgba(232,240,248,.35)}
+.err{color:#ff6b6b;font-size:.78rem;margin-top:14px;line-height:1.6;display:none}
+.back{display:none;margin-top:16px;background:#14b88a;color:#051a0a;border:none;border-radius:10px;padding:10px 24px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="spin"></div>
-  <div class="txt">Signing you in...</div>
+  <div class="spin" id="spinner"></div>
+  <div class="txt" id="msg">Signing you in...</div>
+  <div class="sub" id="sub">Please wait a moment</div>
   <div class="err" id="err"></div>
+  <button class="back" id="backBtn" onclick="window.location.href='login.html'">← Back to Login</button>
 </div>
-
 <script>
-const SB_URL = 'https://epvfbxzuziihhcaaaizp.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
+var SB  = 'https://epvfbxzuziihhcaaaizp.supabase.co';
+var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
 
-function showErr(msg) {
-  const e = document.getElementById('err');
-  e.textContent = msg;
-  e.style.display = 'block';
-  document.querySelector('.txt').textContent = 'Sign in failed';
-  setTimeout(() => window.location.href = 'login.html', 3000);
+function fail(msg) {
+  document.getElementById('spinner').style.display = 'none';
+  document.getElementById('msg').textContent = 'Sign in failed';
+  document.getElementById('sub').style.display = 'none';
+  document.getElementById('err').textContent = msg;
+  document.getElementById('err').style.display = 'block';
+  document.getElementById('backBtn').style.display = 'inline-block';
 }
 
-function saveAndRedirect(access_token, refresh_token, user_data) {
-  try {
-    const parts = access_token.split('.');
-    const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
-    const session = {
-      access_token,
-      refresh_token: refresh_token || '',
-      user: {
-        id: user_data?.id || payload.sub,
-        email: user_data?.email || payload.email,
-        user_metadata: {
-          full_name: user_data?.user_metadata?.full_name ||
-                     user_data?.user_metadata?.name ||
-                     payload.user_metadata?.full_name ||
-                     payload.email || ''
-        }
-      }
-    };
-    localStorage.setItem('sb_session', JSON.stringify(session));
-
-    // Create doctor profile if Google login (new user)
-    createProfileIfNeeded(session);
-
-    window.location.replace('index.html');
-  } catch(e) {
-    showErr('Could not save session: ' + e.message);
-  }
+function success(access_token, refresh_token, user) {
+  localStorage.setItem('sb_session', JSON.stringify({
+    access_token: access_token,
+    refresh_token: refresh_token || '',
+    user: user || {}
+  }));
+  document.getElementById('msg').textContent = 'Success! Loading RxEasy...';
+  window.location.replace('index.html');
 }
 
-async function createProfileIfNeeded(session) {
+async function createProfile(access_token, user) {
   try {
-    // Check if profile exists
-    const check = await fetch(SB_URL + '/rest/v1/doctor_profiles?id=eq.' + session.user.id, {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + session.access_token }
+    var check = await fetch(SB+'/rest/v1/doctor_profiles?id=eq.'+user.id, {
+      headers: {'apikey': KEY, 'Authorization': 'Bearer '+access_token}
     });
-    const existing = await check.json();
-    if (existing && existing.length > 0) return; // Already exists
-
-    // Create new profile for Google user
-    await fetch(SB_URL + '/rest/v1/doctor_profiles', {
+    var existing = await check.json();
+    if (existing && existing.length > 0) return;
+    await fetch(SB+'/rest/v1/doctor_profiles', {
       method: 'POST',
-      headers: {
-        'apikey': SB_KEY,
-        'Authorization': 'Bearer ' + session.access_token,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
+      headers: {'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+access_token,'Prefer':'return=minimal'},
       body: JSON.stringify({
-        id: session.user.id,
-        full_name: session.user.user_metadata.full_name || session.user.email,
-        email: session.user.email,
+        id: user.id,
+        full_name: user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name) ? (user.user_metadata.full_name || user.user_metadata.name) : user.email,
+        email: user.email,
         qualification: 'MBBS',
         is_approved: true,
         is_admin: false
       })
     });
-  } catch(e) { console.warn('Profile create error:', e); }
+  } catch(e) { console.warn('Profile create:', e); }
 }
 
 async function handleCallback() {
-  // Method 1: Token in URL hash
-  const hash = window.location.hash;
+  var fullUrl = window.location.href;
+  var hash = window.location.hash;
+  var search = window.location.search;
+
+  console.log('URL:', fullUrl);
+  console.log('Hash:', hash);
+  console.log('Search:', search);
+
+  // METHOD 1: access_token in hash
   if (hash && hash.includes('access_token')) {
-    const params = new URLSearchParams(hash.substring(1));
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-    if (access_token) {
-      saveAndRedirect(access_token, refresh_token, null);
+    var params = new URLSearchParams(hash.replace('#',''));
+    var at = params.get('access_token');
+    var rt = params.get('refresh_token');
+    if (at) {
+      document.getElementById('sub').textContent = 'Token found, loading...';
+      try {
+        var res = await fetch(SB+'/auth/v1/user', {
+          headers: {'apikey': KEY, 'Authorization': 'Bearer '+at}
+        });
+        var user = await res.json();
+        await createProfile(at, user);
+        success(at, rt, user);
+        return;
+      } catch(e) { console.error('User fetch error:', e); }
+    }
+  }
+
+  // METHOD 2: code in search params
+  var urlParams = new URLSearchParams(search);
+  var code = urlParams.get('code');
+  if (code) {
+    document.getElementById('sub').textContent = 'Exchanging auth code...';
+    try {
+      var res = await fetch(SB+'/auth/v1/token?grant_type=pkce', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','apikey': KEY},
+        body: JSON.stringify({auth_code: code})
+      });
+      var data = await res.json();
+      console.log('PKCE response:', data);
+      if (data.access_token) {
+        if (data.user) await createProfile(data.access_token, data.user);
+        success(data.access_token, data.refresh_token, data.user);
+        return;
+      }
+      fail('Code exchange failed: ' + (data.error_description || data.message || JSON.stringify(data)));
+      return;
+    } catch(e) {
+      fail('Network error during code exchange: ' + e.message);
       return;
     }
   }
 
-  // Method 2: Code in URL params (PKCE)
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get('code');
-  if (code) {
-    try {
-      const res = await fetch(SB_URL + '/auth/v1/token?grant_type=pkce', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
-        body: JSON.stringify({ auth_code: code })
-      });
-      const data = await res.json();
-      if (data.access_token) {
-        saveAndRedirect(data.access_token, data.refresh_token, data.user);
+  // METHOD 3: Check if token is in a different format in the URL
+  if (fullUrl.includes('access_token')) {
+    // Try to extract from full URL
+    var match = fullUrl.match(/access_token=([^&]+)/);
+    if (match) {
+      var at = decodeURIComponent(match[1]);
+      document.getElementById('sub').textContent = 'Token extracted, loading...';
+      try {
+        var res = await fetch(SB+'/auth/v1/user', {
+          headers: {'apikey': KEY, 'Authorization': 'Bearer '+at}
+        });
+        var user = await res.json();
+        var rtMatch = fullUrl.match(/refresh_token=([^&]+)/);
+        var rt = rtMatch ? decodeURIComponent(rtMatch[1]) : '';
+        await createProfile(at, user);
+        success(at, rt, user);
         return;
-      }
-      showErr(data.error_description || 'Code exchange failed');
-    } catch(e) {
-      showErr('Network error: ' + e.message);
+      } catch(e) { console.error(e); }
     }
-    return;
   }
 
-  // No token or code found
-  showErr('No authentication data found. Redirecting...');
+  fail('No authentication data found in the URL.\n\nURL received: ' + fullUrl.substring(0, 100));
 }
 
 handleCallback();
