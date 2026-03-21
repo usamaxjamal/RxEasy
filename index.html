@@ -3173,7 +3173,33 @@ async function loadProfile() {
     var data = await res.json();
     _profile = data && data[0] ? data[0] : null;
     updateSubUI();
+
+    // Show admin button if user is admin
+    if (_profile && _profile.is_admin) {
+      showAdminButton();
+    }
+
+    // Show doctor name in header
+    if (_profile && _profile.full_name) {
+      var dnm = document.getElementById('dnm');
+      if (dnm) dnm.textContent = 'Rx' + '<span style="color:#14b88a">Easy</span>';
+    }
   } catch(e) { console.warn('Profile load:', e); }
+}
+
+function showAdminButton() {
+  // Check if already added
+  if (document.getElementById('adminPanelBtn')) return;
+  // Add admin button to header
+  var clockDiv = document.getElementById('liveClock');
+  if (clockDiv && clockDiv.parentNode) {
+    var btn = document.createElement('button');
+    btn.id = 'adminPanelBtn';
+    btn.innerHTML = '⚡ Admin';
+    btn.onclick = function() { window.open('admin.html', '_blank'); };
+    btn.style.cssText = 'background:linear-gradient(135deg,rgba(201,168,76,.2),rgba(201,168,76,.1));border:1px solid rgba(201,168,76,.35);border-radius:20px;padding:3px 9px;font-size:.58rem;color:#c9a84c;font-weight:700;cursor:pointer;font-family:Plus Jakarta Sans,sans-serif;margin-left:4px';
+    clockDiv.parentNode.insertBefore(btn, clockDiv.nextSibling);
+  }
 }
 
 function isPremium() {
