@@ -613,14 +613,37 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--nv3);outline-of
 .flg.on.rd{background:rgba(192,57,43,.55);border-color:#ff6b6b}
 .flg.on.or{background:rgba(211,84,0,.5);border-color:#ffaa44}
 .flg.on.tl{background:rgba(20,184,138,.3);border-color:#14b88a}
-.ptbar{background:var(--sf);border-bottom:1px solid var(--bd);padding:6px 10px;display:flex;gap:5px;align-items:center}
-.ptbar input,.aw input{border:1px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:.72rem;font-family:"Plus Jakarta Sans",sans-serif;background:var(--bg);color:var(--tx);outline:none;transition:border-color .2s}
-.ptbar input{flex:1}.ptbar input:focus,.aw input:focus{border-color:var(--nv3)}
-.aw{display:flex;gap:4px}.aw input{width:53px;text-align:center}
-.cats{background:var(--sf);border-bottom:1px solid var(--bd);padding:6px 10px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+/* ptbar removed - phase 4 */
+/* ═══ PHASE 4 — QUICK CATEGORIES ═══ */
+.cats{
+  padding:8px 14px 9px;
+  overflow-x:auto;white-space:nowrap;
+  scrollbar-width:none;
+  background:rgba(4,8,15,.92);
+  border-bottom:1px solid rgba(255,255,255,.05);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
 .cats::-webkit-scrollbar{display:none}
-.cat{display:inline-flex;align-items:center;gap:3px;padding:4px 9px;border-radius:20px;font-size:.63rem;font-weight:500;background:var(--sf2);border:1.5px solid var(--bd);color:var(--tx2);cursor:pointer;margin-right:4px;white-space:nowrap;transition:all .18s}
-.cat:active{background:var(--nv);border-color:var(--nv);color:#fff}
+.cat{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 13px;border-radius:20px;
+  font-size:.62rem;font-weight:600;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.07);
+  color:rgba(232,237,245,.55);
+  cursor:pointer;margin-right:5px;
+  transition:all .18s;white-space:nowrap;
+  letter-spacing:.2px;
+  font-family:'DM Sans',sans-serif;
+  user-select:none;
+}
+.cat:active{
+  background:rgba(0,200,150,.12);
+  border-color:rgba(0,200,150,.25);
+  color:#00c896;
+  transform:scale(.93);
+}color:var(--nv);color:#fff}
 .chat{flex:1;overflow-y:auto;padding:10px 10px 5px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
 .wcard{background:linear-gradient(135deg,#0c2240,#1a4a7a);border-radius:var(--r);padding:15px 13px;color:#fff;text-align:center}
 .wrx{font-family:"Playfair Display",serif;font-size:2rem;opacity:.18;margin-bottom:4px}
@@ -2371,50 +2394,24 @@ function installPWA() {
     <div class="flg or" id="f-hepatic" onclick="setFlag('hepatic')">🫀 Hepatic</div>
   </div>
 </div>
-<!-- PATIENT BAR -->
-<div class="ptbar">
-  <input type="text" id="ptN" placeholder="Patient name (optional)" oninput="autoChildMode()"/>
-  <div class="aw">
-    <input type="number" id="ptA" placeholder="Age" min="0" max="120" oninput="autoChildMode()"/>
-    <input type="number" id="ptW" placeholder="kg" min="1" max="200"/>
-  </div>
+<!-- PATIENT BAR REMOVED - Hidden inputs kept for JS compatibility -->
+<div style="display:none">
+  <input type="text" id="ptN">
+  <input type="number" id="ptA">
+  <input type="number" id="ptW">
 </div>
 <!-- CATEGORIES -->
 <div class="cats">
-  <span class="cat" onclick="ask('UTI urinary tract infection')">💧 UTI</span>
-  <span class="cat" onclick="ask('GERD acidity heartburn')">🔥 GERD</span>
-  <span class="cat" onclick="ask('H.Pylori stomach infection')">🦠 H.Pylori</span>
-  <span class="cat" onclick="ask('Typhoid fever enteric fever')">🌡️ Typhoid</span>
-  <span class="cat" onclick="ask('Malaria falciparum fever')">🦟 Malaria</span>
-  <span class="cat" onclick="ask('Sore throat tonsillitis pharyngitis')">🔴 Throat</span>
-  <span class="cat" onclick="ask('Sinusitis sinus infection')">👃 Sinusitis</span>
   <span class="cat" onclick="ask('Fever dry cough URTI upper respiratory')">🤧 URTI</span>
-  <span class="cat" onclick="ask('Fever productive cough LRTI')">🫁 LRTI</span>
-  <span class="cat" onclick="ask('Asthma severe coughing wheeze')">💨 Asthma</span>
-  <span class="cat" onclick="ask('Diabetes mellitus type 2 DM')">🩸 Diabetes</span>
+  <span class="cat" onclick="ask('Typhoid fever enteric fever')">🌡️ Typhoid</span>
+  <span class="cat" onclick="ask('GERD acidity heartburn')">🔥 GERD</span>
   <span class="cat" onclick="ask('Hypertension high blood pressure')">❤️ HTN</span>
-  <span class="cat" onclick="ask('Myocardial infarction MI heart attack prophylaxis')">💔 MI</span>
-  <span class="cat" onclick="ask('IBS irritable bowel syndrome')">🫃 IBS</span>
-  <span class="cat" onclick="ask('Ulcerative colitis UC')">🔴 UC</span>
-  <span class="cat" onclick="ask('Constipation')">⚡ Constipation</span>
-  <span class="cat" onclick="ask('Iron deficiency anemia IDA')">🩸 Anemia IDA</span>
-  <span class="cat" onclick="ask('Megaloblastic anemia B12 folate')">🔬 Megaloblastic</span>
-  <span class="cat" onclick="ask('Hepatitis C HCV chronic')">🫀 HCV</span>
-  <span class="cat" onclick="ask('Hepatitis B HBV chronic')">🫀 HBV</span>
-  <span class="cat" onclick="ask('Decompensated chronic liver disease DCLD')">🫀 DCLD</span>
-  <span class="cat" onclick="ask('Liver abscess amoebic')">🫀 Liver Abscess</span>
-  <span class="cat" onclick="ask('Pulmonary tuberculosis TB')">🫁 TB</span>
-  <span class="cat" onclick="ask('Anxiety depression')">🧠 Psych</span>
-  <span class="cat" onclick="ask('Pylonephritis kidney infection')">🫘 Pylonephritis</span>
-  <span class="cat" onclick="ask('Renal stones nephrolithiasis urolithiasis')">🪨 Renal Stones</span>
-  <span class="cat" onclick="ask('Vaginal candidiasis yeast infection')">💊 Candidiasis</span>
-  <span class="cat" onclick="ask('Chlamydia infection STI')">🔬 Chlamydia</span>
-  <span class="cat" onclick="ask('Leukorrhea vaginal discharge')">💊 Leukorrhea</span>
-  <span class="cat" onclick="ask('Oral ulcer aphthous ulcer mouth sores')">🫦 Oral Ulcer</span>
-  <span class="cat" onclick="ask('Ear infection discharge otitis')">👂 Ear Infection</span>
+  <span class="cat" onclick="ask('Diabetes mellitus type 2 DM')">🩸 Diabetes</span>
+  <span class="cat" onclick="ask('UTI urinary tract infection')">💧 UTI</span>
+  <span class="cat" onclick="ask('Sore throat tonsillitis pharyngitis')">🔴 Throat</span>
   <span class="cat" onclick="ask('Diarrhea gastroenteritis loose stool')">💧 Diarrhea</span>
-  <span class="cat" onclick="ask('Vomiting nausea')">🤢 Vomiting</span>
-  <span class="cat" onclick="ask('Gastric ulcer peptic ulcer')">🔴 Gastric Ulcer</span>
+  <span class="cat" onclick="ask('Malaria falciparum fever')">🦟 Malaria</span>
+  <span class="cat" onclick="ask('Asthma severe coughing wheeze')">💨 Asthma</span>
 </div>
 <!-- CHAT -->
 <div class="chat" id="chat">
