@@ -544,9 +544,14 @@
 .skel-card{padding:12px;border-radius:var(--r);border:1px solid var(--bd)}
 
 /* ═══ MICRO-ANIMATIONS ═══ */
-.rxcard{animation:cardIn .4s cubic-bezier(.34,1.2,.64,1)}
-.msg{animation:msgIn .3s ease}
-@keyframes cardIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+/* ═══════════════════════════════════
+   PHASE 5 — WELCOME + PRESCRIPTION CARD
+═══════════════════════════════════ */
+
+/* ── Animations ── */
+.rxcard{animation:cardIn .45s cubic-bezier(.34,1.1,.64,1)}
+.msg{animation:msgIn .28s ease}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .ib{transition:all .2s cubic-bezier(.34,1.56,.64,1)}
 .ib:active{transform:scale(.82)!important}
@@ -555,6 +560,235 @@
 .sbtn{transition:all .2s cubic-bezier(.34,1.56,.64,1)}
 .sbtn:active{transform:scale(.85)!important}
 .rxbtn{transition:all .18s cubic-bezier(.34,1.4,.64,1)}
+
+/* ── WELCOME CARD ── */
+.wcard{
+  background:rgba(8,14,26,.7);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:20px;
+  padding:28px 22px 26px;
+  text-align:center;
+  margin:4px 2px;
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(10px);
+}
+.wc-glow{
+  position:absolute;
+  width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,200,150,.07) 0%,transparent 65%);
+  top:-80px;left:50%;transform:translateX(-50%);
+  pointer-events:none;
+}
+.wc-emblem{
+  position:relative;width:60px;height:60px;
+  margin:0 auto 16px;
+}
+.wc-emblem-inner{
+  width:60px;height:60px;border-radius:15px;
+  background:linear-gradient(145deg,rgba(6,14,32,.98),rgba(10,22,50,.95));
+  border:1px solid rgba(200,160,50,.28);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(0,200,150,.1),0 8px 24px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);
+  position:relative;z-index:1;
+}
+.wc-ring{
+  position:absolute;inset:-8px;border-radius:22px;
+  border:1px solid rgba(200,160,50,.1);
+  animation:wcRingBreath 4s ease-in-out infinite;
+}
+@keyframes wcRingBreath{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:.9;transform:scale(1.03)}}
+.wc-rx{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.4rem;font-weight:700;
+  color:#fff;line-height:1;letter-spacing:-1px;
+}
+.wc-rx span{color:#00c896}
+.wc-sep{width:22px;height:1px;background:linear-gradient(90deg,transparent,rgba(200,160,50,.7),transparent);margin-top:3px;}
+.wc-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.55rem;font-weight:600;
+  color:#fff;letter-spacing:-.3px;margin-bottom:4px;
+}
+.wc-name span{color:#00c896}
+.wc-tag{font-size:.58rem;color:rgba(232,237,245,.28);letter-spacing:2px;text-transform:uppercase;font-family:'DM Sans',sans-serif;font-weight:300;}
+.wc-divider{display:flex;align-items:center;gap:8px;margin:16px auto;width:160px;}
+.wc-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(200,160,50,.3));}
+.wc-line:last-child{background:linear-gradient(270deg,transparent,rgba(200,160,50,.3));}
+.wc-diamond{width:4px;height:4px;background:rgba(200,160,50,.5);transform:rotate(45deg);flex-shrink:0;}
+.wc-steps{text-align:left;display:flex;flex-direction:column;gap:10px;}
+.wc-step{display:flex;align-items:flex-start;gap:10px;}
+.wc-step-n{
+  width:20px;height:20px;border-radius:50%;flex-shrink:0;
+  background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.2);
+  color:#00c896;font-size:.58rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.wc-step-txt{font-size:.7rem;color:rgba(232,237,245,.45);line-height:1.6;}
+
+/* ═══ PREMIUM PRESCRIPTION CARD ═══ */
+.rxcard{
+  background:#080e1c;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.03),
+    0 20px 60px rgba(0,0,0,.6),
+    0 4px 16px rgba(0,0,0,.4);
+  animation:cardIn .45s cubic-bezier(.34,1.1,.64,1);
+}
+
+/* Letterhead */
+.rxlh{
+  background:
+    linear-gradient(135deg,#06101e 0%,#0a1828 50%,#071420 100%);
+  padding:14px 16px 12px;
+  border-bottom:1px solid rgba(200,160,50,.12);
+  position:relative;overflow:hidden;
+}
+/* Top accent line on letterhead */
+.rxlh::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,
+    transparent,
+    rgba(0,200,150,.5) 30%,
+    rgba(200,160,50,.7) 50%,
+    rgba(0,200,150,.5) 70%,
+    transparent
+  );
+}
+/* Watermark Rx symbol */
+.rxlh::after{
+  content:'℞';
+  position:absolute;right:-8px;top:-10px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:6rem;font-weight:300;
+  color:rgba(0,200,150,.04);
+  line-height:1;pointer-events:none;
+  user-select:none;
+}
+.rxlh-brand{display:flex;align-items:center;gap:9px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(200,160,50,.1);}
+.rxlh-logo-badge{
+  width:28px;height:28px;border-radius:7px;
+  background:rgba(0,200,150,.1);
+  border:1px solid rgba(200,160,50,.2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.rxlh-logo-text{font-family:'Cormorant Garamond',serif;font-size:.85rem;font-weight:700;color:rgba(255,255,255,.92);letter-spacing:-.2px;line-height:1.1;}
+.rxlh-logo-text span{color:#00c896;}
+.rxlh-logo-sub{font-size:.46rem;color:rgba(200,160,50,.55);letter-spacing:2px;text-transform:uppercase;font-weight:500;margin-top:1px;}
+.rxlh-mt{display:flex;justify-content:space-between;align-items:center;}
+.rxlh-pt{font-size:.68rem;color:rgba(255,255,255,.65);font-weight:500;}
+.rxlh-dt{font-size:.56rem;color:rgba(255,255,255,.28);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;}
+
+/* Rx body */
+.rxbody{padding:14px 16px;}
+
+/* Diagnosis line */
+.rxsym{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.05rem;font-weight:700;
+  color:rgba(255,255,255,.95);
+  margin-bottom:10px;
+  padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;gap:7px;
+}
+.rxsym::before{
+  content:'Dx';
+  font-family:'Cormorant Garamond',serif;
+  font-size:.6rem;font-weight:400;font-style:italic;
+  color:#00c896;
+  background:rgba(0,200,150,.1);
+  border:1px solid rgba(0,200,150,.2);
+  padding:1px 6px;border-radius:4px;
+  flex-shrink:0;letter-spacing:.3px;
+}
+
+/* ℞ Symbol */
+.rx-symbol{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.35rem;font-weight:300;font-style:italic;
+  color:rgba(0,200,150,.4);
+  margin-bottom:6px;
+}
+
+/* Medicine lines */
+.rxmeds{margin-bottom:6px;}
+.rxmed{
+  display:flex;gap:9px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.rxmed:last-child{border-bottom:none;padding-bottom:0;}
+.rxnum{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.58rem;color:#00c896;
+  font-weight:500;width:14px;flex-shrink:0;padding-top:2px;
+}
+.rxmn{font-size:.82rem;font-weight:600;color:rgba(255,255,255,.92);margin-bottom:2px;}
+.rxmb{font-size:.65rem;color:rgba(200,160,50,.65);font-style:italic;margin-bottom:2px;}
+.rxmd{font-size:.68rem;color:rgba(232,237,245,.45);font-family:'JetBrains Mono',monospace;letter-spacing:.2px;}
+
+/* Section boxes */
+.rxbx{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:8px;padding:9px 11px;
+  margin-top:8px;border-left:2px solid rgba(0,200,150,.4);
+}
+.rxbx.bx-inv{border-left-color:rgba(42,120,191,.5);}
+.rxbx.bx-wrn{border-left-color:rgba(200,120,50,.5);}
+.rxbx.bx-flg{border-left-color:rgba(220,80,80,.5);}
+.rxbx.bx-alt{border-left-color:rgba(130,80,200,.5);}
+.bxt{font-size:.58rem;font-weight:700;color:rgba(0,200,150,.8);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.rxbx.bx-inv .bxt{color:rgba(42,120,191,.8);}
+.rxbx.bx-wrn .bxt{color:rgba(200,120,50,.8);}
+.rxbx.bx-flg .bxt{color:rgba(220,80,80,.8);}
+.rxbx.bx-alt .bxt{color:rgba(130,80,200,.8);}
+.bxi{font-size:.7rem;color:rgba(232,237,245,.5);line-height:1.7;}
+
+/* Mode badges */
+.mbadge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.6rem;font-weight:700;margin-bottom:8px;}
+.mb-ch{background:rgba(42,120,191,.1);border:1px solid rgba(42,120,191,.2);color:rgba(100,160,220,.9);}
+.mb-pr{background:rgba(220,80,80,.1);border:1px solid rgba(220,80,80,.2);color:rgba(220,120,120,.9);}
+.mb-el{background:rgba(200,120,50,.1);border:1px solid rgba(200,120,50,.2);color:rgba(200,150,80,.9);}
+.mb-rn{background:rgba(200,120,50,.1);border:1px solid rgba(200,120,50,.2);color:rgba(200,150,80,.9);}
+.mb-hp{background:rgba(220,80,80,.1);border:1px solid rgba(220,80,80,.2);color:rgba(220,120,120,.9);}
+
+/* Urdu block */
+.bx-urdu{background:rgba(200,160,50,.06);border:1px solid rgba(200,160,50,.12);border-radius:8px;padding:10px 12px;margin-top:8px;direction:rtl;text-align:right;}
+.urdu-t{font-size:.55rem;font-weight:700;color:rgba(200,160,50,.7);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;direction:ltr;text-align:left;}
+.urdu-x{font-size:.75rem;color:rgba(232,237,245,.6);line-height:1.9;}
+
+/* DB / AI source badges */
+.src-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:.55rem;font-weight:700;margin-bottom:8px;letter-spacing:.3px;}
+.src-db{background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.2);color:#00c896;}
+.src-ai{background:rgba(200,160,50,.1);border:1px solid rgba(200,160,50,.2);color:#c8a032;}
+
+/* Action buttons */
+.rxacts{
+  display:flex;gap:0;
+  border-top:1px solid rgba(255,255,255,.06);
+  background:rgba(4,8,16,.5);
+}
+.rxbtn{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:3px;padding:10px 6px;
+  background:none;border:none;cursor:pointer;
+  transition:all .15s;
+  border-right:1px solid rgba(255,255,255,.05);
+  font-family:'DM Sans',sans-serif;
+}
+.rxbtn:last-child{border-right:none;}
+.rxbtn:active{background:rgba(255,255,255,.05);transform:scale(.94);}
+.bii{font-size:.9rem;}
+.bll{font-size:.5rem;font-weight:600;color:rgba(232,237,245,.35);letter-spacing:.3px;text-transform:uppercase;}
+.rxbtn.bwa .bll{color:rgba(37,211,102,.6);}
+.rxbtn.bcp .bll{color:rgba(0,200,150,.6);}
+.rxbtn.bsv .bll{color:rgba(200,160,50,.6);}
 
 /* ═══ CONFETTI CANVAS ═══ */
 #confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:8000;display:none}
@@ -2415,47 +2649,48 @@ function installPWA() {
 </div>
 <!-- CHAT -->
 <div class="chat" id="chat">
-  <div class="hero-card" id="wc">
-    <!-- Decorative background elements -->
-    <div class="hero-bg-ring hero-ring-1"></div>
-    <div class="hero-bg-ring hero-ring-2"></div>
-    <div class="hero-bg-ring hero-ring-3"></div>
-    <div class="hero-orb hero-orb-1"></div>
-    <div class="hero-orb hero-orb-2"></div>
+  <div class="wcard" id="wc">
 
-    <!-- Logo -->
-    <div class="hero-logo">
-      <div class="hero-logo-inner">
-        <span class="hero-rx">Rx</span>
-      </div>
+  <!-- Ambient glow -->
+  <div class="wc-glow"></div>
+
+  <!-- Logo emblem -->
+  <div class="wc-emblem">
+    <div class="wc-emblem-inner">
+      <div class="wc-rx">Rx<span>E</span></div>
+      <div class="wc-sep"></div>
     </div>
-
-    <!-- Title -->
-    <div class="hero-title">
-      <span class="hero-title-rx">Rx</span><span class="hero-title-easy">Easy</span>
-    </div>
-    <div class="hero-subtitle">by Dr. Usama Jamal &nbsp;·&nbsp; MBBS/MD</div>
-
-    <!-- Gold divider -->
-    <div class="hero-divider">
-      <div class="hero-div-line"></div>
-      <div class="hero-div-diamond"></div>
-      <div class="hero-div-line"></div>
-    </div>
-
-    <!-- Tagline -->
-    <div class="hero-tagline">AI-Powered Prescription Platform</div>
-    <div class="hero-tagline-sub">Pakistan's most complete GP formulary</div>
-
-    <!-- Rotating Quote -->
-    <div class="hero-quote-wrap">
-      <div class="hero-quote-icon">"</div>
-      <div class="hero-quote-text" id="heroQuoteText"></div>
-      <div class="hero-quote-author" id="heroQuoteAuthor"></div>
-      <div class="hero-quote-dots" id="heroQuoteDots"></div>
-    </div>
-
+    <div class="wc-ring"></div>
   </div>
+
+  <!-- Brand -->
+  <div class="wc-name">Rx<span>Easy</span></div>
+  <div class="wc-tag">AI Prescription Platform &nbsp;·&nbsp; Pakistan</div>
+
+  <!-- Divider -->
+  <div class="wc-divider">
+    <div class="wc-line"></div>
+    <div class="wc-diamond"></div>
+    <div class="wc-line"></div>
+  </div>
+
+  <!-- Steps -->
+  <div class="wc-steps">
+    <div class="wc-step">
+      <div class="wc-step-n">1</div>
+      <div class="wc-step-txt">Select patient mode — Adult, Child, Pregnant, Renal</div>
+    </div>
+    <div class="wc-step">
+      <div class="wc-step-n">2</div>
+      <div class="wc-step-txt">Type a diagnosis or tap a quick category above</div>
+    </div>
+    <div class="wc-step">
+      <div class="wc-step-n">3</div>
+      <div class="wc-step-txt">Review your AI-verified prescription and share</div>
+    </div>
+  </div>
+
+</div>
   <div class="acard" id="ac" style="display:none">
     <div class="at">🔑 Activate AI — Free Groq Key</div>
     <p class="ap">Visit <a href="https://console.groq.com" target="_blank">console.groq.com</a> → Sign up free → API Keys → Create → paste below</p>
@@ -4055,6 +4290,7 @@ function renderRx(txt,q,chat){
   <div class="rxbody">
     ${badge}
     <div class="rxsym">${diag?esc(diag):esc(q)}</div>
+    <div class="rx-symbol">&#8478;</div>
     <div class="rxmeds">${rxLines}</div>
     ${condLines}${invLines}${altLines}${warnLines}${rfLines}${advLines}${urduLines}
   </div>
@@ -4062,8 +4298,6 @@ function renderRx(txt,q,chat){
     <button class="rxbtn bwa" onclick="waShare('${encodeURIComponent(txt)}')"><div class="bii">📲</div><div class="bll">WhatsApp</div></button>
     <button class="rxbtn bcp" onclick="cpyTxt('${encodeURIComponent(txt)}')"><div class="bii">📋</div><div class="bll">Copy</div></button>
     <button class="rxbtn bsv" onclick="saveFav('${encodeURIComponent(q)}')"><div class="bii">⭐</div><div class="bll">Save</div></button>
-    <button class="rxbtn bpr" onclick="printRx(this)"><div class="bii">🖨️</div><div class="bll">Print</div></button>
-    <button class="rxbtn balt" onclick="openSheet('favs')"><div class="bii">📂</div><div class="bll">Saved</div></button>
   </div>
 </div>
 </div>`;
