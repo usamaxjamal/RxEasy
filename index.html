@@ -2460,6 +2460,35 @@ body{padding-bottom:0!important}
 .pw-btn-wa:active{transform:scale(.97);filter:brightness(.9)}
 .pw-btn-later{width:100%;background:none;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:11px;font-size:.7rem;font-weight:500;color:rgba(232,237,245,.28);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s}
 .pw-btn-later:active{background:rgba(255,255,255,.04)}
+
+/* ═══ APP WRAPPER LAYOUT ═══ */
+html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #04080f; }
+body { max-width: 480px; margin: 0 auto; }
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  background: #04080f;
+}
+#app > .hdr    { flex-shrink: 0; }
+#app > .ptbar  { flex-shrink: 0; }
+#app > .cats   { flex-shrink: 0; }
+#app > .chat   {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px 14px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#app > .inparea { flex-shrink: 0; }
 </style>
 
 <script>
@@ -2649,6 +2678,7 @@ function installPWA() {
     <div class="pin-key" onclick="pk('clr')" style="font-size:.78rem">Clear</div><div class="pin-key" onclick="pk('0')">0</div><div class="pin-key" onclick="pk('del')">⌫</div>
   </div>
 </div>
+<div id="app">
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
@@ -2771,6 +2801,7 @@ function installPWA() {
     </button>
   </div>
 </div>
+</div><!-- /#app -->
 <!-- CAMERA READER OVERLAY -->
 <div id="cameraOverlay" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.92);flex-direction:column;align-items:center;justify-content:center;gap:14px;">
   <div style="color:#fff;font-size:.9rem;font-weight:700;letter-spacing:.3px">📷 Prescription / Notes Reader</div>
