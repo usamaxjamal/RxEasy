@@ -3882,13 +3882,8 @@ async function buildPrescriptionFromDB(query, population) {
 
 // ═══ GROQ AI ENGINE ═══
 const GROQ_API_KEY = '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';
-const GROQ_MODELS = [
-  'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant',
-  'gemma2-9b-it',
-  'meta-llama/llama-4-scout-17b-16e-instruct',
-  'qwen/qwen-3-32b',
-];
+// GROQ_MODELS kept for badge display reference
+const GROQ_MODELS = ['llama-3.3-70b-versatile','llama-3.1-8b-instant','gemma2-9b-it'];
 const rxCache = {};
 let _curModel = 'LLaMA 3.3 70B';
 
@@ -3908,34 +3903,155 @@ function saveKey(){
   closeSheet('settings');
 }
 
-async function callAI(prompt, maxTokens) {
-  if(!maxTokens) maxTokens = 1800;
-  const key = GROQ_API_KEY;
+// ═══ AI FALLBACK CHAIN ═══
+// Keys
+const GEMINI_KEY   = 'AIzaSyDghmRMJd-1_5PuKpMGFuq_d3ZY0KSmleY';
+const TOGETHER_KEY = '73f0316b9900cb785e4db3b16b16e13f83f7d84a9e2eba47a1c97fedfdeee7c6';
+
+// Extended Groq models list
+const GROQ_MODELS_ALL = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+  'gemma2-9b-it',
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'qwen/qwen-3-32b',
+  'mixtral-8x7b-32768',
+  'llama3-70b-8192',
+  'llama3-8b-8192',
+  'llama-3.1-70b-versatile',
+  'deepseek-r1-distill-llama-70b',
+];
+
+// OpenRouter free models
+const OPENROUTER_MODELS = [
+  'mistralai/mistral-7b-instruct:free',
+  'microsoft/phi-3-mini-128k-instruct:free',
+  'google/gemma-2-9b-it:free',
+  'meta-llama/llama-3.2-3b-instruct:free',
+  'qwen/qwen-2-7b-instruct:free',
+];
+
+async function tryGroq(prompt, maxTokens) {
   const messages = [{role:'user', content:prompt}];
-  for(const model of GROQ_MODELS) {
+  for(const model of GROQ_MODELS_ALL) {
     try {
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+key},
-        body: JSON.stringify({model:model, max_tokens:maxTokens, temperature:0.2, messages:messages})
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
+        body:JSON.stringify({model, max_tokens:maxTokens, temperature:0.2, messages})
       });
       const data = await res.json();
-      if(res.ok) {
-        _curModel = model.split('/').pop().substring(0,20);
+      if(res.ok && data.choices?.[0]?.message?.content) {
+        _curModel = model.split('/').pop().substring(0,15);
         updateModelBadge();
         return data.choices[0].message.content;
       }
-      const msg = (data.error && data.error.message) || '';
-      if(res.status === 429 || msg.indexOf('rate_limit') >= 0) continue;
-      if(msg.indexOf('decommission') >= 0 || msg.indexOf('deprecated') >= 0) continue;
-      if(res.status === 401) { throw new Error('❌ Invalid API key. Please update in ⚙️ Settings.'); }
+      const msg = (data.error?.message)||'';
+      if(res.status===429||msg.includes('rate_limit')||msg.includes('limit')) continue;
+      if(msg.includes('decommission')||msg.includes('deprecated')) continue;
       continue;
-    } catch(e) {
-      if(e.message && e.message.indexOf('Invalid API key') >= 0) throw e;
-      continue;
-    }
+    } catch(e) { continue; }
   }
-  throw new Error('⏳ All Groq models are at their daily limit. Limits reset at midnight UTC. Your data is safe.');
+  return null;
+}
+
+async function tryGemini(prompt, maxTokens) {
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GEMINI_KEY,
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{parts:[{text:prompt}]}],
+          generationConfig:{maxOutputTokens:maxTokens, temperature:0.2}
+        })
+      }
+    );
+    const data = await res.json();
+    if(res.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      _curModel = 'Gemini Flash';
+      updateModelBadge();
+      return data.candidates[0].content.parts[0].text;
+    }
+  } catch(e) {}
+  return null;
+}
+
+async function tryOpenRouter(prompt, maxTokens) {
+  for(const model of OPENROUTER_MODELS) {
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'HTTP-Referer':'https://rxeasy.vercel.app',
+          'X-Title':'RxEasy'
+        },
+        body:JSON.stringify({
+          model, max_tokens:maxTokens, temperature:0.2,
+          messages:[{role:'user', content:prompt}]
+        })
+      });
+      const data = await res.json();
+      if(res.ok && data.choices?.[0]?.message?.content) {
+        _curModel = model.split('/').pop().split(':')[0].substring(0,15);
+        updateModelBadge();
+        return data.choices[0].message.content;
+      }
+      continue;
+    } catch(e) { continue; }
+  }
+  return null;
+}
+
+async function tryTogether(prompt, maxTokens) {
+  const models = [
+    'meta-llama/Llama-3-8b-chat-hf',
+    'mistralai/Mistral-7B-Instruct-v0.2',
+    'google/gemma-2b-it',
+  ];
+  for(const model of models) {
+    try {
+      const res = await fetch('https://api.together.xyz/v1/chat/completions', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOGETHER_KEY},
+        body:JSON.stringify({model, max_tokens:maxTokens, temperature:0.2,
+          messages:[{role:'user', content:prompt}]})
+      });
+      const data = await res.json();
+      if(res.ok && data.choices?.[0]?.message?.content) {
+        _curModel = model.split('/').pop().substring(0,15);
+        updateModelBadge();
+        return data.choices[0].message.content;
+      }
+      continue;
+    } catch(e) { continue; }
+  }
+  return null;
+}
+
+async function callAI(prompt, maxTokens) {
+  if(!maxTokens) maxTokens = 1800;
+
+  // 1. Try Groq (10 models)
+  const groqResult = await tryGroq(prompt, maxTokens);
+  if(groqResult) return groqResult;
+
+  // 2. Try Google Gemini
+  const geminiResult = await tryGemini(prompt, maxTokens);
+  if(geminiResult) return geminiResult;
+
+  // 3. Try OpenRouter (5 free models, no key needed)
+  const orResult = await tryOpenRouter(prompt, maxTokens);
+  if(orResult) return orResult;
+
+  // 4. Try Together AI
+  const togetherResult = await tryTogether(prompt, maxTokens);
+  if(togetherResult) return togetherResult;
+
+  // All failed
+  throw new Error('⏳ All AI services are busy right now. Please try again in a few minutes.');
 }
 
 // Simple hash for cache key
