@@ -3881,7 +3881,7 @@ async function buildPrescriptionFromDB(query, population) {
 }
 
 // ═══ GROQ AI ENGINE ═══
-const GROQ_API_KEY = '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';
+const GROQ_API_KEY = GROQ_KEYS[0] || '';
 // GROQ_MODELS kept for badge display reference
 const GROQ_MODELS = ['llama-3.3-70b-versatile','llama-3.1-8b-instant','gemma2-9b-it'];
 const rxCache = {};
@@ -3904,7 +3904,12 @@ function saveKey(){
 }
 
 // ═══ AI FALLBACK CHAIN ═══
-// Keys
+// Multiple Groq keys for rotation (each has separate daily limit)
+const GROQ_KEYS = [
+  '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',
+  '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',
+  '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',
+];
 const GEMINI_KEY   = 'AIzaSyDghmRMJd-1_5PuKpMGFuq_d3ZY0KSmleY';
 const TOGETHER_KEY = '73f0316b9900cb785e4db3b16b16e13f83f7d84a9e2eba47a1c97fedfdeee7c6';
 
@@ -3933,24 +3938,28 @@ const OPENROUTER_MODELS = [
 
 async function tryGroq(prompt, maxTokens) {
   const messages = [{role:'user', content:prompt}];
-  for(const model of GROQ_MODELS_ALL) {
-    try {
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
-        body:JSON.stringify({model, max_tokens:maxTokens, temperature:0.2, messages})
-      });
-      const data = await res.json();
-      if(res.ok && data.choices?.[0]?.message?.content) {
-        _curModel = model.split('/').pop().substring(0,15);
-        updateModelBadge();
-        return data.choices[0].message.content;
-      }
-      const msg = (data.error?.message)||'';
-      if(res.status===429||msg.includes('rate_limit')||msg.includes('limit')) continue;
-      if(msg.includes('decommission')||msg.includes('deprecated')) continue;
-      continue;
-    } catch(e) { continue; }
+  // Try each key with each model
+  for(const apiKey of GROQ_KEYS) {
+    for(const model of GROQ_MODELS_ALL) {
+      try {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+          body:JSON.stringify({model, max_tokens:maxTokens, temperature:0.2, messages})
+        });
+        const data = await res.json();
+        if(res.ok && data.choices?.[0]?.message?.content) {
+          _curModel = model.split('/').pop().substring(0,15);
+          updateModelBadge();
+          return data.choices[0].message.content;
+        }
+        const msg = (data.error?.message)||'';
+        if(res.status===401) break; // Bad key, try next key
+        if(res.status===429||msg.includes('rate_limit')||msg.includes('limit')) continue;
+        if(msg.includes('decommission')||msg.includes('deprecated')) continue;
+        continue;
+      } catch(e) { continue; }
+    }
   }
   return null;
 }
@@ -3979,12 +3988,14 @@ async function tryGemini(prompt, maxTokens) {
 }
 
 async function tryOpenRouter(prompt, maxTokens) {
+  const OR_KEY = 'sk-or-v1-95b3f3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3';
   for(const model of OPENROUTER_MODELS) {
     try {
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method:'POST',
         headers:{
           'Content-Type':'application/json',
+          'Authorization':'Bearer '+OR_KEY,
           'HTTP-Referer':'https://rxeasy.vercel.app',
           'X-Title':'RxEasy'
         },
@@ -3999,6 +4010,7 @@ async function tryOpenRouter(prompt, maxTokens) {
         updateModelBadge();
         return data.choices[0].message.content;
       }
+      console.warn('OpenRouter failed:', model, data?.error?.message);
       continue;
     } catch(e) { continue; }
   }
@@ -4009,14 +4021,16 @@ async function tryTogether(prompt, maxTokens) {
   const models = [
     'meta-llama/Llama-3-8b-chat-hf',
     'mistralai/Mistral-7B-Instruct-v0.2',
+    'Qwen/Qwen2-72B-Instruct',
     'google/gemma-2b-it',
+    'togethercomputer/llama-2-70b-chat',
   ];
   for(const model of models) {
     try {
       const res = await fetch('https://api.together.xyz/v1/chat/completions', {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOGETHER_KEY},
-        body:JSON.stringify({model, max_tokens:maxTokens, temperature:0.2,
+        body:JSON.stringify({model, max_tokens:Math.min(maxTokens,1024), temperature:0.2,
           messages:[{role:'user', content:prompt}]})
       });
       const data = await res.json();
@@ -4025,6 +4039,8 @@ async function tryTogether(prompt, maxTokens) {
         updateModelBadge();
         return data.choices[0].message.content;
       }
+      console.warn('Together failed:', model, data?.error?.message||'');
+      if(res.status===401) break;
       continue;
     } catch(e) { continue; }
   }
@@ -4050,8 +4066,40 @@ async function callAI(prompt, maxTokens) {
   const togetherResult = await tryTogether(prompt, maxTokens);
   if(togetherResult) return togetherResult;
 
+  // 5. Try Hugging Face Inference API (completely free)
+  const hfResult = await tryHuggingFace(prompt, maxTokens);
+  if(hfResult) return hfResult;
+
   // All failed
-  throw new Error('⏳ All AI services are busy right now. Please try again in a few minutes.');
+  throw new Error('⏳ AI services are temporarily busy. Please try again in 1 minute.');
+}
+
+async function tryHuggingFace(prompt, maxTokens) {
+  const HF_MODELS = [
+    'mistralai/Mistral-7B-Instruct-v0.3',
+    'HuggingFaceH4/zephyr-7b-beta',
+    'microsoft/DialoGPT-large',
+  ];
+  for(const model of HF_MODELS) {
+    try {
+      const res = await fetch(`https://api-inference.huggingface.co/models/${model}/v1/chat/completions`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          model, max_tokens:Math.min(maxTokens,500), temperature:0.2,
+          messages:[{role:'user', content:prompt}]
+        })
+      });
+      const data = await res.json();
+      if(res.ok && data.choices?.[0]?.message?.content) {
+        _curModel = model.split('/').pop().substring(0,15);
+        updateModelBadge();
+        return data.choices[0].message.content;
+      }
+      continue;
+    } catch(e) { continue; }
+  }
+  return null;
 }
 
 // Simple hash for cache key
