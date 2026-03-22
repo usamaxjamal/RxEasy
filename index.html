@@ -4525,10 +4525,15 @@ function updateSplashStatus(msg){
   if(el)el.textContent=msg;
 }
 function hideSplash(){
-  setTimeout(()=>{
+  setTimeout(function(){
     const s=document.getElementById('splash');
-    if(s){s.classList.add('hide');setTimeout(()=>s.style.display='none',700);}
-  },2200);
+    if(!s) return;
+    s.style.opacity='0';
+    s.style.transform='scale(1.04)';
+    s.style.transition='opacity .7s ease, transform .7s ease';
+    s.style.pointerEvents='none';
+    setTimeout(function(){ s.style.display='none'; }, 750);
+  }, 2200);
 }
 
 // ── Real-Time Clock ──
@@ -4711,27 +4716,31 @@ function showAchievement(ach){
   }
 })();
 
-document.addEventListener('DOMContentLoaded',()=>{
-  initSplashParticles();
-  updateSplashStatus('Loading prescription engine...');
-  setTimeout(()=>updateSplashStatus('Ready ✓'),800);
-  loadDailyQuote();
+document.addEventListener('DOMContentLoaded',function(){
+  // Hide splash first — most critical
   hideSplash();
-  startClock();
-  startSessionTimer();
-  initOfflineDetection();
-  // Part 2 inits
-  initBottomNav();
-  initCommandPalette();
-  initAutoLock();
-  initSwipeGestures();
-  initContextMenu();
-  initKeyboardShortcuts();
-  updateBnavBadges();
-  loadSessionLog();
-  renderAchievements();
-  // Part 3 inits
-  initSymptomChecker();
+
+  // Init everything else safely
+  try { initSplashParticles(); } catch(e) {}
+  try { updateSplashStatus('Loading...'); } catch(e) {}
+  try { loadDailyQuote(); } catch(e) {}
+  try { startClock(); } catch(e) {}
+  try { startSessionTimer(); } catch(e) {}
+  try { initOfflineDetection(); } catch(e) {}
+  try { initBottomNav(); } catch(e) {}
+  try { initCommandPalette(); } catch(e) {}
+  try { initAutoLock(); } catch(e) {}
+  try { initSwipeGestures(); } catch(e) {}
+  try { initContextMenu(); } catch(e) {}
+  try { initKeyboardShortcuts(); } catch(e) {}
+  try { updateBnavBadges(); } catch(e) {}
+  try { loadSessionLog(); } catch(e) {}
+  try { renderAchievements(); } catch(e) {}
+  try { initSymptomChecker(); } catch(e) {}
+  try { loadProfile(); } catch(e) {}
+  // Restore Gemini key
+  var gk = localStorage.getItem('gemini_key');
+  if(gk) { var gi = document.getElementById('geminiKeyInp'); if(gi) gi.value = gk; }
 });
 
 // ═══ PART 2: SMART UX & NAVIGATION ═══
