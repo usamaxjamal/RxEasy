@@ -336,30 +336,201 @@
 #liveClock{font-size:.58rem;color:rgba(255,255,255,.5);font-family:"JetBrains Mono",monospace;margin-top:1px;letter-spacing:.5px}
 
 /* ═══ ANIMATED GRADIENT HEADER ═══ */
-.hdr{background:linear-gradient(145deg,#040c18 0%,#081828 35%,#0c2240 65%,#071630 100%);background-size:300% 300%;animation:gradShift 10s ease infinite;padding:14px 14px 10px;position:sticky;top:0;z-index:100;box-shadow:0 4px 30px rgba(0,0,0,.3),0 1px 0 rgba(201,168,76,.12);border-bottom:1px solid rgba(201,168,76,.08);position:relative}
-@keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-/* ══ PREMIUM HEADER ELEMENTS ══ */
-.hdr-logo-area{display:flex;align-items:center;gap:10px}
-.hdr-emblem{width:40px;height:40px;border-radius:10px;background:linear-gradient(145deg,rgba(20,184,138,.18),rgba(42,122,191,.15));border:1px solid rgba(201,168,76,.28);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 14px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07);position:relative;overflow:hidden}
-.hdr-emblem::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 60%)}
-.hdr-emblem-rx{font-family:"Playfair Display",serif;font-size:1rem;font-weight:800;color:#fff;line-height:1;letter-spacing:-0.5px;position:relative;z-index:1}
-.hdr-emblem-rx span{color:#14b88a}
-.hdr-emblem-line{width:22px;height:1px;background:rgba(201,168,76,.5);margin-top:2px;position:relative;z-index:1}
-.hdr-text-area{}
-/* ══ PRESCRIPTION HEADER BRAND ══ */
-.rxlh-brand{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding-bottom:9px;border-bottom:1px solid rgba(201,168,76,.12)}
-.rxlh-logo-badge{width:28px;height:28px;border-radius:7px;background:rgba(20,184,138,.14);border:1px solid rgba(201,168,76,.22);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.rxlh-logo-text{font-family:"Playfair Display",serif;font-size:.8rem;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:-.2px;line-height:1.1}
-.rxlh-logo-text span{color:#14b88a}
-.rxlh-logo-sub{font-size:.48rem;color:rgba(201,168,76,.65);letter-spacing:2px;text-transform:uppercase;font-weight:600}
-.rxlh-mt{display:flex;justify-content:space-between;align-items:center}
-.rxlh-pt{font-size:.65rem;color:rgba(255,255,255,.75);font-weight:500}
-.rxlh-dt{font-size:.58rem;color:rgba(255,255,255,.38);font-family:"JetBrains Mono",monospace}
+/* ═══════════════════════════════════
+   PHASE 3 — PREMIUM HEADER
+═══════════════════════════════════ */
 
-.anm{font-family:"Plus Jakarta Sans",sans-serif;font-size:.57rem;color:rgba(201,168,76,.75);letter-spacing:2.5px;text-transform:uppercase;font-weight:600}
-.dnm{font-family:"Playfair Display",serif;font-size:1.15rem;color:#fff;font-weight:800;line-height:1.1;letter-spacing:-.3px}
-.dnm span{color:#14b88a}
-.dql{font-size:.58rem;color:rgba(255,255,255,.45);font-weight:400;margin-top:2px;letter-spacing:.2px}
+/* ── Main header shell ── */
+.hdr{
+  position:sticky;top:0;z-index:100;
+  background:rgba(4,8,15,.92);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  box-shadow:0 1px 0 rgba(200,160,50,.08),0 8px 32px rgba(0,0,0,.4);
+}
+
+/* Gold + teal top accent */
+.hdr::before{
+  content:'';display:block;height:1px;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,200,150,.35) 25%,
+    rgba(200,160,50,.55) 50%,
+    rgba(0,200,150,.35) 75%,
+    transparent 100%
+  );
+}
+
+/* ── Top row ── */
+.hdr-top{
+  display:flex;align-items:center;
+  padding:10px 14px 9px;
+  gap:10px;
+  min-height:54px;
+}
+
+/* Hamburger */
+.hdr-hamburger{
+  width:34px;height:34px;
+  border-radius:9px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.07);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:4.5px;cursor:pointer;flex-shrink:0;
+  transition:all .18s;
+}
+.hdr-hamburger:active{transform:scale(.88);background:rgba(255,255,255,.09)}
+.hdr-hamburger span{
+  display:block;width:15px;height:1.5px;
+  background:rgba(232,237,245,.6);
+  border-radius:1px;
+  transition:all .2s;
+}
+
+/* Logo area */
+.hdr-logo-area{display:flex;align-items:center;gap:10px}
+
+/* Emblem */
+.hdr-emblem{
+  width:36px;height:36px;border-radius:9px;
+  background:linear-gradient(145deg,rgba(6,14,32,.98),rgba(10,22,50,.95));
+  border:1px solid rgba(200,160,50,.28);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  flex-shrink:0;
+  box-shadow:
+    0 0 16px rgba(0,200,150,.1),
+    0 4px 14px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.08);
+  position:relative;overflow:hidden;
+}
+.hdr-emblem::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(135deg,rgba(255,255,255,.09) 0%,transparent 55%);
+}
+.hdr-emblem-rx{
+  font-family:'Cormorant Garamond',serif;
+  font-size:.95rem;font-weight:700;
+  color:#fff;line-height:1;letter-spacing:-.5px;
+  position:relative;z-index:1;
+  text-shadow:0 0 12px rgba(0,200,150,.3);
+}
+.hdr-emblem-rx span{color:#00c896}
+.hdr-emblem-line{
+  width:18px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(200,160,50,.7),transparent);
+  margin-top:3px;position:relative;z-index:1;
+}
+
+/* Text area */
+.hdr-text-area{}
+.dnm{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.1rem;font-weight:600;
+  color:#fff;line-height:1;letter-spacing:-.2px;
+}
+.dnm span{color:#00c896}
+.dql{
+  font-size:.52rem;
+  color:rgba(232,237,245,.35);
+  font-weight:400;margin-top:2px;
+  letter-spacing:.3px;
+  font-family:'DM Sans',sans-serif;
+}
+
+/* Right side badges */
+.hdr-right{
+  margin-left:auto;
+  display:flex;align-items:center;gap:6px;
+}
+
+/* Premium badge */
+#premiumBadge{
+  display:none;
+  align-items:center;gap:5px;
+  background:linear-gradient(135deg,rgba(200,160,50,.18),rgba(200,160,50,.08));
+  border:1px solid rgba(200,160,50,.3);
+  border-radius:20px;padding:4px 10px;
+  font-size:.58rem;font-weight:700;
+  color:#c8a032;letter-spacing:.3px;
+  box-shadow:0 0 12px rgba(200,160,50,.15);
+}
+#premiumBadge.show{display:flex}
+
+/* Query counter */
+#queryCounterBadge{
+  display:none;
+  align-items:center;gap:4px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:4px 10px;
+  font-size:.58rem;font-weight:600;
+  color:rgba(232,237,245,.5);cursor:pointer;
+  transition:all .15s;
+}
+#queryCounterBadge.show{display:flex}
+#queryCounterBadge.warn{
+  background:rgba(220,80,80,.1);
+  border-color:rgba(220,80,80,.2);
+  color:#e06060;
+}
+
+/* ── MODE FLAGS ROW ── */
+.flags{
+  display:flex;gap:5px;
+  padding:0 14px 9px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.flags::-webkit-scrollbar{display:none}
+
+.flg{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:20px;
+  font-size:.6rem;font-weight:600;
+  white-space:nowrap;cursor:pointer;
+  transition:all .15s;flex-shrink:0;
+  user-select:none;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  color:rgba(232,237,245,.3);
+}
+.flg:active{transform:scale(.92)}
+
+/* Active states per mode */
+.flg.on{
+  background:rgba(255,255,255,.07);
+  border-color:rgba(255,255,255,.12);
+  color:rgba(232,237,245,.8);
+}
+.flg.tl.on{
+  background:rgba(0,200,150,.1);
+  border-color:rgba(0,200,150,.22);
+  color:#00c896;
+  box-shadow:0 0 10px rgba(0,200,150,.12);
+}
+.flg.rd.on{
+  background:rgba(220,80,80,.1);
+  border-color:rgba(220,80,80,.22);
+  color:#e06060;
+}
+.flg.or.on{
+  background:rgba(200,130,50,.1);
+  border-color:rgba(200,130,50,.22);
+  color:#c87830;
+}
+
+/* ── PRESCRIPTION LETTERHEAD BRAND ── */
+.rxlh-brand{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding-bottom:9px;border-bottom:1px solid rgba(200,160,50,.1)}
+.rxlh-logo-badge{width:26px;height:26px;border-radius:7px;background:rgba(0,200,150,.1);border:1px solid rgba(200,160,50,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rxlh-logo-text{font-family:'Cormorant Garamond',serif;font-size:.8rem;font-weight:700;color:rgba(255,255,255,.92);letter-spacing:-.2px;line-height:1.1}
+.rxlh-logo-text span{color:#00c896}
+.rxlh-logo-sub{font-size:.46rem;color:rgba(200,160,50,.6);letter-spacing:2px;text-transform:uppercase;font-weight:500}
+.rxlh-mt{display:flex;justify-content:space-between;align-items:center}
+.rxlh-pt{font-size:.65rem;color:rgba(255,255,255,.7);font-weight:500}
+.rxlh-dt{font-size:.56rem;color:rgba(255,255,255,.32);font-family:'JetBrains Mono',monospace}
+.anm{font-family:'DM Sans',sans-serif;font-size:.55rem;color:rgba(200,160,50,.7);letter-spacing:2.5px;text-transform:uppercase;font-weight:600}
 
 
 /* ═══ GLASSMORPHISM CARDS ═══ */
@@ -2185,13 +2356,12 @@ function installPWA() {
       </div>
       <div class="hdr-text-area">
         <div class="dnm">Rx<span>Easy</span></div>
-        <div class="dql">by Dr. Usama Jamal &nbsp;·&nbsp; MBBS/MD · GP</div>
+        <div class="dql" id="dnm">by Dr. Usama Jamal &nbsp;·&nbsp; MBBS · GP</div>
       </div>
     </div>
-    <div id="liveClock" style="font-size:.5rem;color:rgba(255,255,255,.4);font-family:'JetBrains Mono',monospace;letter-spacing:.4px;margin-left:auto;padding-right:2px"></div>
-    <div style="display:flex;gap:4px;align-items:center;margin-left:6px">
-      <div id="premiumBadge" style="display:none;align-items:center;gap:3px;background:linear-gradient(135deg,rgba(201,168,76,.2),rgba(201,168,76,.1));border:1px solid rgba(201,168,76,.35);border-radius:20px;padding:3px 8px;font-size:.58rem;color:#c9a84c;font-weight:700;cursor:pointer">👑 Premium</div>
-      <div id="queryCounterBadge" onclick="showPaywall()" style="display:none;align-items:center;gap:3px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:3px 8px;font-size:.58rem;color:#c9a84c;font-weight:700;cursor:pointer">⚡ 3 free left</div>
+    <div class="hdr-right">
+      <div id="premiumBadge">👑 Premium</div>
+      <div id="queryCounterBadge" onclick="showPaywall()">⚡ <span id="qcLeft">3</span> left</div>
     </div>
   </div>
   <div class="flags">
