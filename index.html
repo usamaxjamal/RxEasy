@@ -2427,6 +2427,37 @@ body{padding-bottom:0!important}
 #premiumBadge{display:none;align-items:center;gap:4px;background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.08));border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:3px 9px;font-size:.6rem;color:#c9a84c;font-weight:700}
 #premiumBadge.show{display:flex}
 
+
+/* ═══ PHASE 8 — PREMIUM PAYWALL ═══ */
+#paywallOverlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:20px}
+#paywallOverlay.show{display:flex}
+.pw-modal{background:#06101e;border:1px solid rgba(255,255,255,.08);border-radius:24px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.04),0 40px 100px rgba(0,0,0,.8),0 0 80px rgba(200,160,50,.06);animation:pwIn .4s cubic-bezier(.34,1.1,.64,1);position:relative}
+@keyframes pwIn{0%{opacity:0;transform:scale(.88) translateY(24px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+.pw-modal::before{content:'';display:block;height:2px;background:linear-gradient(90deg,transparent,rgba(0,200,150,.5) 25%,rgba(200,160,50,.8) 50%,rgba(0,200,150,.5) 75%,transparent)}
+.pw-head{padding:26px 22px 18px;text-align:center;background:linear-gradient(180deg,rgba(12,24,48,.8) 0%,transparent 100%);border-bottom:1px solid rgba(255,255,255,.05);position:relative;overflow:hidden}
+.pw-head::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(200,160,50,.1) 0%,transparent 65%);top:-60px;left:50%;transform:translateX(-50%);pointer-events:none}
+.pw-crown-wrap{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,rgba(200,160,50,.2),rgba(200,160,50,.08));border:1.5px solid rgba(200,160,50,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 0 30px rgba(200,160,50,.15),inset 0 1px 0 rgba(255,255,255,.1);position:relative;z-index:1;color:#d4a830}
+.pw-title{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:4px;letter-spacing:-.3px;position:relative;z-index:1}
+.pw-title span{color:#00c896}
+.pw-subtitle{font-size:.68rem;color:rgba(232,237,245,.38);line-height:1.6;position:relative;z-index:1}
+.pw-price-box{margin:16px 22px 0;background:linear-gradient(135deg,rgba(200,160,50,.12),rgba(200,160,50,.06));border:1px solid rgba(200,160,50,.22);border-radius:14px;padding:13px 16px;display:flex;align-items:center;justify-content:space-between}
+.pw-price-main{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:700;color:#d4a830;line-height:1}
+.pw-price-sub{font-size:.55rem;color:rgba(200,160,50,.5);margin-top:3px;letter-spacing:.5px}
+.pw-price-badge{background:rgba(0,200,150,.12);border:1px solid rgba(0,200,150,.2);border-radius:20px;padding:4px 10px;font-size:.58rem;font-weight:700;color:#00c896;letter-spacing:.3px}
+.pw-features{padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.05)}
+.pw-feat{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:.7rem;color:rgba(232,237,245,.6)}
+.pw-feat-ico{width:18px;height:18px;border-radius:50%;background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.2);display:flex;align-items:center;justify-content:center;font-size:.52rem;flex-shrink:0;color:#00c896;font-weight:700}
+.pw-steps{padding:14px 22px;background:rgba(255,255,255,.02);border-bottom:1px solid rgba(255,255,255,.05)}
+.pw-steps-title{font-size:.55rem;font-weight:700;color:rgba(200,160,50,.55);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.pw-step{display:flex;gap:10px;margin-bottom:7px;font-size:.66rem;color:rgba(232,237,245,.5);line-height:1.6}
+.pw-step:last-child{margin-bottom:0}
+.pw-step-n{width:17px;height:17px;border-radius:50%;flex-shrink:0;background:rgba(200,160,50,.1);border:1px solid rgba(200,160,50,.2);color:rgba(200,160,50,.75);font-size:.52rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.pw-actions{padding:14px 22px 18px;display:flex;flex-direction:column;gap:7px}
+.pw-btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(135deg,#1da851,#25d366);border:none;border-radius:12px;padding:13px;font-size:.83rem;font-weight:700;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(37,211,102,.25);transition:all .18s;position:relative;overflow:hidden;letter-spacing:.2px}
+.pw-btn-wa::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent 55%)}
+.pw-btn-wa:active{transform:scale(.97);filter:brightness(.9)}
+.pw-btn-later{width:100%;background:none;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:11px;font-size:.7rem;font-weight:500;color:rgba(232,237,245,.28);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s}
+.pw-btn-later:active{background:rgba(255,255,255,.04)}
 </style>
 
 <script>
@@ -8013,54 +8044,42 @@ Try it: rxeasy.dr-usama.com</textarea>
 </style>
 
 <!-- PREMIUM POPUP -->
-<div id="paywallOverlay" onclick="if(event.target===this)closePaywall()" style="position:fixed;inset:0;background:rgba(4,14,28,.88);backdrop-filter:blur(12px);z-index:9000;display:none;align-items:flex-end;justify-content:center;padding:0">
-  <div style="background:linear-gradient(170deg,#0a1628 0%,#0d1e35 50%,#0f2a4a 100%);border:1px solid rgba(201,168,76,.25);border-radius:24px 24px 0 0;padding:8px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 -20px 60px rgba(0,0,0,.6);animation:slideUp2 .35s cubic-bezier(.34,1.1,.64,1)">
-    <style>@keyframes slideUp2{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}</style>
-    <!-- Handle bar -->
-    <div style="width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 20px"></div>
-    <!-- Content -->
-    <div style="padding:0 22px 32px;text-align:center">
-      <!-- Crown animation -->
-      <div style="font-size:3.2rem;margin-bottom:10px;filter:drop-shadow(0 4px 12px rgba(201,168,76,.4))">👑</div>
-      <div style="font-family:Playfair Display,serif;font-size:1.6rem;font-weight:800;color:#fff;margin-bottom:5px;line-height:1.2">Unlock Full <span style="color:#14b88a">Access</span></div>
-      <div id="pwQueryBadge" style="display:inline-flex;align-items:center;gap:5px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:4px 14px;font-size:.63rem;color:#c9a84c;font-weight:700;margin:10px 0 14px">⚡ 3/3 free queries used</div>
-      <div style="font-size:.78rem;color:rgba(255,255,255,.6);line-height:1.75;margin-bottom:20px">You've used your 3 free queries.<br>Get <strong style="color:#fff">unlimited prescriptions</strong> + all features for just Rs.500/year.</div>
-
-      <!-- Features -->
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 16px;margin-bottom:18px;text-align:left">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> Unlimited Rx</div>
-          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> All tools</div>
-          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> Patient records</div>
-          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> Urdu support</div>
-          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> PDF export</div>
-          <div style="font-size:.72rem;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:6px"><span style="color:#14b88a">✅</span> Priority updates</div>
-        </div>
+<div id="paywallOverlay" onclick="if(event.target===this)closePaywall()">
+  <div class="pw-modal">
+    <div class="pw-head">
+      <div class="pw-crown-wrap">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M2 19h20v2H2zM2 17l4-8 6 4 4-6 4 8z"/></svg>
       </div>
-
-      <!-- Price -->
-      <div style="background:linear-gradient(135deg,rgba(20,184,138,.1),rgba(201,168,76,.08));border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:16px;margin-bottom:20px">
-        <div style="font-size:2.4rem;font-weight:800;color:#c9a84c;font-family:Playfair Display,serif;line-height:1">Rs. 500</div>
-        <div style="font-size:.62rem;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:.8px">PER YEAR · ONE TIME PAYMENT · FULL ACCESS</div>
+      <div class="pw-title">Unlock <span>Full Access</span></div>
+      <div class="pw-subtitle">Pakistan's premier AI prescription platform.<br>Unlimited prescriptions. All clinical tools.</div>
+    </div>
+    <div class="pw-price-box">
+      <div>
+        <div class="pw-price-main">Rs. 500</div>
+        <div class="pw-price-sub">PER YEAR &nbsp;&middot;&nbsp; UNLIMITED ACCESS</div>
       </div>
-
-      <!-- Steps -->
-      <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:14px 16px;margin-bottom:20px;text-align:left">
-        <div style="font-size:.63rem;color:#c9a84c;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">How to Subscribe</div>
-        <div style="font-size:.72rem;color:rgba(255,255,255,.7);line-height:2">
-          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:4px"><span style="background:rgba(20,184,138,.2);color:#14b88a;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;flex-shrink:0;margin-top:2px">1</span><span>Send <strong style="color:#14b88a">Rs.500</strong> via JazzCash/EasyPaisa to <strong style="color:#fff">0319-5681808</strong> (Usama Jamal/NayaPay)</span></div>
-          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:4px"><span style="background:rgba(20,184,138,.2);color:#14b88a;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;flex-shrink:0;margin-top:2px">2</span><span>Take a screenshot of payment confirmation</span></div>
-          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:4px"><span style="background:rgba(20,184,138,.2);color:#14b88a;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;flex-shrink:0;margin-top:2px">3</span><span>WhatsApp screenshot to <strong style="color:#fff">0319-5681808</strong> with your registered email</span></div>
-          <div style="display:flex;gap:10px;align-items:flex-start"><span style="background:rgba(20,184,138,.2);color:#14b88a;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;flex-shrink:0;margin-top:2px">4</span><span>Premium activated within <strong style="color:#14b88a">24 hours</strong> ✅</span></div>
-        </div>
-      </div>
-
-      <!-- WhatsApp button -->
-      <button onclick="openWhatsApp()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(135deg,#25d366,#1da851);color:#fff;border:none;border-radius:14px;padding:15px;font-size:.9rem;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:Plus Jakarta Sans,sans-serif;box-shadow:0 6px 20px rgba(37,211,102,.3)">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      <div class="pw-price-badge">&#10003; Best Value</div>
+    </div>
+    <div class="pw-features">
+      <div class="pw-feat"><div class="pw-feat-ico">&#10003;</div>Unlimited AI prescriptions — no limits ever</div>
+      <div class="pw-feat"><div class="pw-feat-ico">&#10003;</div>Verified Pakistan drug database — 200+ drugs</div>
+      <div class="pw-feat"><div class="pw-feat-ico">&#10003;</div>Pediatric · Pregnancy · Renal · Hepatic modes</div>
+      <div class="pw-feat"><div class="pw-feat-ico">&#10003;</div>Lab interpreter · Symptom checker · Calculators</div>
+      <div class="pw-feat"><div class="pw-feat-ico">&#10003;</div>Discharge summary · Generic switcher</div>
+    </div>
+    <div class="pw-steps">
+      <div class="pw-steps-title">How to Subscribe</div>
+      <div class="pw-step"><div class="pw-step-n">1</div><div>Send <strong style="color:rgba(232,237,245,.85)">Rs.500</strong> via JazzCash or EasyPaisa to <strong style="color:#00c896">0319-5681808</strong> (Usama Jamal · NayaPay)</div></div>
+      <div class="pw-step"><div class="pw-step-n">2</div><div>Screenshot the payment confirmation</div></div>
+      <div class="pw-step"><div class="pw-step-n">3</div><div>Send screenshot on WhatsApp with your registered email</div></div>
+      <div class="pw-step"><div class="pw-step-n">4</div><div>Premium activated within <strong style="color:#00c896">24 hours</strong> &#10003;</div></div>
+    </div>
+    <div class="pw-actions">
+      <button class="pw-btn-wa" onclick="openWhatsApp()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
         Send Payment Screenshot on WhatsApp
       </button>
-      <button onclick="closePaywall()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);border-radius:12px;padding:12px;font-size:.75rem;cursor:pointer;font-family:Plus Jakarta Sans,sans-serif;transition:all .2s">Maybe Later — Continue Browsing</button>
+      <button class="pw-btn-later" onclick="closePaywall()">Maybe Later — Continue Browsing</button>
     </div>
   </div>
 </div>
