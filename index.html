@@ -3881,7 +3881,7 @@ async function buildPrescriptionFromDB(query, population) {
 }
 
 // ═══ GROQ AI ENGINE ═══
-const GROQ_API_KEY = GROQ_KEYS[0] || '';
+// GROQ_API_KEY now handled by GROQ_KEYS array in tryGroq()
 // GROQ_MODELS kept for badge display reference
 const GROQ_MODELS = ['llama-3.3-70b-versatile','llama-3.1-8b-instant','gemma2-9b-it'];
 const rxCache = {};
@@ -3905,13 +3905,7 @@ function saveKey(){
 
 // ═══ AI FALLBACK CHAIN ═══
 // Multiple Groq keys for rotation (each has separate daily limit)
-const GROQ_KEYS = [
-  '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',
-  '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',
-  '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',
-];
-const GEMINI_KEY   = 'AIzaSyDghmRMJd-1_5PuKpMGFuq_d3ZY0KSmleY';
-const TOGETHER_KEY = '73f0316b9900cb785e4db3b16b16e13f83f7d84a9e2eba47a1c97fedfdeee7c6';
+
 
 // Extended Groq models list
 const GROQ_MODELS_ALL = [
@@ -4737,6 +4731,15 @@ function showAchievement(ach){
 }
 
 // ── Init All Part 1 Features ──
+// ═══ API KEYS ═══
+const GROQ_KEYS = [
+  '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',
+  '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',
+  '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',
+];
+const GEMINI_KEY   = 'AIzaSyDghmRMJd-1_5PuKpMGFuq_d3ZY0KSmleY';
+const TOGETHER_KEY = '73f0316b9900cb785e4db3b16b16e13f83f7d84a9e2eba47a1c97fedfdeee7c6';
+
 // ═══ AUTH GUARD ═══
 (function() {
   // First check if OAuth token is in URL hash or code in params
