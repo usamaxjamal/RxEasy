@@ -566,7 +566,7 @@
   background:rgba(8,14,26,.7);
   border:1px solid rgba(255,255,255,.07);
   border-radius:20px;
-  padding:28px 22px 26px;
+  padding:24px 20px;
   text-align:center;
   margin:4px 2px;
   position:relative;overflow:hidden;
@@ -2474,6 +2474,40 @@ body{background:#04080f!important}
 .rxbx{background:rgba(255,255,255,.04)!important;color:rgba(232,237,245,.7)!important}
 .bxi{color:rgba(232,237,245,.55)!important}
 .rxlh{background:linear-gradient(135deg,#060e1c,#091626,#060f1a)!important}
+
+/* ═══ APP LAYOUT FIX ═══ */
+html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+body { background: #04080f !important; }
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+}
+#app .hdr { flex-shrink: 0; }
+#app .cats { flex-shrink: 0; }
+#app .chat {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+#app .inparea {
+  flex-shrink: 0;
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: 100% !important;
+}
 </style>
 
 <script>
@@ -2663,6 +2697,7 @@ function installPWA() {
     <div class="pin-key" onclick="pk('clr')" style="font-size:.78rem">Clear</div><div class="pin-key" onclick="pk('0')">0</div><div class="pin-key" onclick="pk('del')">⌫</div>
   </div>
 </div>
+<div id="app">
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
@@ -2785,6 +2820,7 @@ function installPWA() {
     </button>
   </div>
 </div>
+</div><!-- end app -->
 <!-- CAMERA READER OVERLAY -->
 <div id="cameraOverlay" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.92);flex-direction:column;align-items:center;justify-content:center;gap:14px;">
   <div style="color:#fff;font-size:.9rem;font-weight:700;letter-spacing:.3px">📷 Prescription / Notes Reader</div>
