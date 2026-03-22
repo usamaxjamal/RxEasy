@@ -2460,54 +2460,6 @@ body{padding-bottom:0!important}
 .pw-btn-wa:active{transform:scale(.97);filter:brightness(.9)}
 .pw-btn-later{width:100%;background:none;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:11px;font-size:.7rem;font-weight:500;color:rgba(232,237,245,.28);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s}
 .pw-btn-later:active{background:rgba(255,255,255,.04)}
-
-/* ═══ PHASE 9 — HIDE UNUSED ELEMENTS ═══ */
-#installPrompt{display:none!important}
-#achieveToast{display:none!important}
-.pin-ov{display:none!important}
-#confettiCanvas{display:none!important}
-#getAccessBtn{display:none!important}
-#bottomNav{display:none!important}
-/* Force dark always */
-body{background:#04080f!important;color:#ddeaf5!important}
-/* Fix sheet dark theme */
-.sheet{background:#0a1422!important;border:1px solid rgba(255,255,255,.07)!important;box-shadow:0 -8px 40px rgba(0,0,0,.6)!important}
-.shdr{border-bottom:1px solid rgba(255,255,255,.06)!important}
-.shdt{color:rgba(232,237,245,.9)!important}
-.shdc{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.08)!important;color:rgba(232,237,245,.4)!important;border-radius:7px!important;font-size:.72rem!important}
-.shdb{background:#0a1422}
-/* Sheet overlay blur */
-.ov{backdrop-filter:blur(6px)!important;-webkit-backdrop-filter:blur(6px)!important;background:rgba(0,0,0,.7)!important}
-/* Fix sinp inputs */
-.sinp{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.08)!important;color:#ddeaf5!important}
-.sinp:focus{border-color:rgba(0,200,150,.3)!important;box-shadow:0 0 0 3px rgba(0,200,150,.06)!important}
-/* Fix settings rows */
-.sr{border-bottom:1px solid rgba(255,255,255,.04)!important}
-.sl{color:rgba(232,237,245,.85)!important}
-.ss{color:rgba(232,237,245,.35)!important}
-/* Fix toggle */
-.tgl input:checked+.tsl{background:rgba(0,200,150,.2)!important;border-color:rgba(0,200,150,.4)!important}
-.tgl input:checked+.tsl::before{background:#00c896!important}
-/* Fix chat bubbles */
-.msg.u .bbl{background:rgba(0,200,150,.1)!important;border:1px solid rgba(0,200,150,.15)!important;color:#ddeaf5!important;border-radius:14px 3px 14px 14px!important}
-.msg.a .bbl{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.07)!important;color:rgba(232,237,245,.85)!important;border-radius:3px 14px 14px 14px!important}
-/* Fix list items in sheets */
-.li{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.06)!important}
-.lt{color:rgba(232,237,245,.88)!important}
-.ls{color:rgba(232,237,245,.38)!important}
-/* Fix drug cards */
-.dri{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.07)!important}
-.drn{color:#00c896!important}
-/* Fix calc */
-.cc{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.07)!important}
-.cn{color:rgba(232,237,245,.85)!important}
-.cs{color:rgba(232,237,245,.38)!important}
-.cr{background:rgba(0,200,150,.08)!important;border:1px solid rgba(0,200,150,.2)!important}
-.crv{color:#00c896!important}
-/* Fix shdl drag handle */
-.shdl{background:rgba(255,255,255,.1)!important}
-/* Remove dark mode toggle from UI */
-#dkT, label:has(#dkT){display:none!important}
 </style>
 
 <script>
@@ -3453,7 +3405,7 @@ window.onload=()=>{
     const ac=document.getElementById('ac');if(ac)ac.style.display='none';
   }
   updateModelBadge();
-  // dark is permanent default
+  if(localStorage.getItem('dark')==='1'){document.body.classList.add('dark');document.getElementById('dkT').checked=true;document.getElementById('dkBtn').textContent='☀️';}
   const h=localStorage.getItem('rxh');if(h)rxHist=JSON.parse(h);
   const f=localStorage.getItem('rxf');if(f)favs=JSON.parse(f);
   const p=localStorage.getItem('rxp');if(p)patients=JSON.parse(p);
@@ -4172,7 +4124,7 @@ async function sendMsg(){
   const ptN=document.getElementById('ptN').value.trim();
   const ptA=document.getElementById('ptA').value;
   const ptW=document.getElementById('ptW').value;
-  const alg='';
+  const alg=document.getElementById('alg').value;
   const ur=document.getElementById('urT').checked;
   const inv=document.getElementById('invT').checked;
   const alt=document.getElementById('altT').checked;
