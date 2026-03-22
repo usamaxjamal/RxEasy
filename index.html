@@ -4120,26 +4120,21 @@ RULE 7 — ALLERGY CHECK: If patient has documented allergy to ${alg||'nothing s
 ${qty?'RULE 8 — QUANTITY: After each drug write total quantity. Example: BD × 7 days = 14 tablets':''}
 
 ════════════════════
-RESPOND IN THIS FORMAT:
+RESPOND IN THIS FORMAT — BE CONCISE:
 ════════════════════
 
 DIAGNOSIS: [Specific condition name]
 
 PRESCRIPTION:
-[Numbered drugs — ONLY those indicated for this diagnosis. Max 4-5 drugs for simple conditions]
+[Numbered drugs max 4. Format: 1. GenericName (Brand) dose frequency duration]
 
-${inv?'INVESTIGATIONS:\n[Relevant tests for this specific diagnosis only]':''}
+${inv?'INVESTIGATIONS:\n[Relevant tests only — max 3]':''}
 
-${alt?'ALTERNATIVE RX:\n[Clinically appropriate 2nd line options]':''}
+${alt?'ALTERNATIVE RX:\n[2nd line options only — one line each]':''}
 
-${warn?'DRUG INTERACTIONS / WARNINGS:\n[Key warnings for drugs prescribed above only]':''}
+${rf?'RED FLAGS:\n[Emergency signs — max 3 bullet points]':''}
 
-${rf?'RED FLAGS (Refer if):\n[Emergency signs specific to this diagnosis]':''}
-
-ADVICE (ENGLISH ONLY):
-[Condition-specific diet, lifestyle, follow-up. Keep concise.]
-
-${ur?'URDU INSTRUCTIONS (مریض کے لیے ہدایات):\n[Simple Urdu patient instructions for prescribed medicines only]':''}
+${ur?'URDU INSTRUCTIONS:\n[Urdu patient instructions for medicine timings only — NO English repeat]':''}
 
 Query: ${q}`;
 
@@ -4260,10 +4255,11 @@ function renderRx(txt,q,chat){
   const rxLines=renderLines(sections['PRESCRIPTION']||'',true);
   const condLines=sections['CONDITIONAL MEDICINES']?`<div class="rxbx bx-adv"><div class="bxt">➕ Conditional</div>${renderLines(sections['CONDITIONAL MEDICINES'])}</div>`:'';
   const invLines=sections['INVESTIGATIONS']?`<div class="rxbx bx-inv"><div class="bxt">🧪 Investigations</div>${renderLines(sections['INVESTIGATIONS'])}</div>`:'';
-  const altLines=sections['ALTERNATIVE RX']?`<div class="rxbx bx-alt"><div class="bxt">🔀 Alternative Rx</div>${renderLines(sections['ALTERNATIVE RX'])}</div>`:'';
+  const altId='alt_'+Date.now();
+  const altLines=sections['ALTERNATIVE RX']?`<div class="rxbx bx-alt" style="cursor:pointer" onclick="this.querySelector('.alt-body').style.display=this.querySelector('.alt-body').style.display==='none'?'block':'none'"><div class="bxt" style="display:flex;align-items:center;justify-content:space-between">🔀 Alternative Rx <span style="font-size:.6rem;color:rgba(200,160,50,.5);font-weight:400">tap to expand ▾</span></div><div class="alt-body" style="display:none">${renderLines(sections['ALTERNATIVE RX'])}</div></div>`:'';
   const warnLines=sections['DRUG INTERACTIONS']?`<div class="rxbx bx-wrn"><div class="bxt">⚠️ Warnings</div>${renderLines(sections['DRUG INTERACTIONS'])}</div>`:'';
   const rfLines=sections['RED FLAGS']?`<div class="rxbx bx-flg"><div class="bxt">🚨 Red Flags</div>${renderLines(sections['RED FLAGS'])}</div>`:'';
-  const advLines=sections['ADVICE']?`<div class="rxbx bx-adv"><div class="bxt">💡 Advice</div>${renderLines(sections['ADVICE'])}</div>`:'';
+  const advLines='';
   const urduLines=sections['URDU INSTRUCTIONS']?`<div class="bx-urdu"><div class="urdu-t">Urdu Instructions</div><div class="urdu-x">${esc(sections['URDU INSTRUCTIONS'])}</div></div>`:'';
 
   const card=document.createElement('div');
