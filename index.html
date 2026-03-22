@@ -571,7 +571,7 @@
   margin:4px 2px;
   position:relative;overflow:hidden;
   backdrop-filter:blur(10px);
-  flex:1;
+  min-height:calc(100vh - 280px);
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
 }
@@ -645,7 +645,7 @@
 /* Letterhead */
 .rxlh{
   background:
-    linear-gradient(135deg,#06101e 0%,#0a1828 50%,#071420 100%);
+    linear-gradient(135deg,#060e1c 0%,#091626 50%,#060f1a 100%);
   padding:14px 16px 12px;
   border-bottom:1px solid rgba(200,160,50,.12);
   position:relative;overflow:hidden;
@@ -686,7 +686,7 @@
 .rxlh-dt{font-size:.56rem;color:rgba(255,255,255,.28);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;}
 
 /* Rx body */
-.rxbody{padding:14px 16px;}
+.rxbody{padding:14px 16px;background:#080e1c;}
 
 /* Diagnosis line */
 .rxsym{
@@ -740,6 +740,7 @@
   border:1px solid rgba(255,255,255,.06);
   border-radius:8px;padding:9px 11px;
   margin-top:8px;border-left:2px solid rgba(0,200,150,.4);
+  color:rgba(232,237,245,.7);
 }
 .rxbx.bx-inv{border-left-color:rgba(42,120,191,.5);}
 .rxbx.bx-wrn{border-left-color:rgba(200,120,50,.5);}
@@ -881,7 +882,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--nv3);outline-of
   color:#00c896;
   transform:scale(.93);
 }color:var(--nv);color:#fff}
-.chat{flex:1;overflow-y:auto;padding:10px 14px 80px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;min-height:0;height:0}
+.chat{flex:1;overflow-y:auto;padding:10px 14px 80px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;min-height:0}
 .wcard{background:linear-gradient(135deg,#0c2240,#1a4a7a);border-radius:var(--r);padding:15px 13px;color:#fff;text-align:center}
 .wrx{font-family:"Playfair Display",serif;font-size:2rem;opacity:.18;margin-bottom:4px}
 .wcard h2{font-family:"Playfair Display",serif;font-size:1.1rem;margin-bottom:4px}
@@ -906,7 +907,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--nv3);outline-of
 .bbl{max-width:87%;padding:8px 10px;border-radius:12px;font-size:.77rem;line-height:1.6}
 .msg.u .bbl{background:var(--nv);color:#fff;border-radius:12px 3px 12px 12px}
 .msg.a .bbl{background:var(--sf);border:1px solid var(--bd);border-radius:3px 12px 12px 12px;box-shadow:var(--sh)}
-.rxcard{background:var(--sf);border:1.5px solid var(--bd);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.rxcard{background:#080e1c;border:1px solid rgba(255,255,255,.08);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
 .rxlh{background:linear-gradient(135deg,#0c2240,#1a4a7a);padding:9px 12px;color:#fff}
 .rxlh-nm{font-family:"Playfair Display",serif;font-size:1.05rem;font-weight:700}
 .rxlh-ql{font-size:.59rem;color:#14b88a;margin-top:1px}
@@ -2470,6 +2471,12 @@ body{padding-bottom:0!important}
 #getAccessBtn{display:none!important}
 #bottomNav{display:none!important}
 body{background:#04080f!important}
+
+/* ═══ FINAL DARK OVERRIDES ═══ */
+.rxcard,.rxbody,.rxacts{background:#080e1c!important}
+.rxbx{background:rgba(255,255,255,.04)!important;color:rgba(232,237,245,.7)!important}
+.bxi{color:rgba(232,237,245,.55)!important}
+.rxlh{background:linear-gradient(135deg,#060e1c,#091626,#060f1a)!important}
 </style>
 
 <script>
