@@ -1921,6 +1921,114 @@ const DRUGS=[
 {name:"Tramadol",brand:"Tramol, Tonoflex 50mg/100mg",dose:"50-100mg BD/TDS",se:"Nausea, dizziness, constipation, seizure risk",ci:"Seizures, MAOIs, severe respiratory depression"},
 ];
 
+// ═══ SUPABASE CONFIG ═══
+const SUPABASE_URL = 'https://epvfbxzuziihhcaaaizp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
+
+function supabaseConfigured() { return !!SUPABASE_URL && !!SUPABASE_ANON_KEY; }
+
+async function sbFetch(path, params) {
+  const session = JSON.parse(localStorage.getItem('sb_session') || 'null');
+  const token = session ? session.access_token : SUPABASE_ANON_KEY;
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path + (params || ''), {
+    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token }
+  });
+  return res.json();
+}
+
+async function searchDisease(query) {
+  try {
+    const q = encodeURIComponent(query.toLowerCase());
+    const data = await sbFetch('diseases', '?or=(name.ilike.*' + q + '*,aliases.cs.{' + q + '})&limit=20');
+    return Array.isArray(data) ? data : [];
+  } catch(e) { return []; }
+}
+
+async function getTreatmentFromDB(diseaseId, population) {
+  try {
+    const data = await sbFetch('disease_treatments', '?disease_id=eq.' + diseaseId + '&order=drug_order.asc&select=*,drugs(*)');
+    return Array.isArray(data) ? data : [];
+  } catch(e) { return []; }
+}
+
+async function getInvestigations(diseaseId) {
+  try { return await sbFetch('investigations', '?disease_id=eq.' + diseaseId); } catch(e) { return []; }
+}
+
+async function getRedFlags(diseaseId) {
+  try { return await sbFetch('red_flags', '?disease_id=eq.' + diseaseId); } catch(e) { return []; }
+}
+
+function getPopulation() {
+  if (flags.preg) return 'pregnant';
+  if (flags.child) return 'child';
+  if (flags.elderly) return 'elderly';
+  if (flags.renal) return 'renal';
+  if (flags.hepatic) return 'hepatic';
+  return 'adult';
+}
+
+function calcQtyDB(freq, dur) {
+  if (!freq || !dur) return '';
+  const f = freq.toLowerCase(), d = dur.toLowerCase();
+  const perDay = f.includes('tds')||f.includes('tid')?3:f.includes('bd')||f.includes('bid')||f.includes('twice')?2:f.includes('qds')||f.includes('qid')?4:1;
+  const days = parseInt(d) || (d.includes('week')?7:d.includes('month')?30:7);
+  return (perDay * days) + ' tablets';
+}
+
+function formatDrugLineDB(t, idx) {
+  if (!t || !t.drugs) return '';
+  const d = t.drugs;
+  const brand = d.brand_names && d.brand_names.length ? ' (' + d.brand_names.slice(0,2).join('/') + ')' : '';
+  const dose = t.dose || d.standard_dose_adult || '';
+  const freq = t.frequency || '';
+  const dur = t.duration || '';
+  const qty = document.getElementById('qtyT')?.checked !== false ? calcQtyDB(freq, dur) : '';
+  return (idx+1) + '. ' + d.generic_name + brand + '\n   ' + [dose, freq, dur].filter(Boolean).join(' · ') + (qty ? ' = ' + qty : '');
+}
+
+async function buildPrescriptionFromDB(query, population) {
+  try {
+    const diseases = await searchDisease(query);
+    if (!diseases || !diseases.length) return null;
+    const disease = diseases[0];
+    const [treatments, investigations, redFlags] = await Promise.all([
+      getTreatmentFromDB(disease.id, population),
+      getInvestigations(disease.id),
+      getRedFlags(disease.id)
+    ]);
+    if (!treatments || !treatments.length) return null;
+
+    const ptN = document.getElementById('ptN')?.value.trim() || '';
+    const ptA = document.getElementById('ptA')?.value || '';
+    const ptW = document.getElementById('ptW')?.value || '';
+    const pop = getPopulation();
+
+    let rx = 'DIAGNOSIS: ' + disease.name + '\n\n';
+    rx += 'Rx\n';
+    const filtered = treatments.filter(t => {
+      if (!t.population || t.population === 'adult') return true;
+      return t.population === pop || t.population === 'all';
+    });
+    const firstLine = filtered.filter(t => t.line === 'first' || !t.line).slice(0, 5);
+    firstLine.forEach((t, i) => { rx += formatDrugLineDB(t, i) + '\n'; });
+
+    const showInv = document.getElementById('invT')?.checked !== false;
+    if (showInv && investigations && investigations.length) {
+      rx += '\nINVESTIGATIONS:\n' + investigations.map(i => '• ' + i.test_name + (i.notes ? ' — ' + i.notes : '')).join('\n');
+    }
+    const showRF = document.getElementById('rfT')?.checked !== false;
+    if (showRF && redFlags && redFlags.length) {
+      rx += '\n\nRED FLAGS — Return immediately if:\n' + redFlags.map(r => '⚠️ ' + r.flag).join('\n');
+    }
+    if (disease.notes) rx += '\n\nCLINICAL NOTES:\n' + disease.notes;
+
+    const formatPrompt = 'Format this prescription neatly for a Pakistani GP. Add Urdu patient instructions at the end if urdu toggle is on. Keep all drug names and brands exactly as given:\n\n' + rx;
+    const txt = await callAI(formatPrompt, 1000);
+    return txt || rx;
+  } catch(e) { console.error('DB Rx error:', e); return null; }
+}
+
 const GROQ_API_KEY = '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';
 const GROQ_MODELS = [
   'llama-3.3-70b-versatile',
