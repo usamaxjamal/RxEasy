@@ -386,7 +386,7 @@ textarea.inp{resize:vertical;min-height:70px}
 </div>
 <div class="lock-title">Admin Panel</div>
 <div class="lock-sub">Enter access code to continue</div>
-<input class="lock-inp" id="codeInp" onkeydown="if(event.key==='Enter')unlockAdmin()" placeholder="••••••••••••" type="password"/>
+<!-- SEC-02 FIX: No code input. Access verified server-side via is_admin flag. -->
 <button class="lock-btn" onclick="unlockAdmin()">Access Admin Panel</button>
 <div class="lock-err" id="lockErr"></div>
 </div>
