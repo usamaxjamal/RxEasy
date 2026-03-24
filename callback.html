@@ -5,6 +5,16 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>RxEasy — Signing in...</title>
+<!-- SEC-03 FIX: CSP to reduce XSS attack surface -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src  'self' 'unsafe-inline';
+  style-src   'self' 'unsafe-inline';
+  connect-src 'self' https://*.supabase.co;
+  img-src     'self' data: blob:;
+  frame-src   'none';
+  object-src  'none';
+">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#060d1a;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'DM Sans',sans-serif}
@@ -25,6 +35,8 @@ body{background:#060d1a;display:flex;align-items:center;justify-content:center;m
 <div class="err" id="err"></div>
 <button class="back" id="backBtn" onclick="window.location.href='login.html'">← Back to Login</button>
 </div>
+<!-- SEC-01 FIX: config.js provides window.__RXEASY_CONFIG__ -->
+<script src="config.js"></script>
 <script src="assets/js/callback-1.js"></script>
 </body>
 </html>

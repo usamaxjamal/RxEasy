@@ -5,6 +5,17 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="#04080f" name="theme-color"/>
+<!-- SEC-03 FIX: Content Security Policy to mitigate XSS token theft. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src  'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+  style-src   'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
+  font-src    'self' https://fonts.gstatic.com data:;
+  connect-src 'self' https://*.supabase.co https://groq.com https://*.groq.com;
+  img-src     'self' data: blob:;
+  frame-src   'none';
+  object-src  'none';
+">
 <title>RxEasy — Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -368,14 +379,15 @@ textarea.inp{resize:vertical;min-height:70px}
 <!-- TOAST -->
 <div id="toast"></div>
 <!-- LOCK SCREEN -->
-
+<div id="lockScreen">
 <div class="lock-card">
 <div class="lock-emblem">
 <div class="lock-rx">Rx<span>E</span></div>
 </div>
 <div class="lock-title">Admin Panel</div>
-<div class="lock-sub">Verifying your admin privileges...</div>
-<button class="lock-btn" id="unlockBtn" onclick="unlockAdmin()" style="margin-top:8px">Access Admin Panel</button>
+<div class="lock-sub">Enter access code to continue</div>
+<input class="lock-inp" id="codeInp" onkeydown="if(event.key==='Enter')unlockAdmin()" placeholder="••••••••••••" type="password"/>
+<button class="lock-btn" onclick="unlockAdmin()">Access Admin Panel</button>
 <div class="lock-err" id="lockErr"></div>
 </div>
 </div>
@@ -738,6 +750,8 @@ textarea.inp{resize:vertical;min-height:70px}
 </div>
 </div>
 </div>
+<!-- SEC-01 FIX: config.js provides window.__RXEASY_CONFIG__ -->
+<script src="config.js"></script>
 <script src="assets/js/admin-1.js"></script>
 </body>
 </html>
