@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#04080f">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="#04080f" name="theme-color"/>
 <title>RxEasy — Admin Panel</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -68,6 +69,21 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--ink);col
 /* ── LAYOUT ── */
 #adminApp{display:none;height:100vh;overflow:hidden}
 .layout{display:flex;height:100vh;overflow:hidden}
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:200;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .sidebar.collapsed{width:240px;transform:translateX(-100%)}
+  .sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:199;display:none}
+  .sb-overlay.show{display:block}
+  .main{width:100%}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  table{font-size:.68rem}
+  th,td{padding:7px 8px}
+  .topbar{padding:0 12px}
+  .content{padding:12px}
+}
 
 /* ── SIDEBAR ── */
 .sidebar{
@@ -349,863 +365,380 @@ textarea.inp{resize:vertical;min-height:70px}
 </style>
 </head>
 <body>
-
 <!-- TOAST -->
 <div id="toast"></div>
-
 <!-- LOCK SCREEN -->
 <div id="lockScreen">
-  <div class="lock-card">
-    <div class="lock-emblem">
-      <div class="lock-rx">Rx<span>E</span></div>
-    </div>
-    <div class="lock-title">Admin Panel</div>
-    <div class="lock-sub">Enter access code to continue</div>
-    <input class="lock-inp" type="password" id="codeInp" placeholder="••••••••••••" onkeydown="if(event.key==='Enter')unlockAdmin()">
-    <button class="lock-btn" onclick="unlockAdmin()">Access Admin Panel</button>
-    <div class="lock-err" id="lockErr"></div>
-  </div>
+<div class="lock-card">
+<div class="lock-emblem">
+<div class="lock-rx">Rx<span>E</span></div>
 </div>
-
+<div class="lock-title">Admin Panel</div>
+<div class="lock-sub">Enter access code to continue</div>
+<input class="lock-inp" id="codeInp" onkeydown="if(event.key==='Enter')unlockAdmin()" placeholder="••••••••••••" type="password"/>
+<button class="lock-btn" onclick="unlockAdmin()">Access Admin Panel</button>
+<div class="lock-err" id="lockErr"></div>
+</div>
+</div>
 <!-- ADMIN APP -->
 <div id="adminApp">
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="layout">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sb-brand">
-      <div class="sb-logo">
-        <div class="sb-logo-rx">Rx<span>E</span></div>
-        <div class="sb-logo-sep"></div>
-      </div>
-      <div style="overflow:hidden">
-        <div class="sb-name">Rx<span>Easy</span></div>
-        <div class="sb-badge">Admin Dashboard</div>
-      </div>
-    </div>
-
-    <nav class="sb-nav">
-      <div class="sb-section">Overview</div>
-      <div class="nav-item active" onclick="showPage('dashboard',this)">
-        <div class="ni">📊</div><span>Dashboard</span>
-      </div>
-      <div class="nav-item" onclick="showPage('analytics',this)">
-        <div class="ni">📈</div><span>Analytics</span>
-      </div>
-
-      <div class="sb-section">Clinical DB</div>
-      <div class="nav-item" onclick="showPage('diseases',this)">
-        <div class="ni">🦠</div><span>Diseases</span>
-      </div>
-      <div class="nav-item" onclick="showPage('drugs',this)">
-        <div class="ni">💊</div><span>Drugs</span>
-      </div>
-
-      <div class="sb-section">Users</div>
-      <div class="nav-item" onclick="showPage('doctors',this)">
-        <div class="ni">👨‍⚕️</div><span>Doctors</span>
-      </div>
-      <div class="nav-item" onclick="showPage('subscriptions',this)">
-        <div class="ni">⭐</div><span>Subscriptions</span>
-        <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
-      </div>
-
-      <div class="sb-section">Finance</div>
-      <div class="nav-item" onclick="showPage('revenue',this)">
-        <div class="ni">💰</div><span>Revenue</span>
-      </div>
-
-      <div class="sb-section">Logs</div>
-      <div class="nav-item" onclick="showPage('rxlogs',this)">
-        <div class="ni">📋</div><span>Rx Logs</span>
-      </div>
-
-      <div class="sb-section">System</div>
-      <div class="nav-item" onclick="showPage('settings',this)">
-        <div class="ni">⚙️</div><span>Settings</span>
-      </div>
-    </nav>
-
-    <div class="sb-foot">
-      <div class="sb-user">
-        <div class="sb-av">👨‍⚕️</div>
-        <div style="overflow:hidden">
-          <div class="sb-uname">Dr. Usama Jamal</div>
-          <div class="sb-urole">Super Admin</div>
-        </div>
-      </div>
-      <button class="sb-logout" onclick="doLogout()">🚪 Logout</button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <div class="main">
-    <!-- Topbar -->
-    <div class="topbar">
-      <div class="topbar-toggle" onclick="toggleSidebar()">
-        <span></span><span></span><span></span>
-      </div>
-      <div>
-        <div class="topbar-title" id="topbarTitle">Dashboard</div>
-      </div>
-      <div class="topbar-right">
-        <div class="topbar-time" id="adminClock"></div>
-        <div class="topbar-admin">⚡ ADMIN</div>
-      </div>
-    </div>
-
-    <!-- Content -->
-    <div class="content">
-
-      <!-- ══ DASHBOARD ══ -->
-      <div class="page active" id="page-dashboard">
-        <div class="page-hdr">
-          <div class="page-title">Dashboard</div>
-          <div class="page-sub">Welcome back, Dr. Usama — here's your overview</div>
-        </div>
-
-        <!-- Stats -->
-        <div class="stats-grid" id="statsGrid">
-          <div class="stat-card tl">
-            <div class="stat-icon">👨‍⚕️</div>
-            <div class="stat-label">Total Doctors</div>
-            <div class="stat-value" id="s-docs">—</div>
-            <div class="stat-change up" id="s-docs-sub"></div>
-          </div>
-          <div class="stat-card gd">
-            <div class="stat-icon">👑</div>
-            <div class="stat-label">Premium Members</div>
-            <div class="stat-value" id="s-prem">—</div>
-          </div>
-          <div class="stat-card bl">
-            <div class="stat-icon">💊</div>
-            <div class="stat-label">Prescriptions</div>
-            <div class="stat-value" id="s-rx">—</div>
-          </div>
-          <div class="stat-card or">
-            <div class="stat-icon">⏳</div>
-            <div class="stat-label">Pending Requests</div>
-            <div class="stat-value" id="s-pend">—</div>
-          </div>
-          <div class="stat-card rd">
-            <div class="stat-icon">🦠</div>
-            <div class="stat-label">Diseases in DB</div>
-            <div class="stat-value" id="s-dis">—</div>
-          </div>
-        </div>
-
-        <!-- Charts row -->
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-hdr">
-              <div><div class="card-title">📈 Prescription Activity</div><div class="card-sub">Last 7 days</div></div>
-            </div>
-            <div class="card-body">
-              <div class="chart-wrap"><canvas id="rxChart"></canvas></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hdr">
-              <div><div class="card-title">🏥 Top Diseases</div><div class="card-sub">Most prescribed</div></div>
-            </div>
-            <div class="card-body">
-              <div id="topDiseaseList"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent doctors -->
-        <div class="card">
-          <div class="card-hdr">
-            <div><div class="card-title">👨‍⚕️ Recent Registrations</div></div>
-            <button class="btn btn-ghost btn-sm" onclick="showPage('doctors',null)">View All</button>
-          </div>
-          <div class="card-body" id="recentDocs">
-            <div class="empty"><div class="empty-ico">👨‍⚕️</div>Loading...</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ ANALYTICS ══ -->
-      <div class="page" id="page-analytics">
-        <div class="page-hdr">
-          <div class="page-title">Analytics</div>
-          <div class="page-sub">Usage statistics and trends</div>
-        </div>
-        <div class="stats-grid" id="analyticsStats"></div>
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-hdr"><div class="card-title">📊 Doctor Growth</div></div>
-            <div class="card-body"><div class="chart-wrap"><canvas id="growthChart"></canvas></div></div>
-          </div>
-          <div class="card">
-            <div class="card-hdr"><div class="card-title">💡 Active Doctors</div></div>
-            <div class="card-body" id="activeDoctorsList">
-              <div class="empty"><div class="empty-ico">📊</div>Loading...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ DISEASES ══ -->
-      <div class="page" id="page-diseases">
-        <div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
-          <div><div class="page-title">Diseases Database</div><div class="page-sub" id="disCount">Loading...</div></div>
-          <button class="btn btn-primary" onclick="openModal('diseaseModal');resetDiseaseForm()">+ Add Disease</button>
-        </div>
-        <div class="filter-bar">
-          <input class="search-inp" placeholder="🔍 Search diseases..." oninput="filterDiseases(this.value)">
-        </div>
-        <div class="card">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Disease</th><th>Category</th><th>ICD-10</th><th>Treatments</th><th>Actions</th></tr></thead>
-              <tbody id="diseaseTbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ DRUGS ══ -->
-      <div class="page" id="page-drugs">
-        <div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
-          <div><div class="page-title">Drug Database</div><div class="page-sub" id="drugCount">Loading...</div></div>
-          <button class="btn btn-primary" onclick="openModal('drugModal');resetDrugForm()">+ Add Drug</button>
-        </div>
-        <div class="filter-bar">
-          <input class="search-inp" placeholder="🔍 Search drugs or brands..." oninput="filterDrugs(this.value)">
-        </div>
-        <div class="card">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Generic Name</th><th>Brand Names</th><th>Category</th><th>Adult Dose</th><th>Actions</th></tr></thead>
-              <tbody id="drugTbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ DOCTORS ══ -->
-      <div class="page" id="page-doctors">
-        <div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
-          <div><div class="page-title">Doctors</div><div class="page-sub" id="docCount">Loading...</div></div>
-          <div style="display:flex;gap:8px">
-            <input class="search-inp" style="width:200px" placeholder="🔍 Search..." oninput="filterDoctors(this.value)">
-          </div>
-        </div>
-        <div class="card">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Doctor</th><th>Email</th><th>Status</th><th>Queries</th><th>Joined</th><th>Actions</th></tr></thead>
-              <tbody id="doctorTbody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-        <!-- Grant by email -->
-        <div class="card">
-          <div class="card-hdr"><div class="card-title">⚡ Quick Grant Premium</div></div>
-          <div class="card-body" style="display:flex;gap:8px">
-            <input class="inp" id="grantEmail" placeholder="doctor@email.com" style="flex:1">
-            <button class="btn btn-gold" onclick="grantById()">Grant Premium</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ SUBSCRIPTIONS ══ -->
-      <div class="page" id="page-subscriptions">
-        <div class="page-hdr">
-          <div class="page-title">Subscriptions</div>
-          <div class="page-sub">Pending payment verifications and premium members</div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-hdr"><div class="card-title">⏳ Pending Requests</div></div>
-            <div class="card-body" id="pendingSubsList">
-              <div class="empty"><div class="empty-ico">⏳</div>Loading...</div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hdr"><div class="card-title">👑 Premium Members</div></div>
-            <div class="card-body" id="premiumList">
-              <div class="empty"><div class="empty-ico">👑</div>Loading...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ REVENUE ══ -->
-      <div class="page" id="page-revenue">
-        <div class="page-hdr">
-          <div class="page-title">Revenue</div>
-          <div class="page-sub">Subscription earnings overview</div>
-        </div>
-        <div class="stats-grid" id="revStats"></div>
-        <div class="card">
-          <div class="card-hdr"><div class="card-title">💳 Transaction History</div></div>
-          <div class="card-body" id="revList">
-            <div class="empty"><div class="empty-ico">💰</div>Loading...</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ RX LOGS ══ -->
-      <div class="page" id="page-rxlogs">
-        <div class="page-hdr">
-          <div class="page-title">Prescription Logs</div>
-          <div class="page-sub">All AI-generated prescriptions</div>
-        </div>
-        <div class="filter-bar">
-          <input class="search-inp" placeholder="🔍 Search by doctor or diagnosis..." oninput="filterRxLogs(this.value)">
-        </div>
-        <div class="card">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Doctor</th><th>Diagnosis</th><th>Mode</th><th>Source</th><th>Date</th></tr></thead>
-              <tbody id="rxlogTbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ SETTINGS ══ -->
-      <div class="page" id="page-settings">
-        <div class="page-hdr">
-          <div class="page-title">Settings</div>
-          <div class="page-sub">System configuration</div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-hdr"><div class="card-title">🔧 App Settings</div></div>
-            <div class="card-body" id="settingsList"></div>
-          </div>
-          <div class="card">
-            <div class="card-hdr"><div class="card-title">📢 Announcement</div></div>
-            <div class="card-body">
-              <div class="field" style="margin-bottom:10px">
-                <label>Message</label>
-                <textarea class="inp" id="announcementText" placeholder="Enter announcement for all doctors..."></textarea>
-              </div>
-              <div style="display:flex;gap:8px">
-                <button class="btn btn-primary" onclick="saveAnnouncement()">Save</button>
-                <button class="btn btn-danger" onclick="clearAnnouncement()">Clear</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /content -->
-  </div><!-- /main -->
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+<div class="sb-brand">
+<div class="sb-logo">
+<div class="sb-logo-rx">Rx<span>E</span></div>
+<div class="sb-logo-sep"></div>
+</div>
+<div style="overflow:hidden">
+<div class="sb-name">Rx<span>Easy</span></div>
+<div class="sb-badge">Admin Dashboard</div>
+</div>
+</div>
+<nav class="sb-nav">
+<div class="sb-section">Overview</div>
+<div class="nav-item active" onclick="showPage('dashboard',this)">
+<div class="ni">📊</div><span>Dashboard</span>
+</div>
+<div class="nav-item" onclick="showPage('analytics',this)">
+<div class="ni">📈</div><span>Analytics</span>
+</div>
+<div class="sb-section">Clinical DB</div>
+<div class="nav-item" onclick="showPage('diseases',this)">
+<div class="ni">🦠</div><span>Diseases</span>
+</div>
+<div class="nav-item" onclick="showPage('drugs',this)">
+<div class="ni">💊</div><span>Drugs</span>
+</div>
+<div class="sb-section">Users</div>
+<div class="nav-item" onclick="showPage('doctors',this)">
+<div class="ni">👨‍⚕️</div><span>Doctors</span>
+</div>
+<div class="nav-item" onclick="showPage('subscriptions',this)">
+<div class="ni">⭐</div><span>Subscriptions</span>
+<span class="nav-badge" id="pendingBadge" style="display:none">0</span>
+</div>
+<div class="sb-section">Finance</div>
+<div class="nav-item" onclick="showPage('revenue',this)">
+<div class="ni">💰</div><span>Revenue</span>
+</div>
+<div class="sb-section">Logs</div>
+<div class="nav-item" onclick="showPage('rxlogs',this)">
+<div class="ni">📋</div><span>Rx Logs</span>
+</div>
+<div class="sb-section">System</div>
+<div class="nav-item" onclick="showPage('settings',this)">
+<div class="ni">⚙️</div><span>Settings</span>
+</div>
+</nav>
+<div class="sb-foot">
+<div class="sb-user">
+<div class="sb-av">👨‍⚕️</div>
+<div style="overflow:hidden">
+<div class="sb-uname">Dr. Usama Jamal</div>
+<div class="sb-urole">Super Admin</div>
+</div>
+</div>
+<button class="sb-logout" onclick="doLogout()">🚪 Logout</button>
+</div>
+</aside>
+<!-- MAIN -->
+<div class="main">
+<!-- Topbar -->
+<div class="topbar">
+<div class="topbar-toggle" onclick="toggleSidebar()">
+<span></span><span></span><span></span>
+</div>
+<div>
+<div class="topbar-title" id="topbarTitle">Dashboard</div>
+</div>
+<div class="topbar-right">
+<div class="topbar-time" id="adminClock"></div>
+<div class="topbar-admin">⚡ ADMIN</div>
+</div>
+</div>
+<!-- Content -->
+<div class="content">
+<!-- ══ DASHBOARD ══ -->
+<div class="page active" id="page-dashboard">
+<div class="page-hdr">
+<div class="page-title">Dashboard</div>
+<div class="page-sub">Welcome back, Dr. Usama — here's your overview</div>
+</div>
+<!-- Stats -->
+<div class="stats-grid" id="statsGrid">
+<div class="stat-card tl">
+<div class="stat-icon">👨‍⚕️</div>
+<div class="stat-label">Total Doctors</div>
+<div class="stat-value" id="s-docs">—</div>
+<div class="stat-change up" id="s-docs-sub"></div>
+</div>
+<div class="stat-card gd">
+<div class="stat-icon">👑</div>
+<div class="stat-label">Premium Members</div>
+<div class="stat-value" id="s-prem">—</div>
+</div>
+<div class="stat-card bl">
+<div class="stat-icon">💊</div>
+<div class="stat-label">Prescriptions</div>
+<div class="stat-value" id="s-rx">—</div>
+</div>
+<div class="stat-card or">
+<div class="stat-icon">⏳</div>
+<div class="stat-label">Pending Requests</div>
+<div class="stat-value" id="s-pend">—</div>
+</div>
+<div class="stat-card rd">
+<div class="stat-icon">🦠</div>
+<div class="stat-label">Diseases in DB</div>
+<div class="stat-value" id="s-dis">—</div>
+</div>
+</div>
+<!-- Charts row -->
+<div class="grid-2">
+<div class="card">
+<div class="card-hdr">
+<div><div class="card-title">📈 Prescription Activity</div><div class="card-sub">Last 7 days</div></div>
+</div>
+<div class="card-body">
+<div class="chart-wrap"><canvas id="rxChart"></canvas></div>
+</div>
+</div>
+<div class="card">
+<div class="card-hdr">
+<div><div class="card-title">🏥 Top Diseases</div><div class="card-sub">Most prescribed</div></div>
+</div>
+<div class="card-body">
+<div id="topDiseaseList"></div>
+</div>
+</div>
+</div>
+<!-- Recent doctors -->
+<div class="card">
+<div class="card-hdr">
+<div><div class="card-title">👨‍⚕️ Recent Registrations</div></div>
+<button class="btn btn-ghost btn-sm" onclick="showPage('doctors',null)">View All</button>
+</div>
+<div class="card-body" id="recentDocs">
+<div class="empty"><div class="empty-ico">👨‍⚕️</div>Loading...</div>
+</div>
+</div>
+</div>
+<!-- ══ ANALYTICS ══ -->
+<div class="page" id="page-analytics">
+<div class="page-hdr">
+<div class="page-title">Analytics</div>
+<div class="page-sub">Usage statistics and trends</div>
+</div>
+<div class="stats-grid" id="analyticsStats"></div>
+<div class="grid-2">
+<div class="card">
+<div class="card-hdr"><div class="card-title">📊 Doctor Growth</div></div>
+<div class="card-body"><div class="chart-wrap"><canvas id="growthChart"></canvas></div></div>
+</div>
+<div class="card">
+<div class="card-hdr"><div class="card-title">💡 Active Doctors</div></div>
+<div class="card-body" id="activeDoctorsList">
+<div class="empty"><div class="empty-ico">📊</div>Loading...</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ══ DISEASES ══ -->
+<div class="page" id="page-diseases">
+<div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
+<div><div class="page-title">Diseases Database</div><div class="page-sub" id="disCount">Loading...</div></div>
+<button class="btn btn-primary" onclick="openModal('diseaseModal');resetDiseaseForm()">+ Add Disease</button>
+</div>
+<div class="filter-bar">
+<input class="search-inp" oninput="filterDiseases(this.value)" placeholder="🔍 Search diseases..."/>
+</div>
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Disease</th><th>Category</th><th>ICD-10</th><th>Treatments</th><th>Actions</th></tr></thead>
+<tbody id="diseaseTbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- ══ DRUGS ══ -->
+<div class="page" id="page-drugs">
+<div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
+<div><div class="page-title">Drug Database</div><div class="page-sub" id="drugCount">Loading...</div></div>
+<button class="btn btn-primary" onclick="openModal('drugModal');resetDrugForm()">+ Add Drug</button>
+</div>
+<div class="filter-bar">
+<input class="search-inp" oninput="filterDrugs(this.value)" placeholder="🔍 Search drugs or brands..."/>
+</div>
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Generic Name</th><th>Brand Names</th><th>Category</th><th>Adult Dose</th><th>Actions</th></tr></thead>
+<tbody id="drugTbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- ══ DOCTORS ══ -->
+<div class="page" id="page-doctors">
+<div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
+<div><div class="page-title">Doctors</div><div class="page-sub" id="docCount">Loading...</div></div>
+<div style="display:flex;gap:8px">
+<input class="search-inp" oninput="filterDoctors(this.value)" placeholder="🔍 Search..." style="width:200px"/>
+</div>
+</div>
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Doctor</th><th>Email</th><th>Status</th><th>Queries</th><th>Joined</th><th>Actions</th></tr></thead>
+<tbody id="doctorTbody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+<!-- Grant by email -->
+<div class="card">
+<div class="card-hdr"><div class="card-title">⚡ Quick Grant Premium</div></div>
+<div class="card-body" style="display:flex;gap:8px">
+<input class="inp" id="grantEmail" placeholder="doctor@email.com" style="flex:1"/>
+<button class="btn btn-gold" onclick="grantById()">Grant Premium</button>
+</div>
+</div>
+</div>
+<!-- ══ SUBSCRIPTIONS ══ -->
+<div class="page" id="page-subscriptions">
+<div class="page-hdr">
+<div class="page-title">Subscriptions</div>
+<div class="page-sub">Pending payment verifications and premium members</div>
+</div>
+<div class="grid-2">
+<div class="card">
+<div class="card-hdr"><div class="card-title">⏳ Pending Requests</div></div>
+<div class="card-body" id="pendingSubsList">
+<div class="empty"><div class="empty-ico">⏳</div>Loading...</div>
+</div>
+</div>
+<div class="card">
+<div class="card-hdr"><div class="card-title">👑 Premium Members</div></div>
+<div class="card-body" id="premiumList">
+<div class="empty"><div class="empty-ico">👑</div>Loading...</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ══ REVENUE ══ -->
+<div class="page" id="page-revenue">
+<div class="page-hdr">
+<div class="page-title">Revenue</div>
+<div class="page-sub">Subscription earnings overview</div>
+</div>
+<div class="stats-grid" id="revStats"></div>
+<div class="card">
+<div class="card-hdr"><div class="card-title">💳 Transaction History</div></div>
+<div class="card-body" id="revList">
+<div class="empty"><div class="empty-ico">💰</div>Loading...</div>
+</div>
+</div>
+</div>
+<!-- ══ RX LOGS ══ -->
+<div class="page" id="page-rxlogs">
+<div class="page-hdr">
+<div class="page-title">Prescription Logs</div>
+<div class="page-sub">All AI-generated prescriptions</div>
+</div>
+<div class="filter-bar">
+<input class="search-inp" oninput="filterRxLogs(this.value)" placeholder="🔍 Search by doctor or diagnosis..."/>
+</div>
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Doctor</th><th>Diagnosis</th><th>Mode</th><th>Source</th><th>Date</th></tr></thead>
+<tbody id="rxlogTbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- ══ SETTINGS ══ -->
+<div class="page" id="page-settings">
+<div class="page-hdr">
+<div class="page-title">Settings</div>
+<div class="page-sub">System configuration</div>
+</div>
+<div class="grid-2">
+<div class="card">
+<div class="card-hdr"><div class="card-title">🔧 App Settings</div></div>
+<div class="card-body" id="settingsList"></div>
+</div>
+<div class="card">
+<div class="card-hdr"><div class="card-title">📢 Announcement</div></div>
+<div class="card-body">
+<div class="field" style="margin-bottom:10px">
+<label>Message</label>
+<textarea class="inp" id="announcementText" placeholder="Enter announcement for all doctors..."></textarea>
+</div>
+<div style="display:flex;gap:8px">
+<button class="btn btn-primary" onclick="saveAnnouncement()">Save</button>
+<button class="btn btn-danger" onclick="clearAnnouncement()">Clear</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><!-- /content -->
+</div><!-- /main -->
 </div><!-- /layout -->
 </div><!-- /adminApp -->
-
 <!-- DISEASE MODAL -->
 <div class="modal-overlay" id="diseaseModal" onclick="if(event.target===this)closeModal('diseaseModal')">
-  <div class="modal">
-    <div class="modal-hdr">
-      <div class="modal-title" id="disModalTitle">Add Disease</div>
-      <button class="modal-close" onclick="closeModal('diseaseModal')">✕ Close</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid" style="margin-bottom:10px">
-        <div class="field"><label>Disease Name *</label><input class="inp" id="d-name" placeholder="e.g. Typhoid Fever"></div>
-        <div class="field"><label>Category</label><input class="inp" id="d-cat" placeholder="e.g. Infectious"></div>
-        <div class="field"><label>ICD-10 Code</label><input class="inp" id="d-icd" placeholder="e.g. A01.0"></div>
-        <div class="field"><label>Aliases (comma separated)</label><input class="inp" id="d-alias" placeholder="enteric fever, typhus"></div>
-      </div>
-      <div class="field" style="margin-bottom:10px"><label>Clinical Notes</label><textarea class="inp" id="d-notes" placeholder="Brief clinical notes..."></textarea></div>
-      <input type="hidden" id="d-id">
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('diseaseModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDisease()">💾 Save Disease</button>
-    </div>
-  </div>
+<div class="modal">
+<div class="modal-hdr">
+<div class="modal-title" id="disModalTitle">Add Disease</div>
+<button class="modal-close" onclick="closeModal('diseaseModal')">✕ Close</button>
 </div>
-
+<div class="modal-body">
+<div class="form-grid" style="margin-bottom:10px">
+<div class="field"><label>Disease Name *</label><input class="inp" id="d-name" placeholder="e.g. Typhoid Fever"/></div>
+<div class="field"><label>Category</label><input class="inp" id="d-cat" placeholder="e.g. Infectious"/></div>
+<div class="field"><label>ICD-10 Code</label><input class="inp" id="d-icd" placeholder="e.g. A01.0"/></div>
+<div class="field"><label>Aliases (comma separated)</label><input class="inp" id="d-alias" placeholder="enteric fever, typhus"/></div>
+</div>
+<div class="field" style="margin-bottom:10px"><label>Clinical Notes</label><textarea class="inp" id="d-notes" placeholder="Brief clinical notes..."></textarea></div>
+<input id="d-id" type="hidden"/>
+</div>
+<div class="modal-foot">
+<button class="btn btn-ghost" onclick="closeModal('diseaseModal')">Cancel</button>
+<button class="btn btn-primary" onclick="saveDisease()">💾 Save Disease</button>
+</div>
+</div>
+</div>
 <!-- DRUG MODAL -->
 <div class="modal-overlay" id="drugModal" onclick="if(event.target===this)closeModal('drugModal')">
-  <div class="modal">
-    <div class="modal-hdr">
-      <div class="modal-title" id="drugModalTitle">Add Drug</div>
-      <button class="modal-close" onclick="closeModal('drugModal')">✕ Close</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid" style="margin-bottom:10px">
-        <div class="field"><label>Generic Name *</label><input class="inp" id="dr-name" placeholder="e.g. Azithromycin"></div>
-        <div class="field"><label>Brand Names (comma)</label><input class="inp" id="dr-brands" placeholder="Zetro, Azomax"></div>
-        <div class="field"><label>Category</label><input class="inp" id="dr-cat" placeholder="e.g. Antibiotic"></div>
-        <div class="field"><label>Adult Dose</label><input class="inp" id="dr-adose" placeholder="500mg OD × 5 days"></div>
-        <div class="field"><label>Child Dose</label><input class="inp" id="dr-cdose" placeholder="10mg/kg OD"></div>
-        <div class="field"><label>Pregnancy Safe?</label>
-          <select class="inp" id="dr-preg"><option value="true">Yes — Category B</option><option value="false">No — Avoid</option><option value="caution">Caution</option></select>
-        </div>
-      </div>
-      <div class="field" style="margin-bottom:10px"><label>Contraindications</label><input class="inp" id="dr-ci" placeholder="e.g. Penicillin allergy"></div>
-      <input type="hidden" id="dr-id">
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('drugModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDrug()">💾 Save Drug</button>
-    </div>
-  </div>
+<div class="modal">
+<div class="modal-hdr">
+<div class="modal-title" id="drugModalTitle">Add Drug</div>
+<button class="modal-close" onclick="closeModal('drugModal')">✕ Close</button>
 </div>
-
-<script>
-var SB  = 'https://epvfbxzuziihhcaaaizp.supabase.co';
-var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
-var ADMIN_CODE = 'RxEasy@Admin2026';
-var SESSION = null;
-var _diseases = [], _drugs = [], _doctors = [], _rxlogs = [];
-
-// ── Helpers ──
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function toast(msg,dur=2500){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
-function openModal(id){document.getElementById(id).classList.add('show');}
-function closeModal(id){document.getElementById(id).classList.remove('show');}
-
-async function api(path,params='',method='GET',body=null){
-  var token = SESSION ? SESSION.access_token : KEY;
-  var opts = {method, headers:{'apikey':KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json'}};
-  if(body) opts.body = JSON.stringify(body);
-  var r = await fetch(SB+'/rest/v1/'+path+params, opts);
-  if(r.status===204) return null;
-  return r.json();
-}
-
-// ── LOCK ──
-function checkCode(){var v=document.getElementById('codeInp').value.trim();return v===ADMIN_CODE;}
-function unlockAdmin(){
-  if(!checkCode()){
-    document.getElementById('lockErr').textContent='❌ Invalid access code';
-    document.getElementById('codeInp').value='';
-    return;
-  }
-  sessionStorage.setItem('adminUnlocked','1');
-  document.getElementById('lockScreen').style.display='none';
-  document.getElementById('adminApp').style.display='block';
-  initAdmin();
-}
-document.getElementById('codeInp').addEventListener('keydown',function(e){if(e.key==='Enter')unlockAdmin();});
-// Auto-unlock if already unlocked
-if(sessionStorage.getItem('adminUnlocked')==='1'){
-  document.getElementById('lockScreen').style.display='none';
-  document.getElementById('adminApp').style.display='block';
-}
-
-// ── NAVIGATION ──
-function showPage(id, el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  if(el) el.classList.add('active');
-  else {
-    document.querySelectorAll('.nav-item').forEach(n=>{
-      if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'")) n.classList.add('active');
-    });
-  }
-  var titles={dashboard:'Dashboard',analytics:'Analytics',diseases:'Diseases DB',drugs:'Drug DB',doctors:'Doctors',subscriptions:'Subscriptions',revenue:'Revenue',rxlogs:'Rx Logs',settings:'Settings'};
-  document.getElementById('topbarTitle').textContent = titles[id]||id;
-  // Load data for page
-  var loaders={diseases:loadDiseases,drugs:loadDrugs,doctors:loadDoctors,subscriptions:()=>{loadSubscriptions();loadPremium();},analytics:loadAnalytics,revenue:loadRevenue,rxlogs:loadRxLogs,settings:loadSettings};
-  if(loaders[id]) loaders[id]();
-}
-
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}
-
-// ── INIT ──
-function initAdmin(){
-  startClock();
-  initDashboard();
-  loadPendingCount();
-  // Get session from parent app if available
-  try{SESSION=JSON.parse(localStorage.getItem('sb_session')||'null');}catch(e){}
-}
-
-function startClock(){
-  function tick(){
-    var now=new Date();
-    var el=document.getElementById('adminClock');
-    if(el) el.textContent=now.toLocaleString('en-PK',{hour:'2-digit',minute:'2-digit',hour12:true,day:'2-digit',month:'short'});
-  }
-  tick(); setInterval(tick,60000);
-}
-
-// ── DASHBOARD ──
-async function initDashboard(){
-  try{
-    var [docs, prem, dis, drugs, rx] = await Promise.all([
-      api('doctor_profiles','?select=id,is_premium,query_count,created_at&limit=1000'),
-      api('doctor_profiles','?is_premium=eq.true&select=id'),
-      api('diseases','?select=id&limit=1'),
-      api('drugs','?select=id&limit=1'),
-      api('prescription_logs','?select=id&limit=1'),
-    ]);
-    document.getElementById('s-docs').textContent = Array.isArray(docs)?docs.length:'—';
-    document.getElementById('s-prem').textContent = Array.isArray(prem)?prem.length:'—';
-    document.getElementById('s-dis').textContent  = '—';
-    document.getElementById('s-rx').textContent   = '—';
-    // Pending
-    var pend = await api('subscription_requests','?status=eq.pending&select=id');
-    document.getElementById('s-pend').textContent = Array.isArray(pend)?pend.length:'0';
-    // Recent docs
-    if(Array.isArray(docs)){
-      loadRecentDocs(docs.slice(-5).reverse());
-    }
-    // Chart
-    initRxChart();
-    loadTopDiseases();
-  }catch(e){console.error('Dashboard error:',e);}
-}
-
-function loadRecentDocs(docs){
-  var el=document.getElementById('recentDocs');
-  if(!docs||!docs.length){el.innerHTML='<div class="empty"><div class="empty-ico">👨‍⚕️</div>No doctors yet</div>';return;}
-  el.innerHTML=docs.map(d=>`
-    <div class="recent-item">
-      <div class="ri-ico">👨‍⚕️</div>
-      <div><div class="ri-name">${esc(d.full_name||'Doctor')}</div><div class="ri-sub">${esc(d.email||'')}</div></div>
-      <div>${d.is_premium?'<span class="badge gd">👑 Premium</span>':'<span class="badge gray">Free</span>'}</div>
-    </div>`).join('');
-}
-
-function initRxChart(){
-  var ctx=document.getElementById('rxChart');
-  if(!ctx)return;
-  var labels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  var data=labels.map(()=>Math.floor(Math.random()*40+10));
-  new Chart(ctx,{
-    type:'line',
-    data:{labels,datasets:[{label:'Prescriptions',data,borderColor:'#00c896',backgroundColor:'rgba(0,200,150,.08)',borderWidth:2,pointBackgroundColor:'#00c896',pointRadius:3,tension:.4,fill:true}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(221,234,245,.4)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(221,234,245,.4)',font:{size:10}}}}}
-  });
-}
-
-async function loadTopDiseases(){
-  var el=document.getElementById('topDiseaseList');
-  if(!el)return;
-  var data=await api('prescription_logs','?select=disease_name&limit=100');
-  if(!Array.isArray(data)||!data.length){
-    el.innerHTML='<div class="empty"><div class="empty-ico">🦠</div>No data yet</div>';return;
-  }
-  var counts={};
-  data.forEach(r=>{if(r.disease_name)counts[r.disease_name]=(counts[r.disease_name]||0)+1;});
-  var sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  var max=sorted[0]?sorted[0][1]:1;
-  el.innerHTML=sorted.map(([name,count])=>`
-    <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:3px">
-        <span style="color:var(--tx)">${esc(name)}</span>
-        <span style="color:var(--tx3)">${count}</span>
-      </div>
-      <div style="background:var(--sf2);border-radius:4px;height:4px;overflow:hidden">
-        <div style="background:var(--tl);height:100%;width:${Math.round(count/max*100)}%;border-radius:4px;transition:width .5s"></div>
-      </div>
-    </div>`).join('');
-}
-
-async function loadPendingCount(){
-  try{
-    var pend=await api('subscription_requests','?status=eq.pending&select=id');
-    var count=Array.isArray(pend)?pend.length:0;
-    var badge=document.getElementById('pendingBadge');
-    if(badge){badge.textContent=count;badge.style.display=count>0?'inline-flex':'none';}
-    var el=document.getElementById('s-pend');
-    if(el) el.textContent=count;
-  }catch(e){}
-}
-
-// ── DISEASES ──
-async function loadDiseases(){
-  var data=await api('diseases','?order=name.asc&limit=200');
-  _diseases=Array.isArray(data)?data:[];
-  document.getElementById('disCount').textContent=_diseases.length+' diseases in database';
-  renderDiseases(_diseases);
-}
-function renderDiseases(list){
-  var tb=document.getElementById('diseaseTbody');
-  if(!list.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">No diseases found</td></tr>';return;}
-  tb.innerHTML=list.map(d=>`<tr>
-    <td><strong style="color:var(--tx)">${esc(d.name)}</strong></td>
-    <td><span class="badge bl">${esc(d.category||'—')}</span></td>
-    <td><span style="font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--tx3)">${esc(d.icd10||'—')}</span></td>
-    <td><span class="badge tl">${d.treatment_count||0} drugs</span></td>
-    <td style="display:flex;gap:5px">
-      <button class="btn btn-ghost btn-sm" onclick="editDisease('${d.id}')">✏️ Edit</button>
-      <button class="btn btn-danger btn-sm" onclick="delDisease('${d.id}')">🗑️</button>
-    </td>
-  </tr>`).join('');
-}
-function filterDiseases(q){renderDiseases(_diseases.filter(d=>!q||d.name.toLowerCase().includes(q.toLowerCase())));}
-function resetDiseaseForm(){document.getElementById('d-id').value='';document.getElementById('d-name').value='';document.getElementById('d-cat').value='';document.getElementById('d-icd').value='';document.getElementById('d-alias').value='';document.getElementById('d-notes').value='';document.getElementById('disModalTitle').textContent='Add Disease';}
-function editDisease(id){
-  var d=_diseases.find(x=>x.id===id);if(!d)return;
-  document.getElementById('d-id').value=d.id;
-  document.getElementById('d-name').value=d.name||'';
-  document.getElementById('d-cat').value=d.category||'';
-  document.getElementById('d-icd').value=d.icd10||'';
-  document.getElementById('d-alias').value=(d.aliases||[]).join(', ');
-  document.getElementById('d-notes').value=d.notes||'';
-  document.getElementById('disModalTitle').textContent='Edit Disease';
-  openModal('diseaseModal');
-}
-async function saveDisease(){
-  var id=document.getElementById('d-id').value;
-  var body={name:document.getElementById('d-name').value.trim(),category:document.getElementById('d-cat').value.trim(),icd10:document.getElementById('d-icd').value.trim(),aliases:document.getElementById('d-alias').value.split(',').map(s=>s.trim()).filter(Boolean),notes:document.getElementById('d-notes').value.trim()};
-  if(!body.name){toast('Disease name required');return;}
-  try{
-    if(id){await api('diseases','?id=eq.'+id,'PATCH',body);}
-    else{await api('diseases','','POST',body);}
-    toast('✅ Disease saved!');closeModal('diseaseModal');loadDiseases();
-  }catch(e){toast('❌ Error: '+e.message);}
-}
-async function delDisease(id){
-  if(!confirm('Delete this disease?'))return;
-  await api('diseases','?id=eq.'+id,'DELETE');
-  toast('🗑️ Deleted');loadDiseases();
-}
-
-// ── DRUGS ──
-async function loadDrugs(){
-  var data=await api('drugs','?order=generic_name.asc&limit=300');
-  _drugs=Array.isArray(data)?data:[];
-  document.getElementById('drugCount').textContent=_drugs.length+' drugs in database';
-  renderDrugs(_drugs);
-}
-function renderDrugs(list){
-  var tb=document.getElementById('drugTbody');
-  if(!list.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">No drugs found</td></tr>';return;}
-  tb.innerHTML=list.map(d=>`<tr>
-    <td><strong style="color:var(--tx)">${esc(d.generic_name)}</strong></td>
-    <td><span style="font-size:.68rem;color:var(--tl)">${(d.brand_names||[]).slice(0,3).join(', ')||'—'}</span></td>
-    <td><span class="badge bl">${esc(d.category||'—')}</span></td>
-    <td><span style="font-family:'JetBrains Mono',monospace;font-size:.68rem">${esc(d.standard_dose_adult||'—')}</span></td>
-    <td style="display:flex;gap:5px">
-      <button class="btn btn-ghost btn-sm" onclick="editDrug('${d.id}')">✏️</button>
-      <button class="btn btn-danger btn-sm" onclick="delDrug('${d.id}')">🗑️</button>
-    </td>
-  </tr>`).join('');
-}
-function filterDrugs(q){renderDrugs(_drugs.filter(d=>!q||d.generic_name.toLowerCase().includes(q.toLowerCase())||(d.brand_names||[]).some(b=>b.toLowerCase().includes(q.toLowerCase()))));}
-function resetDrugForm(){['dr-id','dr-name','dr-brands','dr-cat','dr-adose','dr-cdose','dr-ci'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});document.getElementById('drugModalTitle').textContent='Add Drug';}
-function editDrug(id){
-  var d=_drugs.find(x=>x.id===id);if(!d)return;
-  document.getElementById('dr-id').value=d.id;
-  document.getElementById('dr-name').value=d.generic_name||'';
-  document.getElementById('dr-brands').value=(d.brand_names||[]).join(', ');
-  document.getElementById('dr-cat').value=d.category||'';
-  document.getElementById('dr-adose').value=d.standard_dose_adult||'';
-  document.getElementById('dr-cdose').value=d.standard_dose_child||'';
-  document.getElementById('dr-ci').value=d.contraindications||'';
-  document.getElementById('drugModalTitle').textContent='Edit Drug';
-  openModal('drugModal');
-}
-async function saveDrug(){
-  var id=document.getElementById('dr-id').value;
-  var body={generic_name:document.getElementById('dr-name').value.trim(),brand_names:document.getElementById('dr-brands').value.split(',').map(s=>s.trim()).filter(Boolean),category:document.getElementById('dr-cat').value.trim(),standard_dose_adult:document.getElementById('dr-adose').value.trim(),standard_dose_child:document.getElementById('dr-cdose').value.trim(),contraindications:document.getElementById('dr-ci').value.trim(),pregnancy_safe:document.getElementById('dr-preg').value};
-  if(!body.generic_name){toast('Drug name required');return;}
-  try{
-    if(id){await api('drugs','?id=eq.'+id,'PATCH',body);}
-    else{await api('drugs','','POST',body);}
-    toast('✅ Drug saved!');closeModal('drugModal');loadDrugs();
-  }catch(e){toast('❌ Error: '+e.message);}
-}
-async function delDrug(id){
-  if(!confirm('Delete this drug?'))return;
-  await api('drugs','?id=eq.'+id,'DELETE');
-  toast('🗑️ Deleted');loadDrugs();
-}
-
-// ── DOCTORS ──
-async function loadDoctors(){
-  var data=await api('doctor_profiles','?order=created_at.desc&limit=200');
-  _doctors=Array.isArray(data)?data:[];
-  document.getElementById('docCount').textContent=_doctors.length+' registered doctors';
-  renderDoctors(_doctors);
-}
-function renderDoctors(list){
-  var tb=document.getElementById('doctorTbody');
-  if(!list.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--tx3)">No doctors found</td></tr>';return;}
-  tb.innerHTML=list.map(d=>`<tr>
-    <td><div style="display:flex;align-items:center;gap:8px"><div class="av">${(d.full_name||'D')[0]}</div><div><div style="font-size:.76rem;font-weight:600;color:var(--tx)">${esc(d.full_name||'—')}</div><div style="font-size:.6rem;color:var(--tx3)">${esc(d.qualification||'')}</div></div></div></td>
-    <td style="font-size:.7rem;color:var(--tx2)">${esc(d.email||'—')}</td>
-    <td>${d.is_premium?'<span class="badge gd">👑 Premium</span>':d.is_admin?'<span class="badge bl">⚡ Admin</span>':'<span class="badge gray">Free</span>'}</td>
-    <td><span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--tx3)">${d.query_count||0}</span></td>
-    <td style="font-size:.65rem;color:var(--tx3)">${d.created_at?new Date(d.created_at).toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'}):'—'}</td>
-    <td style="display:flex;gap:4px">
-      ${!d.is_premium?`<button class="btn btn-gold btn-sm" onclick="grantPremium('${d.id}')">👑</button>`:`<button class="btn btn-danger btn-sm" onclick="revokePremium('${d.id}')">Revoke</button>`}
-      <button class="btn btn-ghost btn-sm" onclick="toggleAdmin('${d.id}',${d.is_admin})">${d.is_admin?'−Admin':'+Admin'}</button>
-    </td>
-  </tr>`).join('');
-}
-function filterDoctors(q){renderDoctors(_doctors.filter(d=>!q||(d.full_name||'').toLowerCase().includes(q.toLowerCase())||(d.email||'').toLowerCase().includes(q.toLowerCase())));}
-async function toggleAdmin(id,isAdmin){
-  await api('doctor_profiles','?id=eq.'+id,'PATCH',{is_admin:!isAdmin});
-  toast(isAdmin?'Admin removed':'Admin granted');loadDoctors();
-}
-async function grantPremium(id){
-  var exp=new Date();exp.setFullYear(exp.getFullYear()+1);
-  await api('doctor_profiles','?id=eq.'+id,'PATCH',{is_premium:true,premium_since:new Date().toISOString(),premium_expires:exp.toISOString()});
-  toast('👑 Premium granted!');loadDoctors();loadPendingCount();
-}
-async function revokePremium(id){
-  if(!confirm('Revoke premium?'))return;
-  await api('doctor_profiles','?id=eq.'+id,'PATCH',{is_premium:false});
-  toast('Premium revoked');loadDoctors();
-}
-async function grantById(){
-  var email=document.getElementById('grantEmail').value.trim();
-  if(!email){toast('Enter email');return;}
-  var docs=await api('doctor_profiles','?email=eq.'+encodeURIComponent(email));
-  if(!docs||!docs.length){toast('❌ Doctor not found');return;}
-  await grantPremium(docs[0].id);
-  document.getElementById('grantEmail').value='';
-}
-
-// ── SUBSCRIPTIONS ──
-async function loadSubscriptions(){
-  var data=await api('subscription_requests','?status=eq.pending&order=created_at.desc&limit=50');
-  var el=document.getElementById('pendingSubsList');
-  if(!Array.isArray(data)||!data.length){el.innerHTML='<div class="empty"><div class="empty-ico">✅</div>No pending requests</div>';return;}
-  el.innerHTML=data.map(s=>`
-    <div class="recent-item">
-      <div class="ri-ico">⏳</div>
-      <div style="flex:1">
-        <div class="ri-name">${esc(s.doctor_email||'Unknown')}</div>
-        <div class="ri-sub">${s.created_at?new Date(s.created_at).toLocaleDateString('en-PK'):'—'} · Rs.${s.amount||500}</div>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button class="btn btn-primary btn-sm" onclick="approveSub('${s.id}','${s.doctor_email}')">✅</button>
-        <button class="btn btn-danger btn-sm" onclick="rejectSub('${s.id}')">❌</button>
-      </div>
-    </div>`).join('');
-}
-async function loadPremium(){
-  var data=await api('doctor_profiles','?is_premium=eq.true&order=premium_since.desc&limit=50');
-  var el=document.getElementById('premiumList');
-  if(!Array.isArray(data)||!data.length){el.innerHTML='<div class="empty"><div class="empty-ico">👑</div>No premium members yet</div>';return;}
-  el.innerHTML=data.map(d=>`
-    <div class="recent-item">
-      <div class="av">${(d.full_name||'D')[0]}</div>
-      <div style="flex:1">
-        <div class="ri-name">${esc(d.full_name||'Doctor')}</div>
-        <div class="ri-sub">${esc(d.email||'')} · Expires: ${d.premium_expires?new Date(d.premium_expires).toLocaleDateString('en-PK'):'—'}</div>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="revokePremium('${d.id}')">Revoke</button>
-    </div>`).join('');
-}
-async function approveSub(id,email){
-  var docs=await api('doctor_profiles','?email=eq.'+encodeURIComponent(email));
-  if(docs&&docs.length) await grantPremium(docs[0].id);
-  await api('subscription_requests','?id=eq.'+id,'PATCH',{status:'approved',approved_at:new Date().toISOString()});
-  toast('✅ Approved & premium granted!');loadSubscriptions();loadPremium();loadPendingCount();
-}
-async function rejectSub(id){
-  await api('subscription_requests','?id=eq.'+id,'PATCH',{status:'rejected'});
-  toast('❌ Rejected');loadSubscriptions();
-}
-
-// ── ANALYTICS ──
-async function loadAnalytics(){
-  var docs=await api('doctor_profiles','?select=id,is_premium,query_count,created_at&limit=500');
-  if(!Array.isArray(docs))return;
-  var total=docs.length, premium=docs.filter(d=>d.is_premium).length;
-  var totalRx=docs.reduce((s,d)=>s+(d.query_count||0),0);
-  document.getElementById('analyticsStats').innerHTML=`
-    <div class="stat-card tl"><div class="stat-icon">👨‍⚕️</div><div class="stat-label">Total Doctors</div><div class="stat-value">${total}</div></div>
-    <div class="stat-card gd"><div class="stat-icon">👑</div><div class="stat-label">Premium</div><div class="stat-value">${premium}</div></div>
-    <div class="stat-card bl"><div class="stat-icon">📊</div><div class="stat-label">Total Rx Generated</div><div class="stat-value">${totalRx}</div></div>
-    <div class="stat-card or"><div class="stat-icon">📈</div><div class="stat-label">Conversion Rate</div><div class="stat-value">${total?Math.round(premium/total*100):0}%</div></div>`;
-  // Growth chart
-  var ctx=document.getElementById('growthChart');
-  if(ctx&&!ctx._chart){
-    var months=['Oct','Nov','Dec','Jan','Feb','Mar'];
-    var data=months.map(()=>Math.floor(Math.random()*15+5));
-    ctx._chart=new Chart(ctx,{type:'bar',data:{labels:months,datasets:[{label:'New Doctors',data,backgroundColor:'rgba(0,200,150,.3)',borderColor:'var(--tl)',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(221,234,245,.4)',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(221,234,245,.4)',font:{size:10}}}}}});
-  }
-  // Active doctors
-  var active=docs.filter(d=>(d.query_count||0)>0).sort((a,b)=>(b.query_count||0)-(a.query_count||0)).slice(0,8);
-  document.getElementById('activeDoctorsList').innerHTML=active.length?active.map(d=>`
-    <div class="recent-item">
-      <div class="av">${(d.full_name||'D')[0]}</div>
-      <div style="flex:1"><div class="ri-name">${esc(d.full_name||'Doctor')}</div></div>
-      <span class="badge tl">${d.query_count} Rx</span>
-    </div>`).join(''):'<div class="empty"><div class="empty-ico">📊</div>No activity yet</div>';
-}
-
-// ── REVENUE ──
-async function loadRevenue(){
-  var prem=await api('doctor_profiles','?is_premium=eq.true&select=id,full_name,email,premium_since&order=premium_since.desc&limit=100');
-  var count=Array.isArray(prem)?prem.length:0;
-  var revenue=count*500;
-  document.getElementById('revStats').innerHTML=`
-    <div class="stat-card gd"><div class="stat-icon">💰</div><div class="stat-label">Total Revenue</div><div class="stat-value">Rs.${revenue.toLocaleString()}</div></div>
-    <div class="stat-card tl"><div class="stat-icon">👑</div><div class="stat-label">Premium Members</div><div class="stat-value">${count}</div></div>
-    <div class="stat-card bl"><div class="stat-icon">📅</div><div class="stat-label">Monthly Recurring</div><div class="stat-value">Rs.${Math.round(revenue/12).toLocaleString()}</div></div>`;
-  var el=document.getElementById('revList');
-  if(!Array.isArray(prem)||!prem.length){el.innerHTML='<div class="empty"><div class="empty-ico">💰</div>No transactions yet</div>';return;}
-  el.innerHTML=`<table width="100%"><thead><tr><th>Doctor</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>`+
-    prem.map(d=>`<tr>
-      <td><div class="ri-name">${esc(d.full_name||'Doctor')}</div><div class="ri-sub">${esc(d.email||'')}</div></td>
-      <td><strong style="color:var(--gd)">Rs. 500</strong></td>
-      <td style="font-size:.65rem;color:var(--tx3)">${d.premium_since?new Date(d.premium_since).toLocaleDateString('en-PK'):'—'}</td>
-      <td><span class="badge tl">✅ Paid</span></td>
-    </tr>`).join('')+'</tbody></table>';
-}
-
-// ── RX LOGS ──
-async function loadRxLogs(){
-  var data=await api('prescription_logs','?order=created_at.desc&limit=100');
-  _rxlogs=Array.isArray(data)?data:[];
-  renderRxLogs(_rxlogs);
-}
-function renderRxLogs(list){
-  var tb=document.getElementById('rxlogTbody');
-  if(!list.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">No logs yet</td></tr>';return;}
-  tb.innerHTML=list.map(r=>`<tr>
-    <td style="font-size:.72rem;color:var(--tx)">${esc(r.doctor_name||r.doctor_id||'—')}</td>
-    <td style="font-size:.72rem;color:var(--tx2)">${esc(r.disease_name||r.query||'—')}</td>
-    <td><span class="badge ${r.patient_mode==='child'?'bl':r.patient_mode==='pregnant'?'rd':'gray'}">${esc(r.patient_mode||'adult')}</span></td>
-    <td><span class="badge ${r.source==='db'?'tl':'or'}">${r.source==='db'?'✅ DB':'⚡ AI'}</span></td>
-    <td style="font-size:.65rem;color:var(--tx3)">${r.created_at?new Date(r.created_at).toLocaleDateString('en-PK',{day:'2-digit',month:'short'}):'—'}</td>
-  </tr>`).join('');
-}
-function filterRxLogs(q){renderRxLogs(_rxlogs.filter(r=>!q||(r.disease_name||'').toLowerCase().includes(q.toLowerCase())||(r.doctor_name||'').toLowerCase().includes(q.toLowerCase())));}
-
-// ── SETTINGS ──
-async function loadSettings(){
-  var data=await api('app_settings','?limit=50');
-  var el=document.getElementById('settingsList');
-  if(!Array.isArray(data)||!data.length){
-    el.innerHTML='<div class="empty"><div class="empty-ico">⚙️</div>No settings configured</div>';return;
-  }
-  el.innerHTML=data.map(s=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd2)">
-      <div><div style="font-size:.76rem;font-weight:600;color:var(--tx)">${esc(s.key)}</div><div style="font-size:.62rem;color:var(--tx3)">${esc(s.description||'')}</div></div>
-      ${s.type==='boolean'?`<label class="tgl"><input type="checkbox" ${s.value==='true'?'checked':''} onchange="toggleSetting('${s.key}',this.checked)"><span class="tsl"></span></label>`:`<input class="inp" style="width:140px" value="${esc(s.value||'')}" onchange="saveSetting('${s.key}',this.value)">`}
-    </div>`).join('');
-}
-async function saveSetting(key,val){await api('app_settings','?key=eq.'+key,'PATCH',{value:String(val)});toast('✅ Saved');}
-async function toggleSetting(key,val){await api('app_settings','?key=eq.'+key,'PATCH',{value:String(val)});toast('✅ Updated');}
-async function saveAnnouncement(){
-  var txt=document.getElementById('announcementText').value.trim();
-  if(!txt){toast('Enter announcement text');return;}
-  await api('app_settings','?key=eq.announcement','PATCH',{value:txt});
-  toast('📢 Announcement saved!');
-}
-async function clearAnnouncement(){
-  await api('app_settings','?key=eq.announcement','PATCH',{value:''});
-  document.getElementById('announcementText').value='';
-  toast('Announcement cleared');
-}
-
-function doLogout(){
-  sessionStorage.removeItem('adminUnlocked');
-  window.location.href='index.html';
-}
-
-// Init
-if(sessionStorage.getItem('adminUnlocked')==='1') initAdmin();
-</script>
+<div class="modal-body">
+<div class="form-grid" style="margin-bottom:10px">
+<div class="field"><label>Generic Name *</label><input class="inp" id="dr-name" placeholder="e.g. Azithromycin"/></div>
+<div class="field"><label>Brand Names (comma)</label><input class="inp" id="dr-brands" placeholder="Zetro, Azomax"/></div>
+<div class="field"><label>Category</label><input class="inp" id="dr-cat" placeholder="e.g. Antibiotic"/></div>
+<div class="field"><label>Adult Dose</label><input class="inp" id="dr-adose" placeholder="500mg OD × 5 days"/></div>
+<div class="field"><label>Child Dose</label><input class="inp" id="dr-cdose" placeholder="10mg/kg OD"/></div>
+<div class="field"><label>Pregnancy Safe?</label>
+<select class="inp" id="dr-preg"><option value="true">Yes — Category B</option><option value="false">No — Avoid</option><option value="caution">Caution</option></select>
+</div>
+</div>
+<div class="field" style="margin-bottom:10px"><label>Contraindications</label><input class="inp" id="dr-ci" placeholder="e.g. Penicillin allergy"/></div>
+<input id="dr-id" type="hidden"/>
+</div>
+<div class="modal-foot">
+<button class="btn btn-ghost" onclick="closeModal('drugModal')">Cancel</button>
+<button class="btn btn-primary" onclick="saveDrug()">💾 Save Drug</button>
+</div>
+</div>
+</div>
+<script src="assets/js/admin-1.js"></script>
 </body>
 </html>
