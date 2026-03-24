@@ -81,11 +81,11 @@ async function doRegister(){
       await fetch(SB+'/rest/v1/doctor_profiles',{
         method:'POST',
         headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+d.access_token,'Prefer':'return=minimal'},
-        body:JSON.stringify({id:d.user.id,full_name:name,email:email,qualification:qual,city:city||null,pmdc_number:pmdc||null,is_approved:true,is_admin:false})
+        body:JSON.stringify({id:d.user.id,full_name:name,email:email,qualification:qual,city:city||null,pmdc_number:pmdc||null,is_approved:false,is_admin:false})
       });
       localStorage.setItem('sb_session',JSON.stringify({access_token:d.access_token,refresh_token:d.refresh_token||'',user:d.user}));
-      so('Account created! Redirecting...');
-      setTimeout(function(){window.location.href='index.html';},1000);
+      so('Account created! Awaiting admin approval. You will be notified shortly.');
+      setTimeout(function(){window.location.href='index.html';},1500);
     } else {
       so('Check your email to verify your account, then login.');
       setBtn('regBtn',false,'Create Doctor Account');

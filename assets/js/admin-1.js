@@ -1,6 +1,6 @@
 var SB  = 'https://epvfbxzuziihhcaaaizp.supabase.co';
 var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
-var ADMIN_CODE = 'RxEasy@Admin2026';
+// ADMIN_CODE removed — admin access now verified server-side via Supabase is_admin
 var SESSION = null;
 var _diseases = [], _drugs = [], _doctors = [], _rxlogs = [];
 
@@ -19,25 +19,60 @@ async function api(path,params='',method='GET',body=null){
   return r.json();
 }
 
-// ── LOCK ──
-function checkCode(){var v=document.getElementById('codeInp').value.trim();return v===ADMIN_CODE;}
-function unlockAdmin(){
-  if(!checkCode()){
-    document.getElementById('lockErr').textContent='❌ Invalid access code';
-    document.getElementById('codeInp').value='';
+// ── LOCK — verified server-side via Supabase is_admin ──
+async function unlockAdmin(){
+  var btn = document.getElementById('unlockBtn');
+  var errEl = document.getElementById('lockErr');
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+
+  // 1. Load session from localStorage
+  var session = null;
+  try { session = JSON.parse(localStorage.getItem('sb_session') || 'null'); } catch(e){}
+
+  // 2. No session → redirect to login
+  if (!session || !session.access_token) {
+    window.location.href = 'login.html';
     return;
   }
-  sessionStorage.setItem('adminUnlocked','1');
-  document.getElementById('lockScreen').style.display='none';
-  document.getElementById('adminApp').style.display='block';
-  initAdmin();
+
+  SESSION = session;
+
+  // 3. Ask Supabase: is this user actually an admin?
+  try {
+    var r = await fetch(SB + '/rest/v1/doctor_profiles?select=is_admin&limit=1', {
+      headers: {
+        'apikey': KEY,
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json'
+      }
+    });
+    var data = await r.json();
+    var isAdmin = Array.isArray(data) && data.length > 0 && data[0].is_admin === true;
+
+    if (!isAdmin) {
+      errEl.textContent = '❌ Access denied. Admin privileges required.';
+      btn.disabled = false;
+      btn.textContent = 'Access Admin Panel';
+      SESSION = null;
+      return;
+    }
+
+    // 4. Confirmed admin — show panel
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    initAdmin();
+
+  } catch(e) {
+    errEl.textContent = '❌ Network error. Check your connection.';
+    btn.disabled = false;
+    btn.textContent = 'Access Admin Panel';
+  }
 }
-document.getElementById('codeInp').addEventListener('keydown',function(e){if(e.key==='Enter')unlockAdmin();});
-// Auto-unlock if already unlocked
-if(sessionStorage.getItem('adminUnlocked')==='1'){
-  document.getElementById('lockScreen').style.display='none';
-  document.getElementById('adminApp').style.display='block';
-}
+
+// Auto-verify on page load (no manual code entry needed)
+window.addEventListener('load', function() { unlockAdmin(); });
 
 // ── NAVIGATION ──
 function showPage(id, el){
@@ -79,8 +114,7 @@ function initAdmin(){
   startClock();
   initDashboard();
   loadPendingCount();
-  // Get session from parent app if available
-  try{SESSION=JSON.parse(localStorage.getItem('sb_session')||'null');}catch(e){}
+  // SESSION is already set and verified in unlockAdmin()
 }
 
 function startClock(){
@@ -473,9 +507,9 @@ async function clearAnnouncement(){
 }
 
 function doLogout(){
-  sessionStorage.removeItem('adminUnlocked');
-  window.location.href='index.html';
+  // Clear session fully — no sessionStorage flag needed anymore
+  localStorage.removeItem('sb_session');
+  window.location.href = 'login.html';
 }
 
-// Init
-if(sessionStorage.getItem('adminUnlocked')==='1') initAdmin();
+// Init — triggered automatically on window load via unlockAdmin()
