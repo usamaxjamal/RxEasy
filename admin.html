@@ -368,15 +368,14 @@ textarea.inp{resize:vertical;min-height:70px}
 <!-- TOAST -->
 <div id="toast"></div>
 <!-- LOCK SCREEN -->
-<div id="lockScreen">
+
 <div class="lock-card">
 <div class="lock-emblem">
 <div class="lock-rx">Rx<span>E</span></div>
 </div>
 <div class="lock-title">Admin Panel</div>
-<div class="lock-sub">Enter access code to continue</div>
-<input class="lock-inp" id="codeInp" onkeydown="if(event.key==='Enter')unlockAdmin()" placeholder="••••••••••••" type="password"/>
-<button class="lock-btn" onclick="unlockAdmin()">Access Admin Panel</button>
+<div class="lock-sub">Verifying your admin privileges...</div>
+<button class="lock-btn" id="unlockBtn" onclick="unlockAdmin()" style="margin-top:8px">Access Admin Panel</button>
 <div class="lock-err" id="lockErr"></div>
 </div>
 </div>
