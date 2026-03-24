@@ -1,8 +1,10 @@
-// Bug #1: Keys kept as named constants (comment instructs env-var migration)
-// To migrate: replace these with build-time env vars (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
-// Ensure strict Row Level Security (RLS) is enabled on ALL Supabase tables.
-const SB  = 'https://epvfbxzuziihhcaaaizp.supabase.co';
-const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
+// SEC-01 FIX: Keys loaded from window.__RXEASY_CONFIG__ (injected by config.js).
+// config.js must be included BEFORE this script in login.html.
+// Copy config.example.js → config.js, fill in your values, and NEVER commit it.
+const _cfg = (typeof window !== 'undefined' && window.__RXEASY_CONFIG__) || {};
+const SB  = _cfg.supabaseUrl  || '';
+const KEY = _cfg.supabaseKey  || '';
+if (!SB || !KEY) console.error('[RxEasy] Missing Supabase config. Did you include config.js?');
 
 // ── Helpers ──
 function se(m) { const e = document.getElementById('errMsg'); e.textContent = m; e.className = 'msg err show'; document.getElementById('okMsg').className = 'msg ok'; }
@@ -34,18 +36,24 @@ function setBtn(id, loading, txt) {
   btn.innerHTML = loading ? '<span class="spin"></span>Please wait...' : txt;
 }
 
-// Bug #11 Fix: Verify token validity before redirecting (not just existence)
+// SEC-03 FIX: Verify token validity AND expiry before redirecting.
+// An expired token in localStorage is just as dangerous as a stolen one.
 window.addEventListener('load', async function () {
   try {
     const s = JSON.parse(localStorage.getItem('sb_session') || 'null');
     if (s && s.access_token) {
+      // Check local expiry first — avoids a network round-trip for expired tokens
+      const now = Math.floor(Date.now() / 1000);
+      if (s.expires_at && s.expires_at < now) {
+        localStorage.removeItem('sb_session');
+        return;
+      }
       const r = await fetch(SB + '/auth/v1/user', {
         headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + s.access_token }
       });
       if (r.ok) {
         window.location.href = 'index.html';
       } else {
-        // Bug #2 Note: Clear invalid/expired session
         localStorage.removeItem('sb_session');
       }
     }
@@ -69,11 +77,15 @@ async function doLogin() {
     });
     const d = await r.json();
     if (!r.ok) { se(d.error_description || d.msg || 'Login failed. Check your credentials.'); setBtn('loginBtn', false, 'Login to RxEasy'); return; }
-    // Bug #2 Note: Ideally use Supabase JS client with httpOnly cookies.
-    // Ensure XSS mitigations (CSP headers) are in place on the server.
+    // SEC-03 NOTE: Tokens are stored in localStorage which is accessible to
+    // any JS running on this page. The CSP meta tag in login.html significantly
+    // reduces XSS risk, but the ideal long-term fix is to migrate to the
+    // official @supabase/supabase-js client configured with httpOnly cookies.
+    // Until then, the session is cleared on any 401 and on logout.
     localStorage.setItem('sb_session', JSON.stringify({
       access_token: d.access_token,
       refresh_token: d.refresh_token || '',
+      expires_at: d.expires_at || (Math.floor(Date.now() / 1000) + (d.expires_in || 3600)),
       user: d.user || {}
     }));
     so('Welcome back! Loading RxEasy...');
@@ -140,6 +152,7 @@ async function doRegister() {
       localStorage.setItem('sb_session', JSON.stringify({
         access_token: d.access_token,
         refresh_token: d.refresh_token || '',
+        expires_at: d.expires_at || (Math.floor(Date.now() / 1000) + (d.expires_in || 3600)),
         user: d.user
       }));
       so('Account created! Redirecting...');

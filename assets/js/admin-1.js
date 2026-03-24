@@ -1,7 +1,15 @@
-// Bug #1: Keys as const (migrate to env vars + enforce RLS on Supabase)
-const SB  = 'https://epvfbxzuziihhcaaaizp.supabase.co';
-const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
-const ADMIN_CODE = 'RxEasy@Admin2026';
+// SEC-01 FIX: Keys are now loaded from window.__RXEASY_CONFIG__ which is
+// injected by the server at runtime (see config.js). They are NOT hardcoded
+// here. To set up locally, copy config.example.js → config.js and fill in
+// your values. NEVER commit config.js to source control.
+//
+// SEC-02 FIX: ADMIN_CODE has been removed entirely. Admin access is now
+// verified server-side by checking is_admin on the doctor_profiles row
+// that matches the authenticated user's ID. See unlockAdmin() below.
+const _cfg = (typeof window !== 'undefined' && window.__RXEASY_CONFIG__) || {};
+const SB  = _cfg.supabaseUrl  || '';
+const KEY = _cfg.supabaseKey  || '';
+if (!SB || !KEY) console.error('[RxEasy] Missing Supabase config. Did you include config.js?');
 let SESSION = null;
 let _diseases = [], _drugs = [], _doctors = [], _rxlogs = [];
 
@@ -34,24 +42,21 @@ async function api(path, params = '', method = 'GET', body = null) {
 }
 
 // ── LOCK ──
-function checkCode() { const v = document.getElementById('codeInp').value.trim(); return v === ADMIN_CODE; }
-
-// Bug #3 Fix: unlockAdmin now verifies admin status using user ID filter
+// SEC-02 FIX: No client-side code check at all. Admin access is granted ONLY
+// if the authenticated user's doctor_profiles row has is_admin === true.
+// The input field is kept so the page still looks the same, but the value
+// is ignored — the real gate is the Supabase query below.
 async function unlockAdmin() {
-  if (!checkCode()) {
-    document.getElementById('lockErr').textContent = '❌ Invalid access code';
-    document.getElementById('codeInp').value = '';
-    return;
-  }
-  // Retrieve session to verify user is actually an admin
+  document.getElementById('lockErr').textContent = '';
   let session = null;
   try { session = JSON.parse(localStorage.getItem('sb_session') || 'null'); } catch (e) {}
   if (!session || !session.access_token || !session.user || !session.user.id) {
     document.getElementById('lockErr').textContent = '❌ No active session. Please login first.';
     return;
   }
-  // Bug #3 Fix: Filter by current user's ID — not just first row in table
   const userId = session.user.id;
+  const btn = document.querySelector('.lock-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
   try {
     const r = await fetch(
       SB + '/rest/v1/doctor_profiles?select=is_admin&id=eq.' + userId + '&limit=1',
@@ -64,6 +69,8 @@ async function unlockAdmin() {
   } catch (e) {
     document.getElementById('lockErr').textContent = '❌ Verification error. Check connection.';
     return;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Access Admin Panel'; }
   }
   SESSION = session;
   sessionStorage.setItem('adminUnlocked', '1');

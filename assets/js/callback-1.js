@@ -1,6 +1,9 @@
-// Bug #1: Keys as const (migrate to env vars + enforce RLS on Supabase)
-const SB  = 'https://epvfbxzuziihhcaaaizp.supabase.co';
-const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw';
+// SEC-01 FIX: Keys loaded from window.__RXEASY_CONFIG__ (injected by config.js).
+// config.js must be included BEFORE this script in callback.html.
+const _cfg = (typeof window !== 'undefined' && window.__RXEASY_CONFIG__) || {};
+const SB  = _cfg.supabaseUrl  || '';
+const KEY = _cfg.supabaseKey  || '';
+if (!SB || !KEY) console.error('[RxEasy] Missing Supabase config. Did you include config.js?');
 
 function fail(msg) {
   document.getElementById('spinner').style.display = 'none';
