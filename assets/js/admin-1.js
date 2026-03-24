@@ -79,7 +79,7 @@ async function unlockAdmin() {
   initAdmin();
 }
 
-document.getElementById('codeInp').addEventListener('keydown', function (e) { if (e.key === 'Enter') unlockAdmin(); });
+// SEC-02 FIX: No code input listener needed — access is verified server-side.
 
 // Auto-unlock if already unlocked this session
 if (sessionStorage.getItem('adminUnlocked') === '1') {
