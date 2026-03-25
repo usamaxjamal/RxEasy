@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<meta content="#04080f" name="theme-color"/>
+<!-- SEC-03 FIX: Content Security Policy restricts which scripts/styles can run,
+     significantly reducing XSS attack surface that could steal localStorage tokens. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src  'self' 'unsafe-inline' https://fonts.googleapis.com;
+  style-src   'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
+  font-src    'self' https://fonts.gstatic.com data:;
+  connect-src 'self' https://*.supabase.co https://groq.com https://*.groq.com;
+  img-src     'self' data: blob:;
+  frame-src   'none';
+  object-src  'none';
+">
+<title>RxEasy — Doctor Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&amp;family=DM+Sans:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:    #04080f;
+  --ink2:   #070d18;
+  --ink3:   #0a1220;
+  --sf:     #0d1828;
+  --sf2:    #111f32;
+  --bd:     rgba(255,255,255,.07);
+  --bd2:    rgba(255,255,255,.04);
+  --tl:     #00c896;
+  --tl2:    #00e8ac;
+  --tl-dim: rgba(0,200,150,.1);
+  --tl-bdr: rgba(0,200,150,.2);
+  --gd:     #c8a032;
+  --gd2:    #e0b840;
+  --gd-dim: rgba(200,160,50,.1);
+  --gd-bdr: rgba(200,160,50,.22);
+  --tx:     #e8edf5;
+  --tx2:    rgba(232,237,245,.55);
+  --tx3:    rgba(232,237,245,.28);
+  --err:    #e05555;
+  --sh:     0 24px 60px rgba(0,0,0,.6);
+}
+
+html{height:100%}
+body{
+  min-height:100%;
+  font-family:'DM Sans',sans-serif;
+  background:var(--ink);
+  color:var(--tx);
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+
+/* ── IMMERSIVE BACKGROUND ── */
+.bg{
+  position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 120% 70% at 50% -10%, rgba(0,140,100,.12) 0%, transparent 55%),
+    radial-gradient(ellipse 80%  80% at -10% 60%, rgba(10,60,140,.1)  0%, transparent 50%),
+    radial-gradient(ellipse 60%  60% at 110% 40%, rgba(180,130,30,.07) 0%,transparent 50%),
+    radial-gradient(ellipse 50%  50% at 50% 110%,rgba(0,180,120,.06)  0%, transparent 50%),
+    linear-gradient(170deg, #04080f 0%, #06101a 35%, #080e1c 65%, #050a14 100%);
+}
+.bg-grid{
+  position:fixed;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.024) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.024) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 90% 90% at 50% 50%,black 10%,transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 90% 90% at 50% 50%,black 10%,transparent 100%);
+}
+
+/* Atmospheric orbs */
+.orb1{position:fixed;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,150,.08) 0%,transparent 65%);top:-200px;left:50%;transform:translateX(-50%);z-index:0;animation:orbFloat 10s ease-in-out infinite}
+.orb2{position:fixed;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(30,100,200,.09) 0%,transparent 65%);bottom:-100px;right:-100px;z-index:0;animation:orbFloat 14s 3s ease-in-out infinite}
+.orb3{position:fixed;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(200,160,50,.06) 0%,transparent 65%);bottom:200px;left:-80px;z-index:0;animation:orbFloat 12s 6s ease-in-out infinite}
+@keyframes orbFloat{0%,100%{transform:translateX(-50%) scale(1) translateY(0)}50%{transform:translateX(-50%) scale(1.06) translateY(-20px)}}
+
+/* Horizontal accent line at top */
+.top-accent{
+  position:fixed;top:0;left:0;right:0;height:1px;z-index:10;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,200,150,.4) 25%,
+    rgba(200,160,50,.6) 50%,
+    rgba(0,200,150,.4) 75%,
+    transparent 100%
+  );
+  animation:accentPulse 4s ease-in-out infinite;
+}
+@keyframes accentPulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* ── MAIN SCROLL WRAPPER ── */
+.wrap{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;
+  padding:40px 20px 60px;
+}
+
+/* ── BRAND SECTION ── */
+.brand{
+  text-align:center;
+  margin-bottom:28px;
+  animation:fadeRise .7s .1s cubic-bezier(.4,0,.2,1) both;
+}
+.brand-emblem{
+  width:68px;height:68px;border-radius:18px;
+  background:linear-gradient(145deg,rgba(8,18,40,.98),rgba(12,26,60,.95));
+  border:1px solid var(--gd-bdr);
+  box-shadow:
+    0 0 0 1px rgba(200,160,50,.06),
+    0 0 30px rgba(0,200,150,.12),
+    0 16px 40px rgba(0,0,0,.6),
+    inset 0 1px 0 rgba(255,255,255,.1);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:0 auto 14px;position:relative;overflow:hidden;
+}
+.brand-emblem::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(135deg,rgba(255,255,255,.09) 0%,transparent 55%);
+}
+.brand-emblem::after{
+  content:'';position:absolute;
+  top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);
+  animation:shimmer 5s 2s ease-in-out infinite;
+  transform:skewX(-15deg);
+}
+@keyframes shimmer{0%{left:-100%}60%,100%{left:200%}}
+.brand-rx{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.75rem;font-weight:700;
+  color:#fff;line-height:1;letter-spacing:-1px;
+  position:relative;z-index:1;
+  text-shadow:0 0 20px rgba(0,200,150,.3);
+}
+.brand-rx span{color:var(--tl)}
+.brand-sep{
+  width:24px;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--gd),transparent);
+  margin-top:4px;position:relative;z-index:1;
+}
+.brand-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.6rem;font-weight:600;
+  color:var(--tx);letter-spacing:-.3px;
+  margin-bottom:5px;
+}
+.brand-name span{color:var(--tl)}
+.brand-tag{
+  font-size:.58rem;color:var(--tx3);
+  letter-spacing:3.5px;text-transform:uppercase;
+  font-family:'DM Sans',sans-serif;font-weight:300;
+}
+
+/* ── TRUST BADGE ── */
+.trust-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--gd-dim);
+  border:1px solid var(--gd-bdr);
+  border-radius:20px;padding:5px 14px;
+  margin-bottom:24px;
+  animation:fadeRise .7s .2s cubic-bezier(.4,0,.2,1) both;
+}
+.tb-dot{width:6px;height:6px;border-radius:50%;background:var(--gd);box-shadow:0 0 8px rgba(200,160,50,.8)}
+.tb-txt{font-size:.62rem;font-weight:600;color:var(--gd);letter-spacing:.5px}
+
+/* ── FEATURE PILLS ── */
+.features{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:6px;
+  margin-bottom:28px;
+  animation:fadeRise .7s .3s cubic-bezier(.4,0,.2,1) both;
+}
+.feat{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--bd);
+  border-radius:20px;padding:5px 11px;
+  font-size:.6rem;font-weight:500;
+  color:var(--tx2);letter-spacing:.2px;
+}
+.feat.tl{background:var(--tl-dim);border-color:var(--tl-bdr);color:var(--tl)}
+
+/* ── LOGIN CARD ── */
+.card{
+  width:100%;max-width:400px;
+  background:rgba(13,24,40,.85);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:24px;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.03),
+    0 32px 80px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.07);
+  animation:cardIn .8s .35s cubic-bezier(.34,1.1,.64,1) both;
+}
+@keyframes cardIn{
+  0%{opacity:0;transform:translateY(28px) scale(.96)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Card top accent */
+.card::before{
+  content:'';display:block;
+  height:1px;
+  background:linear-gradient(90deg,
+    transparent,
+    rgba(0,200,150,.3) 30%,
+    rgba(200,160,50,.5) 50%,
+    rgba(0,200,150,.3) 70%,
+    transparent
+  );
+}
+
+/* ── TABS ── */
+.tabs{
+  display:flex;
+  background:rgba(255,255,255,.03);
+  border-bottom:1px solid var(--bd);
+  padding:4px;gap:3px;
+  border-radius:24px 24px 0 0;
+}
+.tab{
+  flex:1;padding:9px;border-radius:10px;
+  font-size:.75rem;font-weight:600;
+  text-align:center;cursor:pointer;
+  color:var(--tx3);
+  background:none;border:none;
+  font-family:'DM Sans',sans-serif;
+  transition:all .2s;letter-spacing:.2px;
+}
+.tab.active{
+  background:rgba(255,255,255,.07);
+  color:var(--tx);
+  box-shadow:0 1px 8px rgba(0,0,0,.3);
+}
+
+/* ── FORM BODY ── */
+.form-body{padding:22px 22px 28px}
+
+/* Messages */
+.msg{
+  padding:10px 13px;border-radius:10px;
+  font-size:.73rem;font-weight:500;
+  display:none;margin-bottom:14px;
+  line-height:1.5;
+}
+.msg.show{display:block}
+.msg.err{background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.2);color:var(--err)}
+.msg.ok{background:var(--tl-dim);border:1px solid var(--tl-bdr);color:var(--tl)}
+
+/* Fields */
+.field{margin-bottom:14px}
+.lbl{
+  display:block;font-size:.62rem;font-weight:600;
+  color:var(--tx3);letter-spacing:.5px;
+  text-transform:uppercase;margin-bottom:6px;
+}
+.inp-wrap{position:relative}
+.inp{
+  width:100%;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:11px;
+  padding:11px 14px;
+  font-size:.85rem;color:var(--tx);
+  font-family:'DM Sans',sans-serif;
+  outline:none;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+  -webkit-appearance:none;
+}
+.inp:focus{
+  border-color:var(--tl);
+  background:rgba(0,200,150,.04);
+  box-shadow:0 0 0 3px rgba(0,200,150,.08);
+}
+.inp::placeholder{color:var(--tx3)}
+.inp.err{border-color:var(--err);box-shadow:0 0 0 3px rgba(224,85,85,.08)}
+select.inp{cursor:pointer}
+textarea.inp{resize:none;min-height:56px}
+
+/* Row layout */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── PRIMARY BUTTON ── */
+.btn-primary{
+  width:100%;
+  background:linear-gradient(135deg,var(--tl),#00a87a);
+  color:#03120c;border:none;
+  border-radius:12px;padding:13px;
+  font-size:.85rem;font-weight:700;
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:all .2s;
+  box-shadow:0 4px 20px rgba(0,200,150,.25);
+  letter-spacing:.2px;
+  position:relative;overflow:hidden;
+}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.12),transparent 55%);
+  border-radius:inherit;
+}
+.btn-primary:active{transform:scale(.97);filter:brightness(.92)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ── DIVIDER ── */
+.divider{
+  display:flex;align-items:center;gap:10px;
+  margin:16px 0;
+}
+.div-line{flex:1;height:1px;background:var(--bd)}
+.div-txt{font-size:.62rem;color:var(--tx3);letter-spacing:.5px;white-space:nowrap}
+
+/* ── GOOGLE BUTTON ── */
+.btn-google{
+  width:100%;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:12px;
+  font-size:.82rem;font-weight:600;
+  color:var(--tx);cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:all .2s;
+}
+.btn-google:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
+.btn-google:active{transform:scale(.97)}
+
+/* ── FORGOT LINK ── */
+.forgot{
+  text-align:center;margin-top:14px;
+  font-size:.65rem;color:var(--tx3);
+}
+.forgot a{color:var(--tl);text-decoration:none;font-weight:500}
+.forgot a:hover{color:var(--tl2)}
+
+/* ── DOCTOR CREDIT ── */
+.doc-credit{
+  display:flex;align-items:center;gap:11px;
+  background:rgba(255,255,255,.03);
+  border-top:1px solid var(--bd);
+  padding:14px 22px;
+  border-radius:0 0 24px 24px;
+}
+.doc-av{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--sf2);
+  border:1.5px solid var(--gd-bdr);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;flex-shrink:0;
+}
+.doc-name{font-size:.75rem;font-weight:600;color:var(--tx)}
+.doc-title{font-size:.58rem;color:var(--tx3);margin-top:1px}
+
+/* ── SPINNER ── */
+.spin{
+  display:inline-block;
+  width:14px;height:14px;
+  border:2px solid rgba(3,18,12,.3);
+  border-top-color:#03120c;
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+  vertical-align:middle;margin-right:6px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeRise{
+  0%{opacity:0;transform:translateY(12px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+
+/* ── FOOTER ── */
+.footer{
+  text-align:center;margin-top:20px;
+  font-size:.58rem;color:rgba(232,237,245,.2);
+  animation:fadeRise .7s .6s cubic-bezier(.4,0,.2,1) both;
+  letter-spacing:.5px;
+}
+</style>
+</head>
+<body>
+<!-- Background -->
+<div class="bg"></div>
+<div class="bg-grid"></div>
+<div class="orb1"></div>
+<div class="orb2"></div>
+<div class="orb3"></div>
+<div class="top-accent"></div>
+<div class="wrap">
+<!-- Brand -->
+<div class="brand">
+<div class="brand-emblem">
+<div class="brand-rx">Rx<span>E</span></div>
+<div class="brand-sep"></div>
+</div>
+<div class="brand-name">Rx<span>Easy</span></div>
+<div class="brand-tag">AI Prescription Platform · Pakistan</div>
+</div>
+<!-- Trust badge -->
+<div class="trust-badge">
+<div class="tb-dot"></div>
+<div class="tb-txt">Trusted by PMDC Registered Doctors</div>
+</div>
+<!-- Features -->
+<div class="features">
+<div class="feat tl">✅ Verified Drug Database</div>
+<div class="feat tl">🇵🇰 Pakistan Brand Names</div>
+<div class="feat">🤖 AI Clinical Formatting</div>
+<div class="feat">👶 Pediatric · 🤰 Pregnancy Modes</div>
+<div class="feat">🔒 Doctor-Only Access</div>
+</div>
+<!-- Card -->
+<div class="card">
+<!-- Tabs -->
+<div class="tabs">
+<button class="tab active" id="tab-login" onclick="showTab('login')">Login</button>
+<button class="tab" id="tab-reg" onclick="showTab('reg')">Register</button>
+</div>
+<!-- Messages -->
+<div style="padding:0 22px">
+<div class="msg err" id="errMsg"></div>
+<div class="msg ok" id="okMsg"></div>
+</div>
+<!-- LOGIN FORM -->
+<div class="form-body" id="loginForm">
+<div class="field">
+<label class="lbl">Email Address</label>
+<input autocomplete="email" class="inp" id="loginEmail" placeholder="doctor@email.com" type="email"/>
+</div>
+<div class="field">
+<label class="lbl">Password</label>
+<input autocomplete="current-password" class="inp" id="loginPass" placeholder="••••••••" type="password"/>
+</div>
+<button class="btn-primary" id="loginBtn" onclick="doLogin()">
+        Login to RxEasy
+      </button>
+<div class="divider">
+<div class="div-line"></div>
+<div class="div-txt">or continue with</div>
+<div class="div-line"></div>
+</div>
+<button class="btn-google" onclick="doGoogle()">
+<svg height="18" viewbox="0 0 24 24" width="18">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+        Continue with Google
+      </button>
+<div class="forgot"><a href="#" onclick="doReset(event)">Forgot password?</a></div>
+</div>
+<!-- REGISTER FORM -->
+<div class="form-body" id="regForm" style="display:none">
+<div class="field">
+<label class="lbl">Full Name *</label>
+<input class="inp" id="regName" placeholder="Dr. Your Name" type="text"/>
+</div>
+<div class="row2">
+<div class="field">
+<label class="lbl">Qualification</label>
+<select class="inp" id="regQual">
+<option>MBBS</option>
+<option>BDS</option>
+<option>MBBS, FCPS</option>
+<option>MBBS, MCPS</option>
+<option>MD</option>
+</select>
+</div>
+<div class="field">
+<label class="lbl">City</label>
+<input class="inp" id="regCity" placeholder="Lahore" type="text"/>
+</div>
+</div>
+<div class="field">
+<label class="lbl">PMDC No. <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+<input class="inp" id="regPmdc" placeholder="PMDC-XXXXX" type="text"/>
+</div>
+<div class="field">
+<label class="lbl">Email Address *</label>
+<input class="inp" id="regEmail" placeholder="doctor@email.com" type="email"/>
+</div>
+<div class="field">
+<label class="lbl">Password * <span style="font-weight:300;text-transform:none;letter-spacing:0">(min 8 chars)</span></label>
+<input class="inp" id="regPass" placeholder="••••••••" type="password"/>
+</div>
+<button class="btn-primary" id="regBtn" onclick="doRegister()">
+        Create Doctor Account
+      </button>
+<div class="divider">
+<div class="div-line"></div>
+<div class="div-txt">or</div>
+<div class="div-line"></div>
+</div>
+<button class="btn-google" onclick="doGoogle()">
+<svg height="18" viewbox="0 0 24 24" width="18">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+        Register with Google
+      </button>
+</div>
+<!-- Doctor credit at bottom of card -->
+<div class="doc-credit">
+<div class="doc-av">👨‍⚕️</div>
+<div>
+<div class="doc-name">Dr. Usama Jamal</div>
+<div class="doc-title">MBBS · PMDC Registered · Founder, RxEasy</div>
+</div>
+</div>
+</div>
+<div class="footer">RxEasy  ·  Pakistan's AI Prescription Platform  ·  Doctors Only</div>
+</div>
+<!-- SEC-01 FIX: config.js provides window.__RXEASY_CONFIG__ with Supabase keys.
+     Copy config.example.js → config.js, fill in your values, never commit it. -->
+<script src="config.js"></script>
+<script src="assets/js/login-1.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "index.html": [
+    "index-1.js",
+    "index-2.js",
+    "index-3.js",
+    "index-4.js"
+  ],
+  "login.html": [
+    "login-1.js"
+  ],
+  "admin.html": [
+    "admin-1.js"
+  ],
+  "callback.html": [
+    "callback-1.js"
+  ]
+}
