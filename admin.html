@@ -32,7 +32,7 @@
   --sh:0 4px 24px rgba(0,0,0,.4); --sh2:0 8px 40px rgba(0,0,0,.5);
 }
 
-html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--tx);overflow:hidden}
+html,body{height:100%;width:100%;font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--tx);overflow:hidden}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
@@ -78,22 +78,52 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--ink);col
 .lock-err{font-size:.7rem;color:var(--rd);margin-top:8px;min-height:18px}
 
 /* ── LAYOUT ── */
-#adminApp{display:none;height:100vh;overflow:hidden}
+#adminApp{display:none;height:100vh;width:100%;overflow:hidden}
 .layout{display:flex;height:100vh;overflow:hidden}
+
+/* ── MOBILE LAYOUT FIX ── */
 @media(max-width:768px){
-  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:200;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+  .sidebar{
+    position:fixed;left:0;top:0;bottom:0;
+    z-index:300;
+    width:80vw;max-width:280px;
+    transform:translateX(-100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow:4px 0 32px rgba(0,0,0,.7);
+  }
   .sidebar.mobile-open{transform:translateX(0)}
-  .sidebar.collapsed{width:240px;transform:translateX(-100%)}
-  .sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:199;display:none}
+  .sidebar.collapsed{width:80vw;max-width:280px;transform:translateX(-100%)}
+  .sb-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.65);
+    backdrop-filter:blur(3px);
+    z-index:299;
+    display:none;
+  }
   .sb-overlay.show{display:block}
-  .main{width:100%}
-  .stats-grid{grid-template-columns:1fr 1fr}
-  .grid-2,.grid-3{grid-template-columns:1fr}
+  .main{width:100%;min-width:0}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .grid-2,.grid-3{grid-template-columns:1fr;gap:10px}
   .form-grid{grid-template-columns:1fr}
-  table{font-size:.68rem}
-  th,td{padding:7px 8px}
-  .topbar{padding:0 12px}
-  .content{padding:12px}
+  .topbar{padding:0 12px;height:52px}
+  .topbar-time{display:none}
+  .topbar-admin{display:none}
+  .content{padding:10px;-webkit-overflow-scrolling:touch}
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{font-size:.65rem;min-width:500px}
+  th,td{padding:6px 8px;white-space:nowrap}
+  .stat-card{padding:12px 14px}
+  .stat-value{font-size:1.5rem}
+  .card{margin-bottom:10px}
+  .card-body{padding:10px 12px}
+  .card-hdr{padding:10px 12px}
+  .modal{max-width:100%;max-height:92vh;border-radius:16px 16px 0 0;margin-top:auto}
+  .modal-overlay{align-items:flex-end;padding:0}
+  .filter-bar{flex-wrap:wrap}
+  .search-inp{min-width:100%}
+  .btn{font-size:.7rem;padding:7px 12px}
+  .btn-sm{font-size:.65rem;padding:5px 9px}
+  .page-title{font-size:1.2rem}
 }
 
 /* ── SIDEBAR ── */
@@ -217,7 +247,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--ink);col
 .page-sub{font-size:.7rem;color:var(--tx3)}
 
 /* ── STAT CARDS ── */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px}
 .stat-card{
   background:var(--sf);border:1px solid var(--bd);border-radius:14px;
   padding:16px 18px;position:relative;overflow:hidden;
@@ -379,7 +409,7 @@ textarea.inp{resize:vertical;min-height:70px}
 <!-- TOAST -->
 <div id="toast"></div>
 <!-- LOCK SCREEN -->
-<div id="lockScreen">
+<div id="lockScreen" role="dialog" aria-modal="true" aria-label="Admin access verification">
 <div class="lock-card">
 <div class="lock-emblem">
 <div class="lock-rx">Rx<span>E</span></div>
@@ -393,10 +423,10 @@ textarea.inp{resize:vertical;min-height:70px}
 </div>
 <!-- ADMIN APP -->
 <div id="adminApp">
-<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()" aria-hidden="true"></div>
 <div class="layout">
 <!-- SIDEBAR -->
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar" id="sidebar" aria-label="Admin navigation" role="navigation">
 <div class="sb-brand">
 <div class="sb-logo">
 <div class="sb-logo-rx">Rx<span>E</span></div>
@@ -701,7 +731,7 @@ textarea.inp{resize:vertical;min-height:70px}
 </div><!-- /layout -->
 </div><!-- /adminApp -->
 <!-- DISEASE MODAL -->
-<div class="modal-overlay" id="diseaseModal" onclick="if(event.target===this)closeModal('diseaseModal')">
+<div class="modal-overlay" id="diseaseModal" onclick="if(event.target===this)closeModal('diseaseModal')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="modal">
 <div class="modal-hdr">
 <div class="modal-title" id="disModalTitle">Add Disease</div>
@@ -724,7 +754,7 @@ textarea.inp{resize:vertical;min-height:70px}
 </div>
 </div>
 <!-- DRUG MODAL -->
-<div class="modal-overlay" id="drugModal" onclick="if(event.target===this)closeModal('drugModal')">
+<div class="modal-overlay" id="drugModal" onclick="if(event.target===this)closeModal('drugModal')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="modal">
 <div class="modal-hdr">
 <div class="modal-title" id="drugModalTitle">Add Drug</div>

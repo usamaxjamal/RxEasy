@@ -2771,7 +2771,7 @@ body { max-width: 480px; margin: 0 auto; }
 <button class="undo-btn" onclick="doUndo()">↩ Undo</button>
 </div>
 <!-- SETTINGS SHEET -->
-<div class="ov" id="ov-settings" onclick="closeSheet('settings')">
+<div class="ov" id="ov-settings" onclick="closeSheet('settings')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">⚙️ Settings</div><button class="shdc" onclick="closeSheet('settings')">✕</button></div>
@@ -2821,7 +2821,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- HISTORY -->
-<div class="ov" id="ov-history" onclick="closeSheet('history')">
+<div class="ov" id="ov-history" onclick="closeSheet('history')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr">
@@ -2835,7 +2835,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- DRUGS -->
-<div class="ov" id="ov-drugs" onclick="closeSheet('drugs')">
+<div class="ov" id="ov-drugs" onclick="closeSheet('drugs')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">💊 Drug Reference</div><button class="shdc" onclick="closeSheet('drugs')">✕</button></div>
@@ -2846,7 +2846,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- FAVS -->
-<div class="ov" id="ov-favs" onclick="closeSheet('favs')">
+<div class="ov" id="ov-favs" onclick="closeSheet('favs')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">⭐ Saved Rx</div><button class="shdc" onclick="closeSheet('favs')">✕</button></div>
@@ -2854,7 +2854,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- PATIENTS -->
-<div class="ov" id="ov-pts" onclick="closeSheet('pts')">
+<div class="ov" id="ov-pts" onclick="closeSheet('pts')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr">
@@ -2868,7 +2868,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- ANALYTICS -->
-<div class="ov" id="ov-analytics" onclick="closeSheet('analytics')">
+<div class="ov" id="ov-analytics" onclick="closeSheet('analytics')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📊 Analytics</div><button class="shdc" onclick="closeSheet('analytics')">✕</button></div>
@@ -2876,7 +2876,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- CALCULATORS -->
-<div class="ov" id="ov-calc" onclick="closeSheet('calc')">
+<div class="ov" id="ov-calc" onclick="closeSheet('calc')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🧮 Clinical Calculators</div><button class="shdc" onclick="closeSheet('calc')">✕</button></div>
@@ -2898,7 +2898,7 @@ body { max-width: 480px; margin: 0 auto; }
 <script src="assets/js/index-2.js"></script>
 <!-- ═══ PART 3: CLINICAL POWER FEATURE SHEETS ═══ -->
 <!-- AI SYMPTOM CHECKER -->
-<div class="ov" id="ov-symptom" onclick="closeSheet('symptom')">
+<div class="ov" id="ov-symptom" onclick="closeSheet('symptom')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:88vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🤖 AI Symptom Checker</div><button class="shdc" onclick="closeSheet('symptom')">✕</button></div>
@@ -2922,7 +2922,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- LAB RESULT INTERPRETER -->
-<div class="ov" id="ov-lab" onclick="closeSheet('lab')">
+<div class="ov" id="ov-lab" onclick="closeSheet('lab')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🧪 Lab Result Interpreter</div><button class="shdc" onclick="closeSheet('lab')">✕</button></div>
@@ -2961,7 +2961,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- PRESCRIPTION QR CODE -->
-<div class="ov" id="ov-qr" onclick="closeSheet('qr')">
+<div class="ov" id="ov-qr" onclick="closeSheet('qr')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📱 Prescription QR Code</div><button class="shdc" onclick="closeSheet('qr')">✕</button></div>
@@ -2979,7 +2979,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- DISCHARGE SUMMARY -->
-<div class="ov" id="ov-discharge" onclick="closeSheet('discharge')">
+<div class="ov" id="ov-discharge" onclick="closeSheet('discharge')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📄 Discharge Summary</div><button class="shdc" onclick="closeSheet('discharge')">✕</button></div>
@@ -2999,7 +2999,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- FOLLOW-UP MESSAGE GENERATOR -->
-<div class="ov" id="ov-followup" onclick="closeSheet('followup')">
+<div class="ov" id="ov-followup" onclick="closeSheet('followup')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📲 Follow-up Message</div><button class="shdc" onclick="closeSheet('followup')">✕</button></div>
@@ -3026,7 +3026,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- GENERIC vs BRAND SWITCHER -->
-<div class="ov" id="ov-generic" onclick="closeSheet('generic')">
+<div class="ov" id="ov-generic" onclick="closeSheet('generic')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">💊 Generic / Brand Switcher</div><button class="shdc" onclick="closeSheet('generic')">✕</button></div>
@@ -3048,7 +3048,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 <!-- ═══ PART 4: CLINIC MANAGEMENT SHEETS ═══ -->
 <!-- STATS DASHBOARD -->
-<div class="ov" id="ov-stats" onclick="closeSheet('stats')">
+<div class="ov" id="ov-stats" onclick="closeSheet('stats')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📊 Clinic Dashboard</div><button class="shdc" onclick="closeSheet('stats')">✕</button></div>
@@ -3076,7 +3076,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- TOKEN / QUEUE SYSTEM -->
-<div class="ov" id="ov-token" onclick="closeSheet('token')">
+<div class="ov" id="ov-token" onclick="closeSheet('token')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🎫 Patient Queue</div><button class="shdc" onclick="closeSheet('token')">✕</button></div>
@@ -3102,7 +3102,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- REVENUE TRACKER -->
-<div class="ov" id="ov-revenue" onclick="closeSheet('revenue')">
+<div class="ov" id="ov-revenue" onclick="closeSheet('revenue')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">💰 Revenue Tracker</div><button class="shdc" onclick="closeSheet('revenue')">✕</button></div>
@@ -3140,7 +3140,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- PATIENT SATISFACTION -->
-<div class="ov" id="ov-satisfaction" onclick="closeSheet('satisfaction')">
+<div class="ov" id="ov-satisfaction" onclick="closeSheet('satisfaction')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">😊 Patient Satisfaction</div><button class="shdc" onclick="closeSheet('satisfaction')">✕</button></div>
@@ -3162,7 +3162,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- APPOINTMENT CALENDAR -->
-<div class="ov" id="ov-calendar" onclick="closeSheet('calendar')">
+<div class="ov" id="ov-calendar" onclick="closeSheet('calendar')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📅 Appointments</div><button class="shdc" onclick="closeSheet('calendar')">✕</button></div>
@@ -3183,7 +3183,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 <!-- ═══ PART 4: CLINIC MANAGEMENT SHEETS ═══ -->
 <!-- TOKEN / QUEUE SYSTEM -->
-<div class="ov" id="ov-queue" onclick="closeSheet('queue')">
+<div class="ov" id="ov-queue" onclick="closeSheet('queue')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:90vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🎫 Patient Queue</div><button class="shdc" onclick="closeSheet('queue')">✕</button></div>
@@ -3209,7 +3209,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- APPOINTMENT CALENDAR -->
-<div class="ov" id="ov-appt" onclick="closeSheet('appt')">
+<div class="ov" id="ov-appt" onclick="closeSheet('appt')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📅 Appointments</div><button class="shdc" onclick="closeSheet('appt')">✕</button></div>
@@ -3234,7 +3234,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- REVENUE TRACKER -->
-<div class="ov" id="ov-revenue" onclick="closeSheet('revenue')">
+<div class="ov" id="ov-revenue" onclick="closeSheet('revenue')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">💰 Revenue Tracker</div><button class="shdc" onclick="closeSheet('revenue')">✕</button></div>
@@ -3252,7 +3252,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- PATIENT SATISFACTION -->
-<div class="ov" id="ov-satisfaction" onclick="closeSheet('satisfaction')">
+<div class="ov" id="ov-satisfaction" onclick="closeSheet('satisfaction')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">😊 Patient Satisfaction</div><button class="shdc" onclick="closeSheet('satisfaction')">✕</button></div>
@@ -3279,7 +3279,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- STATS DASHBOARD -->
-<div class="ov" id="ov-stats" onclick="closeSheet('stats')">
+<div class="ov" id="ov-stats" onclick="closeSheet('stats')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📊 Dashboard</div><button class="shdc" onclick="closeSheet('stats')">✕</button></div>
@@ -3381,8 +3381,8 @@ body { max-width: 480px; margin: 0 auto; }
 <!-- ═══════════════════════════════════════════════ -->
 <!-- SIDEBAR OVERLAY + DRAWER                        -->
 <!-- ═══════════════════════════════════════════════ -->
-<div id="sidebarOverlay" onclick="closeSidebar()"></div>
-<div id="sidebar">
+<div id="sidebarOverlay" onclick="closeSidebar()" aria-hidden="true"></div>
+<div id="sidebar" aria-hidden="true" aria-label="Navigation menu" role="navigation">
 <!-- Doctor Profile -->
 <div class="sb-profile">
 <div class="sb-avatar-wrap">
@@ -3438,7 +3438,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- ═══ COMMON DISEASES SHEET ═══ -->
-<div class="ov" id="ov-common" onclick="closeSheet('common')">
+<div class="ov" id="ov-common" onclick="closeSheet('common')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🏥 Common Diseases</div><button class="shdc" onclick="closeSheet('common')">✕</button></div>
@@ -3449,7 +3449,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- ═══ ANTIBIOTIC GUIDE SHEET ═══ -->
-<div class="ov" id="ov-antibiotic" onclick="closeSheet('antibiotic')">
+<div class="ov" id="ov-antibiotic" onclick="closeSheet('antibiotic')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🦠 Antibiotic Guide</div><button class="shdc" onclick="closeSheet('antibiotic')">✕</button></div>
@@ -3457,7 +3457,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- ═══ EMERGENCY DOSES SHEET ═══ -->
-<div class="ov" id="ov-emergency" onclick="closeSheet('emergency')">
+<div class="ov" id="ov-emergency" onclick="closeSheet('emergency')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🚨 Emergency Doses</div><button class="shdc" onclick="closeSheet('emergency')">✕</button></div>
@@ -3466,7 +3466,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 <script src="assets/js/index-4.js"></script>
 <!-- ═══ PROFILE & BRANDING SHEET ═══ -->
-<div class="ov" id="ov-profile" onclick="closeSheet('profile')">
+<div class="ov" id="ov-profile" onclick="closeSheet('profile')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">👨‍⚕️ Dr. Usama Jamal</div><button class="shdc" onclick="closeSheet('profile')">✕</button></div>
@@ -3590,7 +3590,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- ═══ BUSINESS CARD SHEET ═══ -->
-<div class="ov" id="ov-bizcard" onclick="closeSheet('bizcard')">
+<div class="ov" id="ov-bizcard" onclick="closeSheet('bizcard')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">💳 Digital Business Card</div><button class="shdc" onclick="closeSheet('bizcard')">✕</button></div>
@@ -3657,7 +3657,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- ═══ TESTIMONIALS SHEET ═══ -->
-<div class="ov" id="ov-testimonials" onclick="closeSheet('testimonials')">
+<div class="ov" id="ov-testimonials" onclick="closeSheet('testimonials')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">⭐ Testimonials</div><button class="shdc" onclick="closeSheet('testimonials')">✕</button></div>
@@ -3688,7 +3688,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- ═══ BLOG SHEET ═══ -->
-<div class="ov" id="ov-blog" onclick="closeSheet('blog')">
+<div class="ov" id="ov-blog" onclick="closeSheet('blog')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📝 Blog &amp; Updates</div><button class="shdc" onclick="closeSheet('blog')">✕</button></div>
@@ -3703,7 +3703,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 <!-- ═══ SOCIAL SHARE SHEET ═══ -->
-<div class="ov" id="ov-share" onclick="closeSheet('share')">
+<div class="ov" id="ov-share" onclick="closeSheet('share')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">📣 Share RxEasy</div><button class="shdc" onclick="closeSheet('share')">✕</button></div>
@@ -3756,7 +3756,7 @@ Try it: rxeasy.dr-usama.com</textarea>
 </div>
 </div>
 <!-- ═══ REFERRAL SHEET ═══ -->
-<div class="ov" id="ov-referral" onclick="closeSheet('referral')">
+<div class="ov" id="ov-referral" onclick="closeSheet('referral')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🎁 Referral Program</div><button class="shdc" onclick="closeSheet('referral')">✕</button></div>
@@ -3815,7 +3815,7 @@ Try it: rxeasy.dr-usama.com</textarea>
 </div>
 </div>
 <!-- ═══ CLINIC BRANDING SHEET ═══ -->
-<div class="ov" id="ov-clinicbrand" onclick="closeSheet('clinicbrand')">
+<div class="ov" id="ov-clinicbrand" onclick="closeSheet('clinicbrand')" role="dialog" aria-modal="true" aria-hidden="true">
 <div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">🏥 Clinic Branding</div><button class="shdc" onclick="closeSheet('clinicbrand')">✕</button></div>
