@@ -175,40 +175,22 @@ function readUploadedImage(input) {
 }
 
 async function readImageWithAI(dataUrl) {
-  const key = localStorage.getItem('groqKey') || '';
-  if (!key) { toast('⚠️ Set your API key first in ⚙️ Settings'); return; }
   toast('🔍 Reading prescription image...');
   document.getElementById('qi').value = '⏳ Reading image...';
   document.getElementById('qi').disabled = true;
 
   try {
-    // Use Groq vision model (llava) to read the prescription image
-    const base64 = dataUrl.split(',')[1];
-    const mimeType = dataUrl.split(';')[0].split(':')[1];
+    const cfg = window.__RXEASY_CONFIG__;
+    const PROXY_URL = cfg.supabaseUrl + '/functions/v1/ai-proxy';
+    const imagePrompt = 'This is a medical note, handwritten prescription, or patient complaint. Extract the main diagnosis or medical condition mentioned. Reply with ONLY the diagnosis/condition in 3-8 words, nothing else. Example: "Typhoid fever with hepatitis" or "URTI with dry cough and fever".';
 
-    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const resp = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama-3.2-11b-vision-preview',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image_url',
-              image_url: { url: dataUrl }
-            },
-            {
-              type: 'text',
-              text: 'This is a medical note, handwritten prescription, or patient complaint. Extract the main diagnosis or medical condition mentioned. Reply with ONLY the diagnosis/condition in 3-8 words, nothing else. Example: "Typhoid fever with hepatitis" or "URTI with dry cough and fever".'
-            }
-          ]
-        }]
-      })
+      headers: { 'Content-Type': 'application/json', 'apikey': cfg.supabaseKey },
+      body: JSON.stringify({ prompt: imagePrompt, maxTokens: 50 })
     });
     const data = await resp.json();
-    const diagnosis = data.choices?.[0]?.message?.content?.trim() || '';
+    const diagnosis = data.text?.trim() || '';
     if (diagnosis) {
       document.getElementById('qi').value = diagnosis;
       document.getElementById('qi').disabled = false;
@@ -216,12 +198,12 @@ async function readImageWithAI(dataUrl) {
       haptic('success');
       setTimeout(() => sendMsg(), 600);
     } else {
-      throw new Error('Could not read diagnosis from image');
+      throw new Error('No diagnosis returned');
     }
   } catch(err) {
     document.getElementById('qi').value = '';
     document.getElementById('qi').disabled = false;
-    toast('❌ Image read failed: ' + err.message);
+    toast('❌ Image read failed. Please type the diagnosis manually.');
   }
 }
 
