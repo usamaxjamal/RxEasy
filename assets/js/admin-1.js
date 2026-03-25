@@ -63,7 +63,31 @@ async function api(path, params = '', method = 'GET', body = null) {
   return r.json();
 }
 
-// ── LOCK ──
+// apiCount: gets exact row count from Supabase using HEAD + Prefer:count=exact
+// Returns a number or null on failure
+async function apiCount(table, params = '') {
+  const token = SESSION ? SESSION.access_token : KEY;
+  try {
+    const r = await fetch(SB + '/rest/v1/' + table + '?select=id' + (params ? '&' + params : ''), {
+      method: 'HEAD',
+      headers: {
+        'apikey': KEY,
+        'Authorization': 'Bearer ' + token,
+        'Prefer': 'count=exact'
+      },
+      signal: AbortSignal.timeout(15000)
+    });
+    // Supabase returns count in Content-Range header: "0-24/150"
+    const range = r.headers.get('content-range');
+    if (range) {
+      const total = range.split('/')[1];
+      if (total && total !== '*') return parseInt(total, 10);
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
+
 // SEC-02 FIX: No client-side code check at all. Admin access is granted ONLY
 // if the authenticated user's doctor_profiles row has is_admin === true.
 // The input field is kept so the page still looks the same, but the value
@@ -183,20 +207,33 @@ function stopClock() {
 // ── DASHBOARD ──
 async function initDashboard() {
   try {
-    const [docs, prem, dis, drugs, rx] = await Promise.all([
-      api('doctor_profiles', '?select=id,is_premium,query_count,created_at&limit=1000'),
+    // Fetch doctors and premium in parallel
+    const [docs, prem] = await Promise.all([
+      api('doctor_profiles', '?select=id,full_name,email,is_premium,query_count,created_at&limit=1000'),
       api('doctor_profiles', '?is_premium=eq.true&select=id'),
-      api('diseases', '?select=id&limit=1'),
-      api('drugs', '?select=id&limit=1'),
-      api('prescription_logs', '?select=id&limit=1'),
     ]);
-    document.getElementById('s-docs').textContent = Array.isArray(docs) ? docs.length : '—';
-    document.getElementById('s-prem').textContent = Array.isArray(prem) ? prem.length : '—';
-    document.getElementById('s-dis').textContent  = '—';
-    document.getElementById('s-rx').textContent   = '—';
+
+    const totalDocs = Array.isArray(docs) ? docs.length : 0;
+    const totalPrem = Array.isArray(prem) ? prem.length : 0;
+
+    document.getElementById('s-docs').textContent = totalDocs || '—';
+    document.getElementById('s-prem').textContent = totalPrem || '—';
+
+    // Get real counts using Supabase count via select=count
+    try {
+      const disCount = await apiCount('diseases');
+      document.getElementById('s-dis').textContent = disCount !== null ? disCount : '—';
+    } catch(e) { document.getElementById('s-dis').textContent = '—'; }
+
+    try {
+      const rxCount = await apiCount('prescription_logs');
+      document.getElementById('s-rx').textContent = rxCount !== null ? rxCount : '—';
+    } catch(e) { document.getElementById('s-rx').textContent = '—'; }
+
     const pend = await api('subscription_requests', '?status=eq.pending&select=id');
     document.getElementById('s-pend').textContent = Array.isArray(pend) ? pend.length : '0';
-    if (Array.isArray(docs)) { loadRecentDocs(docs.slice(-5).reverse()); }
+
+    if (Array.isArray(docs) && docs.length) { loadRecentDocs(docs.slice(-5).reverse()); }
     initRxChart();
     loadTopDiseases();
   } catch (e) { console.error('Dashboard error:', e); }
@@ -412,18 +449,22 @@ async function revokePremium(id) {
   toast('Premium revoked'); loadDoctors();
 }
 async function grantById() {
-  const email = document.getElementById('grantEmail').value.trim().toLowerCase();
+  const rawEmail = document.getElementById('grantEmail').value.trim();
+  const email = rawEmail.toLowerCase();
   const btn = document.getElementById('grantBtn');
   const status = document.getElementById('grantStatus');
   if (!email) { if(status) status.innerHTML='<span style="color:var(--rd)">⚠️ Please enter an email address</span>'; return; }
   if(status) status.innerHTML='<span style="color:var(--tx3)">🔍 Searching...</span>';
   if(btn) { btn.disabled=true; btn.textContent='Searching...'; }
   try {
-    let docs = await api('doctor_profiles', '?email=ilike.' + encodeURIComponent(email) + '&limit=5');
-    if (!docs || !docs.length) docs = await api('doctor_profiles', '?email=eq.' + encodeURIComponent(email) + '&limit=5');
+    // CRITICAL: Do NOT use encodeURIComponent — it encodes @ as %40 which
+    // Supabase PostgREST does not decode, so the email never matches.
+    let docs = await api('doctor_profiles', '?email=ilike.' + email + '&limit=5');
     if (!docs || !docs.length) {
-      const orig = document.getElementById('grantEmail').value.trim();
-      docs = await api('doctor_profiles', '?email=ilike.' + encodeURIComponent(orig) + '&limit=5');
+      docs = await api('doctor_profiles', '?email=eq.' + email + '&limit=5');
+    }
+    if (!docs || !docs.length) {
+      docs = await api('doctor_profiles', '?email=ilike.' + rawEmail + '&limit=5');
     }
     if (!docs || !docs.length) {
       if(status) status.innerHTML='<span style="color:var(--rd)">❌ Doctor not found. Check the email or ensure they have registered first.</span>';
@@ -476,8 +517,9 @@ async function loadPremium() {
     </div>`).join('');
 }
 async function approveSub(id, email) {
-  let docs = await api('doctor_profiles', '?email=ilike.' + encodeURIComponent(email) + '&limit=5');
-  if (!docs || !docs.length) docs = await api('doctor_profiles', '?email=eq.' + encodeURIComponent(email) + '&limit=5');
+  // Do NOT use encodeURIComponent — @ encodes to %40 and breaks Supabase matching
+  let docs = await api('doctor_profiles', '?email=ilike.' + email + '&limit=5');
+  if (!docs || !docs.length) docs = await api('doctor_profiles', '?email=eq.' + email + '&limit=5');
   if (docs && docs.length) await grantPremium(docs[0].id);
   await api('subscription_requests', '?id=eq.' + id, 'PATCH', { status: 'approved', approved_at: new Date().toISOString() });
   toast('✅ Approved & premium granted!'); loadSubscriptions(); loadPremium(); loadPendingCount();
