@@ -125,20 +125,28 @@ function showPage(id, el) {
   document.getElementById('topbarTitle').textContent = titles[id] || id;
   const loaders = { diseases: loadDiseases, drugs: loadDrugs, doctors: loadDoctors, subscriptions: () => { loadSubscriptions(); loadPremium(); }, analytics: loadAnalytics, revenue: loadRevenue, rxlogs: loadRxLogs, settings: loadSettings };
   if (loaders[id]) loaders[id]();
+  // Auto-close sidebar on mobile after navigation
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('sbOverlay');
-  const isOpen = sb.classList.contains('mobile-open');
-  if (isOpen) {
-    sb.classList.remove('mobile-open');
-    ov.classList.remove('show');
-    document.body.style.overflow = '';
+  const isMobile = window.innerWidth <= 768;
+  if (isMobile) {
+    const isOpen = sb.classList.contains('mobile-open');
+    if (isOpen) {
+      sb.classList.remove('mobile-open');
+      ov.classList.remove('show');
+      document.body.style.overflow = '';
+    } else {
+      sb.classList.add('mobile-open');
+      ov.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
   } else {
-    sb.classList.add('mobile-open');
-    ov.classList.add('show');
-    document.body.style.overflow = 'hidden';
+    // Desktop: collapse/expand
+    sb.classList.toggle('collapsed');
   }
 }
 function closeSidebar() {
@@ -405,17 +413,33 @@ async function revokePremium(id) {
 }
 async function grantById() {
   const email = document.getElementById('grantEmail').value.trim().toLowerCase();
-  if (!email) { toast('Enter email'); return; }
-  let docs = await api('doctor_profiles', '?email=ilike.' + encodeURIComponent(email) + '&limit=5');
-  if (!docs || !docs.length) docs = await api('doctor_profiles', '?email=eq.' + encodeURIComponent(email) + '&limit=5');
-  if (!docs || !docs.length) {
-    const orig = document.getElementById('grantEmail').value.trim();
-    docs = await api('doctor_profiles', '?email=ilike.' + encodeURIComponent(orig) + '&limit=5');
+  const btn = document.getElementById('grantBtn');
+  const status = document.getElementById('grantStatus');
+  if (!email) { if(status) status.innerHTML='<span style="color:var(--rd)">⚠️ Please enter an email address</span>'; return; }
+  if(status) status.innerHTML='<span style="color:var(--tx3)">🔍 Searching...</span>';
+  if(btn) { btn.disabled=true; btn.textContent='Searching...'; }
+  try {
+    let docs = await api('doctor_profiles', '?email=ilike.' + encodeURIComponent(email) + '&limit=5');
+    if (!docs || !docs.length) docs = await api('doctor_profiles', '?email=eq.' + encodeURIComponent(email) + '&limit=5');
+    if (!docs || !docs.length) {
+      const orig = document.getElementById('grantEmail').value.trim();
+      docs = await api('doctor_profiles', '?email=ilike.' + encodeURIComponent(orig) + '&limit=5');
+    }
+    if (!docs || !docs.length) {
+      if(status) status.innerHTML='<span style="color:var(--rd)">❌ Doctor not found. Check the email or ensure they have registered first.</span>';
+      return;
+    }
+    if(btn) btn.textContent='Granting...';
+    await grantPremium(docs[0].id);
+    document.getElementById('grantEmail').value = '';
+    if(status) status.innerHTML='<span style="color:var(--tl)">✅ Premium granted to <strong>' + esc(docs[0].full_name || docs[0].email) + '</strong>!</span>';
+    setTimeout(()=>{ if(status) status.innerHTML=''; }, 4000);
+    toast('👑 Premium granted to ' + esc(docs[0].full_name || docs[0].email) + '!');
+  } catch(e) {
+    if(status) status.innerHTML='<span style="color:var(--rd)">❌ Error: ' + esc(e.message) + '</span>';
+  } finally {
+    if(btn) { btn.disabled=false; btn.innerHTML='👑 Grant Premium'; }
   }
-  if (!docs || !docs.length) { toast('❌ Doctor not found. Make sure they have registered first.'); return; }
-  await grantPremium(docs[0].id);
-  document.getElementById('grantEmail').value = '';
-  toast('👑 Premium granted to ' + esc(docs[0].full_name) + '!');
 }
 
 // ── SUBSCRIPTIONS ──
