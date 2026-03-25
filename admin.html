@@ -1,427 +1,786 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<meta name="theme-color" content="#04080f"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob:; frame-src 'none'; object-src 'none';">
-<title>RxEasy Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="#04080f" name="theme-color"/>
+<!-- SEC-03 FIX: Content Security Policy to mitigate XSS token theft. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src  'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+  style-src   'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
+  font-src    'self' https://fonts.gstatic.com data:;
+  connect-src 'self' https://*.supabase.co https://groq.com https://*.groq.com;
+  img-src     'self' data: blob:;
+  frame-src   'none';
+  object-src  'none';
+">
+<title>RxEasy — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&amp;family=DM+Sans:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --ink:#04080f;--sf:#0d1828;--sf2:#111f32;
-  --bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.04);
-  --tx:#ddeaf5;--tx2:rgba(221,234,245,.6);--tx3:rgba(221,234,245,.3);
-  --tl:#00c896;--tl2:#00e8ac;--tl-dim:rgba(0,200,150,.1);--tl-bdr:rgba(0,200,150,.2);
-  --gd:#c8a032;--gd-dim:rgba(200,160,50,.1);--gd-bdr:rgba(200,160,50,.2);
-  --rd:#e05555;--or:#c87830;--bl:#3a7fd5;
-  --sh:0 4px 20px rgba(0,0,0,.4);
+  --ink:#04080f; --ink2:#070d18; --ink3:#0a1220;
+  --sf:#0d1828;  --sf2:#111f32; --sf3:#162438;
+  --bd:rgba(255,255,255,.07); --bd2:rgba(255,255,255,.04);
+  --tx:#ddeaf5;  --tx2:rgba(221,234,245,.55); --tx3:rgba(221,234,245,.28);
+  --tl:#00c896;  --tl2:#00e8ac; --tl-dim:rgba(0,200,150,.1); --tl-bdr:rgba(0,200,150,.2);
+  --gd:#c8a032;  --gd2:#e0b840; --gd-dim:rgba(200,160,50,.1); --gd-bdr:rgba(200,160,50,.2);
+  --rd:#e05555;  --or:#c87830;  --bl:#3a7fd5;
+  --sh:0 4px 24px rgba(0,0,0,.4); --sh2:0 8px 40px rgba(0,0,0,.5);
 }
-html,body{height:100%;background:var(--ink);color:var(--tx);font-family:'DM Sans',sans-serif;overflow:hidden}
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
-#lockScreen{position:fixed;inset:0;z-index:9999;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:20px}
-.lock-card{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:32px 24px;width:100%;max-width:340px;text-align:center;box-shadow:var(--sh)}
-.lock-logo{width:60px;height:60px;border-radius:16px;background:var(--tl-dim);border:1px solid var(--tl-bdr);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.6rem}
-.lock-title{font-size:1.2rem;font-weight:700;color:var(--tx);margin-bottom:6px}
-.lock-sub{font-size:.72rem;color:var(--tx3);margin-bottom:24px;line-height:1.6}
-.lock-btn{width:100%;background:linear-gradient(135deg,var(--tl),#009e78);color:#021a10;border:none;border-radius:12px;padding:13px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 16px rgba(0,200,150,.25)}
+
+html,body{height:100%;width:100%;font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--tx);overflow:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
+
+/* ── LOCK SCREEN ── */
+#lockScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+}
+.lock-card{
+  background:var(--sf);border:1px solid var(--bd);
+  border-radius:20px;padding:36px 32px;
+  width:100%;max-width:360px;text-align:center;
+  box-shadow:var(--sh2);
+}
+.lock-emblem{
+  width:64px;height:64px;border-radius:16px;
+  background:linear-gradient(145deg,rgba(0,200,150,.15),rgba(0,200,150,.05));
+  border:1px solid var(--tl-bdr);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+  box-shadow:0 0 30px rgba(0,200,150,.12);
+}
+.lock-rx{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:#fff}
+.lock-rx span{color:var(--tl)}
+.lock-title{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;color:var(--tx);margin-bottom:4px}
+.lock-sub{font-size:.72rem;color:var(--tx3);margin-bottom:24px}
+.lock-inp{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--bd);
+  border-radius:10px;padding:11px 14px;font-size:.9rem;color:var(--tx);
+  outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px;
+  transition:border-color .2s;text-align:center;letter-spacing:3px;
+}
+.lock-inp:focus{border-color:var(--tl);box-shadow:0 0 0 3px var(--tl-dim)}
+.lock-btn{
+  width:100%;background:linear-gradient(135deg,var(--tl),#009e78);
+  color:#021a10;border:none;border-radius:10px;padding:12px;
+  font-size:.85rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .15s;box-shadow:0 4px 16px rgba(0,200,150,.25);
+}
 .lock-btn:active{transform:scale(.97)}
-.lock-btn:disabled{opacity:.6;cursor:not-allowed}
-.lock-err{font-size:.7rem;color:var(--rd);margin-top:10px;min-height:18px;line-height:1.4}
-#adminApp{display:none;height:100vh;width:100%;flex-direction:column;overflow:hidden}
-#adminApp.show{display:flex}
-.topbar{flex-shrink:0;height:54px;background:rgba(4,8,15,.96);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:10px}
-.topbar-logo{width:32px;height:32px;border-radius:8px;background:var(--tl-dim);border:1px solid var(--tl-bdr);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--tl);flex-shrink:0}
-.topbar-title{font-size:.95rem;font-weight:700;color:var(--tx);flex:1}
-.topbar-clock{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--tx3);display:none}
-@media(min-width:380px){.topbar-clock{display:block}}
-.topbar-admin{background:var(--gd-dim);border:1px solid var(--gd-bdr);border-radius:20px;padding:3px 9px;font-size:.55rem;font-weight:700;color:var(--gd)}
-.logout-btn{background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.2);border-radius:8px;padding:5px 10px;font-size:.65rem;font-weight:600;color:var(--rd);cursor:pointer;font-family:'DM Sans',sans-serif}
-.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 12px 76px;-webkit-overflow-scrolling:touch}
+.lock-err{font-size:.7rem;color:var(--rd);margin-top:8px;min-height:18px}
+
+/* ── LAYOUT ── */
+#adminApp{display:none;height:100vh;width:100%;overflow:hidden}
+.layout{display:flex;height:100vh;overflow:hidden}
+
+/* ── MOBILE LAYOUT FIX ── */
+@media(max-width:768px){
+  .sidebar{
+    position:fixed;left:0;top:0;bottom:0;
+    z-index:300;
+    width:80vw;max-width:280px;
+    transform:translateX(-100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow:4px 0 32px rgba(0,0,0,.7);
+  }
+  .sidebar.mobile-open{transform:translateX(0)}
+  .sidebar.collapsed{width:80vw;max-width:280px;transform:translateX(-100%)}
+  .sb-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.65);
+    backdrop-filter:blur(3px);
+    z-index:299;
+    display:none;
+  }
+  .sb-overlay.show{display:block}
+  .main{width:100%;min-width:0}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .grid-2,.grid-3{grid-template-columns:1fr;gap:10px}
+  .form-grid{grid-template-columns:1fr}
+  .topbar{padding:0 12px;height:52px}
+  .topbar-time{display:none}
+  .topbar-admin{display:none}
+  .content{padding:10px;-webkit-overflow-scrolling:touch}
+  .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{font-size:.65rem;min-width:500px}
+  th,td{padding:6px 8px;white-space:nowrap}
+  .stat-card{padding:12px 14px}
+  .stat-value{font-size:1.5rem}
+  .card{margin-bottom:10px}
+  .card-body{padding:10px 12px}
+  .card-hdr{padding:10px 12px}
+  .modal{max-width:100%;max-height:92vh;border-radius:16px 16px 0 0;margin-top:auto}
+  .modal-overlay{align-items:flex-end;padding:0}
+  .filter-bar{flex-wrap:wrap}
+  .search-inp{min-width:100%}
+  .btn{font-size:.7rem;padding:7px 12px}
+  .btn-sm{font-size:.65rem;padding:5px 9px}
+  .page-title{font-size:1.2rem}
+}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:240px;flex-shrink:0;
+  background:var(--ink2);
+  border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;
+  height:100vh;overflow:hidden;
+  transition:width .25s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.sidebar.collapsed{width:64px}
+.sidebar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--tl-bdr),var(--gd-bdr),transparent);
+}
+
+.sb-brand{
+  padding:20px 16px 16px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.sb-logo{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(145deg,rgba(0,200,150,.15),rgba(0,200,150,.05));
+  border:1px solid var(--tl-bdr);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(0,200,150,.1);
+}
+.sb-logo-rx{font-family:'Cormorant Garamond',serif;font-size:.9rem;font-weight:700;color:#fff;line-height:1}
+.sb-logo-rx span{color:var(--tl)}
+.sb-logo-sep{width:18px;height:1px;background:linear-gradient(90deg,transparent,var(--gd),transparent);margin-top:2px}
+.sb-name{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden}
+.sb-name span{color:var(--tl)}
+.sb-badge{font-size:.5rem;color:var(--gd);letter-spacing:2px;text-transform:uppercase;white-space:nowrap}
+
+.sb-nav{flex:1;overflow-y:auto;padding:10px 8px;scrollbar-width:none}
+.sb-nav::-webkit-scrollbar{display:none}
+.sb-section{font-size:.5rem;font-weight:700;color:var(--tx3);letter-spacing:2px;text-transform:uppercase;padding:10px 8px 4px;white-space:nowrap;overflow:hidden}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:10px;
+  cursor:pointer;color:var(--tx2);font-size:.78rem;font-weight:500;
+  transition:all .15s;margin-bottom:1px;position:relative;
+  white-space:nowrap;overflow:hidden;
+}
+.nav-item:hover{background:var(--sf2);color:var(--tx)}
+.nav-item.active{background:var(--tl-dim);color:var(--tl);border:1px solid var(--tl-bdr)}
+.nav-item .ni{
+  width:28px;height:28px;border-radius:7px;
+  background:rgba(255,255,255,.05);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;flex-shrink:0;
+}
+.nav-item.active .ni{background:rgba(0,200,150,.12)}
+.nav-badge{
+  margin-left:auto;background:var(--rd);color:#fff;
+  border-radius:10px;padding:1px 6px;font-size:.52rem;font-weight:700;
+  flex-shrink:0;
+}
+
+.sb-foot{padding:10px 8px 16px;border-top:1px solid var(--bd);flex-shrink:0}
+.sb-user{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:10px;
+  background:var(--sf2);border:1px solid var(--bd);
+  margin-bottom:6px;
+}
+.sb-av{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  background:var(--tl-dim);border:1.5px solid var(--tl-bdr);
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;
+}
+.sb-uname{font-size:.72rem;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden}
+.sb-urole{font-size:.58rem;color:var(--gd);white-space:nowrap}
+.sb-logout{
+  width:100%;background:rgba(224,85,85,.07);border:1px solid rgba(224,85,85,.12);
+  border-radius:8px;padding:8px;font-size:.72rem;font-weight:600;
+  color:rgba(224,85,85,.7);cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .15s;
+}
+.sb-logout:hover{background:rgba(224,85,85,.12)}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--ink)}
+
+/* Topbar */
+.topbar{
+  height:58px;flex-shrink:0;
+  background:rgba(4,8,15,.95);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+}
+.topbar-toggle{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--sf2);border:1px solid var(--bd);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;cursor:pointer;flex-shrink:0;transition:all .15s;
+}
+.topbar-toggle span{display:block;width:14px;height:1.5px;background:var(--tx2);border-radius:1px}
+.topbar-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;color:var(--tx)}
+.topbar-sub{font-size:.62rem;color:var(--tx3);margin-left:4px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.topbar-time{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--tx3)}
+.topbar-admin{
+  background:var(--gd-dim);border:1px solid var(--gd-bdr);
+  border-radius:20px;padding:3px 10px;
+  font-size:.58rem;font-weight:700;color:var(--gd);
+}
+
+/* Content area */
+.content{flex:1;overflow-y:auto;padding:20px;-webkit-overflow-scrolling:touch}
+
+/* Pages */
 .page{display:none}
 .page.active{display:block}
-.page-title{font-size:1.1rem;font-weight:700;color:var(--tx);margin-bottom:3px}
-.page-sub{font-size:.68rem;color:var(--tx3);margin-bottom:14px}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.stat-card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px;position:relative;overflow:hidden}
+
+/* Page header */
+.page-hdr{margin-bottom:20px}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--tx);margin-bottom:2px}
+.page-sub{font-size:.7rem;color:var(--tx3)}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{
+  background:var(--sf);border:1px solid var(--bd);border-radius:14px;
+  padding:16px 18px;position:relative;overflow:hidden;
+  transition:transform .15s,box-shadow .15s;cursor:default;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--sh)}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .stat-card.tl::before{background:linear-gradient(90deg,var(--tl),var(--tl2))}
-.stat-card.gd::before{background:linear-gradient(90deg,var(--gd),#e0b840)}
+.stat-card.gd::before{background:linear-gradient(90deg,var(--gd),var(--gd2))}
 .stat-card.bl::before{background:linear-gradient(90deg,var(--bl),#5a9ff5)}
 .stat-card.rd::before{background:linear-gradient(90deg,var(--rd),#f08080)}
 .stat-card.or::before{background:linear-gradient(90deg,var(--or),#e0a060)}
-.stat-icon{font-size:1.2rem;margin-bottom:6px}
-.stat-label{font-size:.56rem;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-.stat-value{font-size:1.5rem;font-weight:700;color:var(--tx);line-height:1}
+.stat-icon{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;margin-bottom:10px;
+}
+.stat-card.tl .stat-icon{background:var(--tl-dim)}
+.stat-card.gd .stat-icon{background:var(--gd-dim)}
+.stat-card.bl .stat-icon{background:rgba(58,127,213,.12)}
+.stat-card.rd .stat-icon{background:rgba(224,85,85,.1)}
+.stat-card.or .stat-icon{background:rgba(200,120,48,.1)}
+.stat-label{font-size:.62rem;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.stat-value{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:700;color:var(--tx);line-height:1}
 .stat-card.tl .stat-value{color:var(--tl)}
 .stat-card.gd .stat-value{color:var(--gd)}
 .stat-card.bl .stat-value{color:var(--bl)}
 .stat-card.rd .stat-value{color:var(--rd)}
 .stat-card.or .stat-value{color:var(--or)}
-.card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;margin-bottom:12px;overflow:hidden}
-.card-hdr{padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.stat-change{font-size:.62rem;margin-top:5px}
+.stat-change.up{color:#4caf7d}
+.stat-change.dn{color:var(--rd)}
+
+/* ── GRID LAYOUTS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* ── CARDS ── */
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.card-hdr{
+  padding:14px 16px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;
+}
 .card-title{font-size:.82rem;font-weight:700;color:var(--tx)}
 .card-sub{font-size:.62rem;color:var(--tx3);margin-top:1px}
-.card-body{padding:12px 14px}
-.doctor-card{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:8px}
-.doctor-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.doctor-av{width:36px;height:36px;border-radius:50%;background:var(--tl-dim);border:1px solid var(--tl-bdr);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--tl);flex-shrink:0;text-transform:uppercase}
-.doctor-name{font-size:.8rem;font-weight:600;color:var(--tx)}
-.doctor-email{font-size:.63rem;color:var(--tx3);margin-top:1px;word-break:break-all}
-.doctor-actions{display:flex;gap:6px;flex-wrap:wrap}
-.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:.58rem;font-weight:700}
+.card-body{padding:14px 16px}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.75rem}
+th{padding:9px 12px;text-align:left;font-size:.58rem;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);background:var(--sf2)}
+td{padding:10px 12px;border-bottom:1px solid var(--bd2);color:var(--tx2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.58rem;font-weight:700}
 .badge.tl{background:var(--tl-dim);border:1px solid var(--tl-bdr);color:var(--tl)}
 .badge.gd{background:var(--gd-dim);border:1px solid var(--gd-bdr);color:var(--gd)}
 .badge.rd{background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.2);color:var(--rd)}
 .badge.or{background:rgba(200,120,48,.1);border:1px solid rgba(200,120,48,.2);color:var(--or)}
 .badge.bl{background:rgba(58,127,213,.1);border:1px solid rgba(58,127,213,.2);color:var(--bl)}
 .badge.gray{background:rgba(255,255,255,.05);border:1px solid var(--bd);color:var(--tx3)}
-.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
-.btn:active{transform:scale(.95)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s}
+.btn:active{transform:scale(.96)}
 .btn-primary{background:linear-gradient(135deg,var(--tl),#009e78);color:#021a10;box-shadow:0 2px 10px rgba(0,200,150,.2)}
 .btn-gold{background:linear-gradient(135deg,var(--gd),#a07828);color:#fff}
 .btn-danger{background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.2);color:var(--rd)}
 .btn-ghost{background:var(--sf2);border:1px solid var(--bd);color:var(--tx2)}
-.btn-full{width:100%;justify-content:center;padding:11px}
-.inp{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:10px 13px;font-size:.82rem;color:var(--tx);outline:none;font-family:'DM Sans',sans-serif;transition:border-color .2s;-webkit-appearance:none}
+.btn-sm{padding:4px 9px;font-size:.65rem}
+
+/* ── SEARCH / FILTER BAR ── */
+.filter-bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.search-inp{
+  background:var(--sf2);border:1px solid var(--bd);border-radius:9px;
+  padding:8px 12px;font-size:.75rem;color:var(--tx);
+  outline:none;font-family:'DM Sans',sans-serif;
+  transition:border-color .2s;flex:1;min-width:160px;
+}
+.search-inp:focus{border-color:var(--tl)}
+.search-inp::placeholder{color:var(--tx3)}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:.62rem;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px}
+.inp{
+  background:var(--sf2);border:1px solid var(--bd);border-radius:9px;
+  padding:9px 12px;font-size:.78rem;color:var(--tx);
+  outline:none;font-family:'DM Sans',sans-serif;transition:border-color .2s;
+}
 .inp:focus{border-color:var(--tl);box-shadow:0 0 0 3px var(--tl-dim)}
 .inp::placeholder{color:var(--tx3)}
 select.inp{cursor:pointer}
 textarea.inp{resize:vertical;min-height:70px}
-.inp-row{display:flex;gap:8px;align-items:center}
-.inp-row .inp{flex:1}
-.field{margin-bottom:12px}
-.field label{display:block;font-size:.62rem;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
-.search-bar{background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:9px 13px;font-size:.8rem;color:var(--tx);outline:none;font-family:'DM Sans',sans-serif;width:100%;margin-bottom:12px;-webkit-appearance:none;display:block}
-.search-bar:focus{border-color:var(--tl)}
-.search-bar::placeholder{color:var(--tx3)}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);
+  z-index:500;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:var(--sf);border:1px solid var(--bd);border-radius:18px;
+  width:100%;max-width:520px;max-height:85vh;overflow-y:auto;
+  box-shadow:var(--sh2);animation:modalIn .25s cubic-bezier(.34,1.1,.64,1);
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.93) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:.88rem;font-weight:700;color:var(--tx)}
+.modal-close{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:3px 10px;font-size:.78rem;cursor:pointer;color:var(--tx2);font-family:'DM Sans',sans-serif}
+.modal-body{padding:18px 20px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--sf);border:1px solid var(--bd);color:var(--tx);
+  padding:9px 18px;border-radius:20px;font-size:.74rem;font-weight:500;
+  z-index:9000;opacity:0;transition:all .25s;white-space:nowrap;
+  box-shadow:var(--sh2);pointer-events:none;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── CHART CONTAINER ── */
+.chart-wrap{position:relative;height:220px}
+
+/* ── RECENT ITEM ── */
 .recent-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd2)}
 .recent-item:last-child{border-bottom:none}
-.ri-ico{width:28px;height:28px;border-radius:7px;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0}
-.ri-name{font-size:.76rem;font-weight:600;color:var(--tx)}
+.ri-ico{width:30px;height:30px;border-radius:8px;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.ri-name{font-size:.76rem;font-weight:600;color:var(--tx);flex:1}
 .ri-sub{font-size:.6rem;color:var(--tx3);margin-top:1px}
-.chart-wrap{position:relative;height:170px}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:500;display:none;align-items:flex-end;justify-content:center;padding:0}
-.modal-overlay.show{display:flex}
-.modal{background:var(--sf);border:1px solid var(--bd);border-radius:20px 20px 0 0;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.5);animation:modalUp .25s cubic-bezier(.34,1.1,.64,1)}
-@keyframes modalUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-handle{width:36px;height:4px;background:var(--bd);border-radius:2px;margin:10px auto 0}
-.modal-hdr{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-size:.88rem;font-weight:700;color:var(--tx)}
-.modal-close{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:4px 11px;font-size:.75rem;cursor:pointer;color:var(--tx2);font-family:'DM Sans',sans-serif}
-.modal-body{padding:16px 18px}
-.modal-foot{padding:12px 18px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}
-.tgl{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0}
-.tgl input{display:none}
-.tsl{position:absolute;inset:0;background:var(--sf2);border:1px solid var(--bd);border-radius:20px;cursor:pointer;transition:all .2s}
+.ri-val{font-size:.72rem;color:var(--tx2);flex-shrink:0}
+
+/* ── AVATAR ── */
+.av{width:28px;height:28px;border-radius:50%;background:var(--tl-dim);border:1px solid var(--tl-bdr);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:var(--tl);flex-shrink:0}
+
+/* ── TOGGLE ── */
+.tgl{position:relative;display:inline-block;width:38px;height:20px}
+.tgl input{opacity:0;width:0;height:0}
+.tsl{position:absolute;inset:0;background:var(--sf3);border:1px solid var(--bd);border-radius:20px;cursor:pointer;transition:all .2s}
 .tsl::before{content:'';position:absolute;width:14px;height:14px;left:2px;top:50%;transform:translateY(-50%);background:var(--tx3);border-radius:50%;transition:all .2s}
 .tgl input:checked+.tsl{background:var(--tl-dim);border-color:var(--tl-bdr)}
 .tgl input:checked+.tsl::before{transform:translate(18px,-50%);background:var(--tl)}
-.empty{text-align:center;padding:30px 16px;color:var(--tx3);font-size:.78rem}
-.empty-ico{font-size:1.8rem;margin-bottom:8px;opacity:.4}
-#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--sf);border:1px solid var(--bd);color:var(--tx);padding:9px 18px;border-radius:20px;font-size:.74rem;font-weight:500;z-index:9000;opacity:0;transition:all .25s;white-space:nowrap;box-shadow:var(--sh);pointer-events:none;max-width:90vw;text-align:center}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:62px;background:rgba(7,13,24,.97);border-top:1px solid var(--bd);display:flex;align-items:stretch;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;background:none;border:none;color:var(--tx3);font-family:'DM Sans',sans-serif;transition:color .15s;position:relative;padding:6px 2px}
-.nav-btn.active{color:var(--tl)}
-.nav-btn .nav-icon{font-size:1.05rem;line-height:1}
-.nav-btn .nav-label{font-size:.48rem;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
-.nav-badge{position:absolute;top:6px;right:calc(50% - 16px);background:var(--rd);color:#fff;border-radius:10px;padding:1px 5px;font-size:.48rem;font-weight:700;display:none}
-.nav-badge.show{display:block}
-.section-title{font-size:.62rem;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px}
-.grant-box{background:linear-gradient(135deg,rgba(200,160,50,.08),rgba(200,160,50,.04));border:1px solid var(--gd-bdr);border-radius:12px;padding:14px;margin-bottom:12px}
-.grant-title{font-size:.78rem;font-weight:700;color:var(--gd);margin-bottom:10px}
-.sub-card{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:8px}
-.sub-email{font-size:.78rem;font-weight:600;color:var(--tx);margin-bottom:3px}
-.sub-meta{font-size:.62rem;color:var(--tx3);margin-bottom:8px}
-.sub-actions{display:flex;gap:6px}
-.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;font-size:.72rem;min-width:380px}
-th{padding:8px 10px;text-align:left;font-size:.55rem;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--bd);background:var(--sf2);white-space:nowrap}
-td{padding:9px 10px;border-bottom:1px solid var(--bd2);color:var(--tx2);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.back-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:40px 20px;color:var(--tx3);font-size:.78rem}
+.empty-ico{font-size:2rem;margin-bottom:8px;opacity:.4}
+
+/* Scrollbar */
+.sf3{background:var(--sf3)}
 </style>
 </head>
 <body>
-
+<!-- TOAST -->
 <div id="toast"></div>
-
 <!-- LOCK SCREEN -->
-<div id="lockScreen" role="dialog" aria-modal="true" aria-label="Admin verification">
-  <div class="lock-card">
-    <div class="lock-logo">⚡</div>
-    <div class="lock-title">RxEasy Admin</div>
-    <div class="lock-sub">You must be logged in with your admin doctor account to access this panel.</div>
-    <button class="lock-btn" onclick="unlockAdmin()">Verify &amp; Enter Admin Panel</button>
-    <div class="lock-err" id="lockErr"></div>
-  </div>
+<div id="lockScreen" role="dialog" aria-modal="true" aria-label="Admin access verification">
+<div class="lock-card">
+<div class="lock-emblem">
+<div class="lock-rx">Rx<span>E</span></div>
 </div>
-
+<div class="lock-title">Admin Panel</div>
+<div class="lock-sub">Enter access code to continue</div>
+<!-- SEC-02 FIX: No code input. Access verified server-side via is_admin flag. -->
+<button class="lock-btn" onclick="unlockAdmin()">Access Admin Panel</button>
+<div class="lock-err" id="lockErr"></div>
+</div>
+</div>
 <!-- ADMIN APP -->
 <div id="adminApp">
-
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="topbar-logo">Rx</div>
-    <div class="topbar-title" id="topbarTitle">Dashboard</div>
-    <div class="topbar-clock" id="adminClock"></div>
-    <div class="topbar-admin">ADMIN</div>
-    <button class="logout-btn" onclick="doLogout()">Logout</button>
-  </div>
-
-  <!-- CONTENT -->
-  <div class="content" id="mainContent">
-
-    <!-- DASHBOARD -->
-    <div class="page active" id="page-dashboard">
-      <div class="page-title">Dashboard</div>
-      <div class="page-sub">RxEasy overview</div>
-      <div class="stats-grid">
-        <div class="stat-card tl"><div class="stat-icon">👨‍⚕️</div><div class="stat-label">Total Doctors</div><div class="stat-value" id="s-docs">—</div></div>
-        <div class="stat-card gd"><div class="stat-icon">👑</div><div class="stat-label">Premium</div><div class="stat-value" id="s-prem">—</div></div>
-        <div class="stat-card bl"><div class="stat-icon">💊</div><div class="stat-label">Prescriptions</div><div class="stat-value" id="s-rx">—</div></div>
-        <div class="stat-card or"><div class="stat-icon">⏳</div><div class="stat-label">Pending</div><div class="stat-value" id="s-pend">—</div></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">📈 Prescription Activity</div><div class="card-sub">Last 7 days</div></div>
-        <div class="card-body"><div class="chart-wrap"><canvas id="rxChart"></canvas></div></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">🏥 Top Diseases</div></div>
-        <div class="card-body" id="topDiseaseList"><div class="empty"><div class="empty-ico">🦠</div>Loading...</div></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">👨‍⚕️ Recent Registrations</div></div>
-        <div class="card-body" id="recentDocs"><div class="empty"><div class="empty-ico">👨‍⚕️</div>Loading...</div></div>
-      </div>
-    </div>
-
-    <!-- DOCTORS -->
-    <div class="page" id="page-doctors">
-      <div class="page-title">Doctors</div>
-      <div class="page-sub" id="docCount">Loading...</div>
-      <div class="grant-box">
-        <div class="grant-title">👑 Grant Premium by Email</div>
-        <div class="inp-row">
-          <input class="inp" id="grantEmail" type="email" placeholder="doctor@email.com"/>
-          <button class="btn btn-gold" onclick="grantById()">Grant 👑</button>
-        </div>
-      </div>
-      <input class="search-bar" oninput="filterDoctors(this.value)" placeholder="🔍 Search by name or email..."/>
-      <div id="doctorList"><div class="empty"><div class="empty-ico">👨‍⚕️</div>Loading...</div></div>
-    </div>
-
-    <!-- SUBSCRIPTIONS -->
-    <div class="page" id="page-subs">
-      <div class="page-title">Subscriptions</div>
-      <div class="page-sub">Manage premium members</div>
-      <div class="section-title">⏳ Pending Payment Requests</div>
-      <div id="pendingSubsList"><div class="empty"><div class="empty-ico">✅</div>No pending requests</div></div>
-      <div class="section-title">👑 Active Premium Members</div>
-      <div id="premiumList"><div class="empty"><div class="empty-ico">👑</div>Loading...</div></div>
-    </div>
-
-    <!-- ANALYTICS -->
-    <div class="page" id="page-analytics">
-      <div class="page-title">Analytics</div>
-      <div class="page-sub">Usage statistics</div>
-      <div class="analytics-grid" id="analyticsStats"></div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">📊 Doctor Growth</div></div>
-        <div class="card-body"><div class="chart-wrap"><canvas id="growthChart"></canvas></div></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">🏆 Most Active Doctors</div></div>
-        <div class="card-body" id="activeDoctorsList"><div class="empty"><div class="empty-ico">📊</div>Loading...</div></div>
-      </div>
-    </div>
-
-    <!-- MORE -->
-    <div class="page" id="page-more">
-      <div class="page-title">More</div>
-      <div class="page-sub">Database, logs &amp; settings</div>
-      <div class="section-title">Clinical Database</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-        <button class="btn btn-ghost btn-full" onclick="navTo('diseases')">🦠 Diseases DB</button>
-        <button class="btn btn-ghost btn-full" onclick="navTo('drugs')">💊 Drug DB</button>
-      </div>
-      <div class="section-title">Logs &amp; Finance</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-        <button class="btn btn-ghost btn-full" onclick="navTo('rxlogs')">📋 Rx Logs</button>
-        <button class="btn btn-ghost btn-full" onclick="navTo('revenue')">💰 Revenue</button>
-      </div>
-      <div class="section-title">System</div>
-      <button class="btn btn-ghost btn-full" style="margin-bottom:8px" onclick="navTo('settings')">⚙️ App Settings</button>
-      <button class="btn btn-danger btn-full" onclick="doLogout()">🚪 Logout</button>
-    </div>
-
-    <!-- DISEASES -->
-    <div class="page" id="page-diseases">
-      <div class="back-row">
-        <button class="btn btn-ghost" onclick="navTo('more')" style="padding:6px 10px">← Back</button>
-        <div class="page-title" style="margin:0;flex:1">Diseases DB</div>
-        <button class="btn btn-primary" onclick="openModal('diseaseModal');resetDiseaseForm()" style="padding:6px 11px">+ Add</button>
-      </div>
-      <div class="page-sub" id="disCount" style="margin-bottom:10px">Loading...</div>
-      <input class="search-bar" oninput="filterDiseases(this.value)" placeholder="🔍 Search diseases..."/>
-      <div class="tbl-scroll">
-        <table>
-          <thead><tr><th>Name</th><th>Category</th><th>ICD-10</th><th>Actions</th></tr></thead>
-          <tbody id="diseaseTbody"><tr><td colspan="4" style="text-align:center;padding:20px;color:var(--tx3)">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- DRUGS -->
-    <div class="page" id="page-drugs">
-      <div class="back-row">
-        <button class="btn btn-ghost" onclick="navTo('more')" style="padding:6px 10px">← Back</button>
-        <div class="page-title" style="margin:0;flex:1">Drug DB</div>
-        <button class="btn btn-primary" onclick="openModal('drugModal');resetDrugForm()" style="padding:6px 11px">+ Add</button>
-      </div>
-      <div class="page-sub" id="drugCount" style="margin-bottom:10px">Loading...</div>
-      <input class="search-bar" oninput="filterDrugs(this.value)" placeholder="🔍 Search drugs..."/>
-      <div class="tbl-scroll">
-        <table>
-          <thead><tr><th>Generic Name</th><th>Brands</th><th>Category</th><th>Actions</th></tr></thead>
-          <tbody id="drugTbody"><tr><td colspan="4" style="text-align:center;padding:20px;color:var(--tx3)">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- RX LOGS -->
-    <div class="page" id="page-rxlogs">
-      <div class="back-row">
-        <button class="btn btn-ghost" onclick="navTo('more')" style="padding:6px 10px">← Back</button>
-        <div class="page-title" style="margin:0">Rx Logs</div>
-      </div>
-      <input class="search-bar" oninput="filterRxLogs(this.value)" placeholder="🔍 Search logs..."/>
-      <div class="tbl-scroll">
-        <table>
-          <thead><tr><th>Doctor</th><th>Diagnosis</th><th>Mode</th><th>Source</th><th>Date</th></tr></thead>
-          <tbody id="rxlogTbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--tx3)">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- REVENUE -->
-    <div class="page" id="page-revenue">
-      <div class="back-row">
-        <button class="btn btn-ghost" onclick="navTo('more')" style="padding:6px 10px">← Back</button>
-        <div class="page-title" style="margin:0">Revenue</div>
-      </div>
-      <div class="analytics-grid" id="revStats"></div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">💳 Transactions</div></div>
-        <div class="card-body" id="revList"><div class="empty"><div class="empty-ico">💰</div>Loading...</div></div>
-      </div>
-    </div>
-
-    <!-- SETTINGS -->
-    <div class="page" id="page-settings">
-      <div class="back-row">
-        <button class="btn btn-ghost" onclick="navTo('more')" style="padding:6px 10px">← Back</button>
-        <div class="page-title" style="margin:0">Settings</div>
-      </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">🔧 App Settings</div></div>
-        <div class="card-body" id="settingsList"><div class="empty"><div class="empty-ico">⚙️</div>Loading...</div></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr"><div class="card-title">📢 Announcement</div></div>
-        <div class="card-body">
-          <div class="field"><label>Message for all doctors</label><textarea class="inp" id="announcementText" placeholder="Enter announcement..."></textarea></div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-primary" onclick="saveAnnouncement()">Save</button>
-            <button class="btn btn-danger" onclick="clearAnnouncement()">Clear</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <button class="nav-btn active" id="nav-dashboard" onclick="navTo('dashboard')">
-      <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
-    </button>
-    <button class="nav-btn" id="nav-doctors" onclick="navTo('doctors')">
-      <span class="nav-icon">👨‍⚕️</span><span class="nav-label">Doctors</span>
-    </button>
-    <button class="nav-btn" id="nav-subs" onclick="navTo('subs')">
-      <span class="nav-icon">⭐</span><span class="nav-label">Subs</span>
-      <span class="nav-badge" id="pendingBadge">0</span>
-    </button>
-    <button class="nav-btn" id="nav-analytics" onclick="navTo('analytics')">
-      <span class="nav-icon">📈</span><span class="nav-label">Analytics</span>
-    </button>
-    <button class="nav-btn" id="nav-more" onclick="navTo('more')">
-      <span class="nav-icon">⋯</span><span class="nav-label">More</span>
-    </button>
-  </nav>
-
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()" aria-hidden="true"></div>
+<div class="layout">
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar" aria-label="Admin navigation" role="navigation">
+<div class="sb-brand">
+<div class="sb-logo">
+<div class="sb-logo-rx">Rx<span>E</span></div>
+<div class="sb-logo-sep"></div>
 </div>
-
+<div style="overflow:hidden">
+<div class="sb-name">Rx<span>Easy</span></div>
+<div class="sb-badge">Admin Dashboard</div>
+</div>
+</div>
+<nav class="sb-nav">
+<div class="sb-section">Overview</div>
+<div class="nav-item active" onclick="showPage('dashboard',this)">
+<div class="ni">📊</div><span>Dashboard</span>
+</div>
+<div class="nav-item" onclick="showPage('analytics',this)">
+<div class="ni">📈</div><span>Analytics</span>
+</div>
+<div class="sb-section">Clinical DB</div>
+<div class="nav-item" onclick="showPage('diseases',this)">
+<div class="ni">🦠</div><span>Diseases</span>
+</div>
+<div class="nav-item" onclick="showPage('drugs',this)">
+<div class="ni">💊</div><span>Drugs</span>
+</div>
+<div class="sb-section">Users</div>
+<div class="nav-item" onclick="showPage('doctors',this)">
+<div class="ni">👨‍⚕️</div><span>Doctors</span>
+</div>
+<div class="nav-item" onclick="showPage('subscriptions',this)">
+<div class="ni">⭐</div><span>Subscriptions</span>
+<span class="nav-badge" id="pendingBadge" style="display:none">0</span>
+</div>
+<div class="sb-section">Finance</div>
+<div class="nav-item" onclick="showPage('revenue',this)">
+<div class="ni">💰</div><span>Revenue</span>
+</div>
+<div class="sb-section">Logs</div>
+<div class="nav-item" onclick="showPage('rxlogs',this)">
+<div class="ni">📋</div><span>Rx Logs</span>
+</div>
+<div class="sb-section">System</div>
+<div class="nav-item" onclick="showPage('settings',this)">
+<div class="ni">⚙️</div><span>Settings</span>
+</div>
+</nav>
+<div class="sb-foot">
+<div class="sb-user">
+<div class="sb-av">👨‍⚕️</div>
+<div style="overflow:hidden">
+<div class="sb-uname">Dr. Usama Jamal</div>
+<div class="sb-urole">Super Admin</div>
+</div>
+</div>
+<button class="sb-logout" onclick="doLogout()">🚪 Logout</button>
+</div>
+</aside>
+<!-- MAIN -->
+<div class="main">
+<!-- Topbar -->
+<div class="topbar">
+<div class="topbar-toggle" onclick="toggleSidebar()">
+<span></span><span></span><span></span>
+</div>
+<div>
+<div class="topbar-title" id="topbarTitle">Dashboard</div>
+</div>
+<div class="topbar-right">
+<div class="topbar-time" id="adminClock"></div>
+<div class="topbar-admin">⚡ ADMIN</div>
+</div>
+</div>
+<!-- Content -->
+<div class="content">
+<!-- ══ DASHBOARD ══ -->
+<div class="page active" id="page-dashboard">
+<div class="page-hdr">
+<div class="page-title">Dashboard</div>
+<div class="page-sub">Welcome back, Dr. Usama — here's your overview</div>
+</div>
+<!-- Stats -->
+<div class="stats-grid" id="statsGrid">
+<div class="stat-card tl">
+<div class="stat-icon">👨‍⚕️</div>
+<div class="stat-label">Total Doctors</div>
+<div class="stat-value" id="s-docs">—</div>
+<div class="stat-change up" id="s-docs-sub"></div>
+</div>
+<div class="stat-card gd">
+<div class="stat-icon">👑</div>
+<div class="stat-label">Premium Members</div>
+<div class="stat-value" id="s-prem">—</div>
+</div>
+<div class="stat-card bl">
+<div class="stat-icon">💊</div>
+<div class="stat-label">Prescriptions</div>
+<div class="stat-value" id="s-rx">—</div>
+</div>
+<div class="stat-card or">
+<div class="stat-icon">⏳</div>
+<div class="stat-label">Pending Requests</div>
+<div class="stat-value" id="s-pend">—</div>
+</div>
+<div class="stat-card rd">
+<div class="stat-icon">🦠</div>
+<div class="stat-label">Diseases in DB</div>
+<div class="stat-value" id="s-dis">—</div>
+</div>
+</div>
+<!-- Charts row -->
+<div class="grid-2">
+<div class="card">
+<div class="card-hdr">
+<div><div class="card-title">📈 Prescription Activity</div><div class="card-sub">Last 7 days</div></div>
+</div>
+<div class="card-body">
+<div class="chart-wrap"><canvas id="rxChart"></canvas></div>
+</div>
+</div>
+<div class="card">
+<div class="card-hdr">
+<div><div class="card-title">🏥 Top Diseases</div><div class="card-sub">Most prescribed</div></div>
+</div>
+<div class="card-body">
+<div id="topDiseaseList"></div>
+</div>
+</div>
+</div>
+<!-- Recent doctors -->
+<div class="card">
+<div class="card-hdr">
+<div><div class="card-title">👨‍⚕️ Recent Registrations</div></div>
+<button class="btn btn-ghost btn-sm" onclick="showPage('doctors',null)">View All</button>
+</div>
+<div class="card-body" id="recentDocs">
+<div class="empty"><div class="empty-ico">👨‍⚕️</div>Loading...</div>
+</div>
+</div>
+</div>
+<!-- ══ ANALYTICS ══ -->
+<div class="page" id="page-analytics">
+<div class="page-hdr">
+<div class="page-title">Analytics</div>
+<div class="page-sub">Usage statistics and trends</div>
+</div>
+<div class="stats-grid" id="analyticsStats"></div>
+<div class="grid-2">
+<div class="card">
+<div class="card-hdr"><div class="card-title">📊 Doctor Growth</div></div>
+<div class="card-body"><div class="chart-wrap"><canvas id="growthChart"></canvas></div></div>
+</div>
+<div class="card">
+<div class="card-hdr"><div class="card-title">💡 Active Doctors</div></div>
+<div class="card-body" id="activeDoctorsList">
+<div class="empty"><div class="empty-ico">📊</div>Loading...</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ══ DISEASES ══ -->
+<div class="page" id="page-diseases">
+<div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
+<div><div class="page-title">Diseases Database</div><div class="page-sub" id="disCount">Loading...</div></div>
+<button class="btn btn-primary" onclick="openModal('diseaseModal');resetDiseaseForm()">+ Add Disease</button>
+</div>
+<div class="filter-bar">
+<input class="search-inp" oninput="filterDiseases(this.value)" placeholder="🔍 Search diseases..."/>
+</div>
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Disease</th><th>Category</th><th>ICD-10</th><th>Treatments</th><th>Actions</th></tr></thead>
+<tbody id="diseaseTbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- ══ DRUGS ══ -->
+<div class="page" id="page-drugs">
+<div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
+<div><div class="page-title">Drug Database</div><div class="page-sub" id="drugCount">Loading...</div></div>
+<button class="btn btn-primary" onclick="openModal('drugModal');resetDrugForm()">+ Add Drug</button>
+</div>
+<div class="filter-bar">
+<input class="search-inp" oninput="filterDrugs(this.value)" placeholder="🔍 Search drugs or brands..."/>
+</div>
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Generic Name</th><th>Brand Names</th><th>Category</th><th>Adult Dose</th><th>Actions</th></tr></thead>
+<tbody id="drugTbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- ══ DOCTORS ══ -->
+<div class="page" id="page-doctors">
+<div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
+<div><div class="page-title">Doctors</div><div class="page-sub" id="docCount">Loading...</div></div>
+<div style="display:flex;gap:8px">
+<input class="search-inp" oninput="filterDoctors(this.value)" placeholder="🔍 Search..." style="width:200px"/>
+</div>
+</div>
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Doctor</th><th>Email</th><th>Status</th><th>Queries</th><th>Joined</th><th>Actions</th></tr></thead>
+<tbody id="doctorTbody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+<!-- Grant by email -->
+<div class="card">
+<div class="card-hdr"><div class="card-title">⚡ Quick Grant Premium</div></div>
+<div class="card-body" style="display:flex;gap:8px">
+<input class="inp" id="grantEmail" placeholder="doctor@email.com" style="flex:1"/>
+<button class="btn btn-gold" onclick="grantById()">Grant Premium</button>
+</div>
+</div>
+</div>
+<!-- ══ SUBSCRIPTIONS ══ -->
+<div class="page" id="page-subscriptions">
+<div class="page-hdr">
+<div class="page-title">Subscriptions</div>
+<div class="page-sub">Pending payment verifications and premium members</div>
+</div>
+<div class="grid-2">
+<div class="card">
+<div class="card-hdr"><div class="card-title">⏳ Pending Requests</div></div>
+<div class="card-body" id="pendingSubsList">
+<div class="empty"><div class="empty-ico">⏳</div>Loading...</div>
+</div>
+</div>
+<div class="card">
+<div class="card-hdr"><div class="card-title">👑 Premium Members</div></div>
+<div class="card-body" id="premiumList">
+<div class="empty"><div class="empty-ico">👑</div>Loading...</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ══ REVENUE ══ -->
+<div class="page" id="page-revenue">
+<div class="page-hdr">
+<div class="page-title">Revenue</div>
+<div class="page-sub">Subscription earnings overview</div>
+</div>
+<div class="stats-grid" id="revStats"></div>
+<div class="card">
+<div class="card-hdr"><div class="card-title">💳 Transaction History</div></div>
+<div class="card-body" id="revList">
+<div class="empty"><div class="empty-ico">💰</div>Loading...</div>
+</div>
+</div>
+</div>
+<!-- ══ RX LOGS ══ -->
+<div class="page" id="page-rxlogs">
+<div class="page-hdr">
+<div class="page-title">Prescription Logs</div>
+<div class="page-sub">All AI-generated prescriptions</div>
+</div>
+<div class="filter-bar">
+<input class="search-inp" oninput="filterRxLogs(this.value)" placeholder="🔍 Search by doctor or diagnosis..."/>
+</div>
+<div class="card">
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Doctor</th><th>Diagnosis</th><th>Mode</th><th>Source</th><th>Date</th></tr></thead>
+<tbody id="rxlogTbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- ══ SETTINGS ══ -->
+<div class="page" id="page-settings">
+<div class="page-hdr">
+<div class="page-title">Settings</div>
+<div class="page-sub">System configuration</div>
+</div>
+<div class="grid-2">
+<div class="card">
+<div class="card-hdr"><div class="card-title">🔧 App Settings</div></div>
+<div class="card-body" id="settingsList"></div>
+</div>
+<div class="card">
+<div class="card-hdr"><div class="card-title">📢 Announcement</div></div>
+<div class="card-body">
+<div class="field" style="margin-bottom:10px">
+<label>Message</label>
+<textarea class="inp" id="announcementText" placeholder="Enter announcement for all doctors..."></textarea>
+</div>
+<div style="display:flex;gap:8px">
+<button class="btn btn-primary" onclick="saveAnnouncement()">Save</button>
+<button class="btn btn-danger" onclick="clearAnnouncement()">Clear</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /layout -->
+</div><!-- /adminApp -->
 <!-- DISEASE MODAL -->
 <div class="modal-overlay" id="diseaseModal" onclick="if(event.target===this)closeModal('diseaseModal')" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-hdr">
-      <div class="modal-title" id="disModalTitle">Add Disease</div>
-      <button class="modal-close" onclick="closeModal('diseaseModal')">✕ Close</button>
-    </div>
-    <div class="modal-body">
-      <div class="field"><label>Disease Name *</label><input class="inp" id="d-name" placeholder="e.g. Typhoid Fever"/></div>
-      <div class="field"><label>Category</label><input class="inp" id="d-cat" placeholder="e.g. Infectious"/></div>
-      <div class="field"><label>ICD-10 Code</label><input class="inp" id="d-icd" placeholder="e.g. A01.0"/></div>
-      <div class="field"><label>Aliases (comma separated)</label><input class="inp" id="d-alias" placeholder="enteric fever, typhus"/></div>
-      <div class="field"><label>Clinical Notes</label><textarea class="inp" id="d-notes" placeholder="Brief clinical notes..."></textarea></div>
-      <input id="d-id" type="hidden"/>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('diseaseModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDisease()">💾 Save</button>
-    </div>
-  </div>
+<div class="modal">
+<div class="modal-hdr">
+<div class="modal-title" id="disModalTitle">Add Disease</div>
+<button class="modal-close" onclick="closeModal('diseaseModal')">✕ Close</button>
 </div>
-
+<div class="modal-body">
+<div class="form-grid" style="margin-bottom:10px">
+<div class="field"><label>Disease Name *</label><input class="inp" id="d-name" placeholder="e.g. Typhoid Fever"/></div>
+<div class="field"><label>Category</label><input class="inp" id="d-cat" placeholder="e.g. Infectious"/></div>
+<div class="field"><label>ICD-10 Code</label><input class="inp" id="d-icd" placeholder="e.g. A01.0"/></div>
+<div class="field"><label>Aliases (comma separated)</label><input class="inp" id="d-alias" placeholder="enteric fever, typhus"/></div>
+</div>
+<div class="field" style="margin-bottom:10px"><label>Clinical Notes</label><textarea class="inp" id="d-notes" placeholder="Brief clinical notes..."></textarea></div>
+<input id="d-id" type="hidden"/>
+</div>
+<div class="modal-foot">
+<button class="btn btn-ghost" onclick="closeModal('diseaseModal')">Cancel</button>
+<button class="btn btn-primary" onclick="saveDisease()">💾 Save Disease</button>
+</div>
+</div>
+</div>
 <!-- DRUG MODAL -->
 <div class="modal-overlay" id="drugModal" onclick="if(event.target===this)closeModal('drugModal')" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-hdr">
-      <div class="modal-title" id="drugModalTitle">Add Drug</div>
-      <button class="modal-close" onclick="closeModal('drugModal')">✕ Close</button>
-    </div>
-    <div class="modal-body">
-      <div class="field"><label>Generic Name *</label><input class="inp" id="dr-name" placeholder="e.g. Azithromycin"/></div>
-      <div class="field"><label>Brand Names (comma separated)</label><input class="inp" id="dr-brands" placeholder="Zetro, Azomax"/></div>
-      <div class="field"><label>Category</label><input class="inp" id="dr-cat" placeholder="e.g. Antibiotic"/></div>
-      <div class="field"><label>Adult Dose</label><input class="inp" id="dr-adose" placeholder="500mg OD x 5 days"/></div>
-      <div class="field"><label>Child Dose</label><input class="inp" id="dr-cdose" placeholder="10mg/kg OD"/></div>
-      <div class="field"><label>Pregnancy Safe?</label>
-        <select class="inp" id="dr-preg">
-          <option value="true">Yes - Category B</option>
-          <option value="false">No - Avoid</option>
-          <option value="caution">Caution</option>
-        </select>
-      </div>
-      <div class="field"><label>Contraindications</label><input class="inp" id="dr-ci" placeholder="e.g. Penicillin allergy"/></div>
-      <input id="dr-id" type="hidden"/>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="closeModal('drugModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDrug()">💾 Save</button>
-    </div>
-  </div>
+<div class="modal">
+<div class="modal-hdr">
+<div class="modal-title" id="drugModalTitle">Add Drug</div>
+<button class="modal-close" onclick="closeModal('drugModal')">✕ Close</button>
 </div>
-
+<div class="modal-body">
+<div class="form-grid" style="margin-bottom:10px">
+<div class="field"><label>Generic Name *</label><input class="inp" id="dr-name" placeholder="e.g. Azithromycin"/></div>
+<div class="field"><label>Brand Names (comma)</label><input class="inp" id="dr-brands" placeholder="Zetro, Azomax"/></div>
+<div class="field"><label>Category</label><input class="inp" id="dr-cat" placeholder="e.g. Antibiotic"/></div>
+<div class="field"><label>Adult Dose</label><input class="inp" id="dr-adose" placeholder="500mg OD × 5 days"/></div>
+<div class="field"><label>Child Dose</label><input class="inp" id="dr-cdose" placeholder="10mg/kg OD"/></div>
+<div class="field"><label>Pregnancy Safe?</label>
+<select class="inp" id="dr-preg"><option value="true">Yes — Category B</option><option value="false">No — Avoid</option><option value="caution">Caution</option></select>
+</div>
+</div>
+<div class="field" style="margin-bottom:10px"><label>Contraindications</label><input class="inp" id="dr-ci" placeholder="e.g. Penicillin allergy"/></div>
+<input id="dr-id" type="hidden"/>
+</div>
+<div class="modal-foot">
+<button class="btn btn-ghost" onclick="closeModal('drugModal')">Cancel</button>
+<button class="btn btn-primary" onclick="saveDrug()">💾 Save Drug</button>
+</div>
+</div>
+</div>
+<!-- SEC-01 FIX: config.js provides window.__RXEASY_CONFIG__ -->
 <script src="config.js"></script>
 <script src="assets/js/admin-1.js"></script>
 </body>
