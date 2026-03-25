@@ -1,0 +1,95 @@
+# RxEasy – Secure API Key Setup Guide
+# =====================================================
+# Follow these steps ONCE to make your site secure forever.
+# No coding needed — just copy and paste.
+# =====================================================
+
+
+## STEP 1 — Deploy the Edge Function to Supabase
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Go to: https://supabase.com → open your project
+2. Click "Edge Functions" in the left menu
+3. Click the "Deploy a new function" button
+4. Name it exactly:  ai-proxy
+5. Delete any default code in the editor
+6. Open the file:  supabase/functions/ai-proxy/index.ts  (from this zip)
+7. Copy ALL the code and paste it into the Supabase editor
+8. Click "Deploy"
+
+Done! The function is now live.
+
+
+## STEP 2 — Add Your API Keys as Secrets
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Still in Supabase → Edge Functions → click on "ai-proxy" → click "Secrets"
+
+Add these secrets one by one (click "Add new secret" for each):
+
+  Name: GROQ_KEY_1
+  Value: (paste your 1st Groq key)
+
+  Name: GROQ_KEY_2
+  Value: (paste your 2nd Groq key)
+
+  Name: GROQ_KEY_3
+  Value: (paste your 3rd Groq key)
+
+  Name: GROQ_KEY_4
+  Value: (paste your 4th Groq key)
+
+  Name: GEMINI_KEY
+  Value: (paste your Gemini key)
+
+Click Save after each one.
+
+Your keys are now locked inside Supabase — invisible to the public.
+
+
+## STEP 3 — Upload the Fixed Files to GitHub
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Replace these files in your GitHub repository with the ones from this zip:
+
+  assets/js/index-2.js   ← keys removed, now uses proxy
+  assets/js/index-3.js   ← (unchanged, included for completeness)
+  assets/js/index-4.js   ← (unchanged)
+  assets/js/admin-1.js   ← (unchanged)
+
+Also upload the new folder:
+  supabase/functions/ai-proxy/index.ts   ← the Edge Function code
+
+You do NOT need to touch config.js — the Supabase anon key there is safe to be public.
+
+
+## STEP 4 — Test Your Website
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Open your website
+2. Try generating a prescription
+3. It should work exactly as before
+
+If something doesn't work, go to Supabase → Edge Functions → ai-proxy → Logs
+to see what's happening.
+
+
+## HOW IT WORKS (Simple Explanation)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BEFORE (unsafe):
+  Your website → [API keys visible in code] → Groq/Gemini
+
+AFTER (secure):
+  Your website → Supabase proxy (keys hidden on server) → Groq/Gemini
+
+Nobody can see your keys anymore. Even if your GitHub is public,
+there are NO keys in your code — they live only inside Supabase's
+secure vault.
+
+
+## IF YOU GET NEW API KEYS IN THE FUTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Just go to Supabase → Edge Functions → ai-proxy → Secrets
+and update the value. No code changes needed. No GitHub upload needed.
