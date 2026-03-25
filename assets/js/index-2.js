@@ -994,141 +994,38 @@ const OPENROUTER_MODELS = [
   'qwen/qwen-2-7b-instruct:free',
 ];
 
-async function tryGroq(prompt, maxTokens) {
-  const messages = [{role:'user', content:prompt}];
-  // Try each key with each model
-  for(const apiKey of GROQ_KEYS) {
-    for(const model of GROQ_MODELS_ALL) {
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method:'POST',
-          headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-          body:JSON.stringify({model, max_tokens:maxTokens, temperature:0.2, messages})
-        });
-        const data = await res.json();
-        if(res.ok && data.choices?.[0]?.message?.content) {
-          _curModel = model.split('/').pop().substring(0,15);
-          updateModelBadge();
-          return data.choices[0].message.content;
-        }
-        const msg = (data.error?.message)||'';
-        if(res.status===401) break; // Bad key, try next key
-        if(res.status===429||msg.includes('rate_limit')||msg.includes('limit')) continue;
-        if(msg.includes('decommission')||msg.includes('deprecated')) continue;
-        continue;
-      } catch(e) { continue; }
-    }
-  }
-  return null;
-}
-
-async function tryGemini(prompt, maxTokens) {
-  try {
-    const res = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GEMINI_KEY,
-      {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          contents:[{parts:[{text:prompt}]}],
-          generationConfig:{maxOutputTokens:maxTokens, temperature:0.2}
-        })
-      }
-    );
-    const data = await res.json();
-    if(res.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      _curModel = 'Gemini Flash';
-      updateModelBadge();
-      return data.candidates[0].content.parts[0].text;
-    }
-  } catch(e) {}
-  return null;
-}
-
-async function tryOpenRouter(prompt, maxTokens) {
-  const OR_KEY = 'sk-or-v1-95b3f3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3e3b3';
-  for(const model of OPENROUTER_MODELS) {
-    try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization':'Bearer '+OR_KEY,
-          'HTTP-Referer':'https://rxeasy.vercel.app',
-          'X-Title':'RxEasy'
-        },
-        body:JSON.stringify({
-          model, max_tokens:maxTokens, temperature:0.2,
-          messages:[{role:'user', content:prompt}]
-        })
-      });
-      const data = await res.json();
-      if(res.ok && data.choices?.[0]?.message?.content) {
-        _curModel = model.split('/').pop().split(':')[0].substring(0,15);
-        updateModelBadge();
-        return data.choices[0].message.content;
-      }
-      console.warn('OpenRouter failed:', model, data?.error?.message);
-      continue;
-    } catch(e) { continue; }
-  }
-  return null;
-}
-
-async function tryTogether(prompt, maxTokens) {
-  const models = [
-    'meta-llama/Llama-3-8b-chat-hf',
-    'mistralai/Mistral-7B-Instruct-v0.2',
-    'Qwen/Qwen2-72B-Instruct',
-    'google/gemma-2b-it',
-    'togethercomputer/llama-2-70b-chat',
-  ];
-  for(const model of models) {
-    try {
-      const res = await fetch('https://api.together.xyz/v1/chat/completions', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOGETHER_KEY},
-        body:JSON.stringify({model, max_tokens:Math.min(maxTokens,1024), temperature:0.2,
-          messages:[{role:'user', content:prompt}]})
-      });
-      const data = await res.json();
-      if(res.ok && data.choices?.[0]?.message?.content) {
-        _curModel = model.split('/').pop().substring(0,15);
-        updateModelBadge();
-        return data.choices[0].message.content;
-      }
-      console.warn('Together failed:', model, data?.error?.message||'');
-      if(res.status===401) break;
-      continue;
-    } catch(e) { continue; }
-  }
-  return null;
-}
+// ═══ SECURE AI PROXY ═══
+// All API keys are stored securely in Supabase Edge Function secrets.
+// No keys are stored in this file. Do NOT add keys here.
 
 async function callAI(prompt, maxTokens) {
   if(!maxTokens) maxTokens = 1800;
 
-  // 1. Try Groq (10 models)
-  const groqResult = await tryGroq(prompt, maxTokens);
-  if(groqResult) return groqResult;
+  const cfg = window.__RXEASY_CONFIG__;
+  const PROXY_URL = cfg.supabaseUrl + '/functions/v1/ai-proxy';
 
-  // 2. Try Google Gemini
-  const geminiResult = await tryGemini(prompt, maxTokens);
-  if(geminiResult) return geminiResult;
+  // 1. Try Groq + Gemini via secure Supabase proxy
+  try {
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': cfg.supabaseKey },
+      body: JSON.stringify({ prompt, maxTokens })
+    });
+    const data = await res.json();
+    if (res.ok && data.text) {
+      _curModel = data.model || 'AI';
+      updateModelBadge();
+      return data.text;
+    }
+    console.warn('Proxy failed:', data?.error);
+  } catch(e) {
+    console.warn('Proxy unreachable:', e);
+  }
 
-  // 3. Try OpenRouter (5 free models, no key needed)
-  const orResult = await tryOpenRouter(prompt, maxTokens);
-  if(orResult) return orResult;
-
-  // 4. Try Together AI
-  const togetherResult = await tryTogether(prompt, maxTokens);
-  if(togetherResult) return togetherResult;
-
-  // 5. Try Hugging Face Inference API (completely free)
+  // 2. Fallback: Hugging Face (completely free, no key needed)
   const hfResult = await tryHuggingFace(prompt, maxTokens);
   if(hfResult) return hfResult;
 
-  // All failed
   throw new Error('⏳ AI services are temporarily busy. Please try again in 1 minute.');
 }
 
@@ -1796,13 +1693,8 @@ function showAchievement(ach){
 
 // ── Init All Part 1 Features ──
 // ═══ API KEYS ═══
-const GROQ_KEYS = [
-  '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',
-  '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',
-  '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',
-];
-const GEMINI_KEY   = 'AIzaSyDghmRMJd-1_5PuKpMGFuq_d3ZY0KSmleY';
-const TOGETHER_KEY = '73f0316b9900cb785e4db3b16b16e13f83f7d84a9e2eba47a1c97fedfdeee7c6';
+// Keys have been moved to Supabase Edge Function secrets (ai-proxy).
+// See supabase/functions/ai-proxy/index.ts in your project.
 
 // ═══ AUTH GUARD ═══
 (function() {
