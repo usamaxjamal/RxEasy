@@ -1022,56 +1022,18 @@ async function callAI(prompt, maxTokens) {
     console.warn('Proxy unreachable:', e);
   }
 
-  // 2. Fallback: OpenRouter free models (no key needed for free tier)
-  const orResult = await tryOpenRouter(prompt, maxTokens);
-  if(orResult) return orResult;
-
-  // 3. Fallback: Hugging Face
+  // 2. Fallback: Hugging Face (completely free, no key needed)
   const hfResult = await tryHuggingFace(prompt, maxTokens);
   if(hfResult) return hfResult;
 
   throw new Error('⏳ AI services are temporarily busy. Please try again in 1 minute.');
 }
 
-async function tryOpenRouter(prompt, maxTokens) {
-  const models = [
-    'meta-llama/llama-3.2-3b-instruct:free',
-    'google/gemma-2-9b-it:free',
-    'mistralai/mistral-7b-instruct:free',
-    'qwen/qwen-2-7b-instruct:free',
-    'microsoft/phi-3-mini-128k-instruct:free',
-  ];
-  for(const model of models) {
-    try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://rxeasy4.netlify.app',
-          'X-Title': 'RxEasy',
-        },
-        body: JSON.stringify({
-          model,
-          max_tokens: Math.min(maxTokens, 1800),
-          temperature: 0.2,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      const data = await res.json();
-      if(res.ok && data.choices?.[0]?.message?.content) {
-        _curModel = model.split('/').pop().replace(':free','').substring(0,18);
-        updateModelBadge();
-        return data.choices[0].message.content;
-      }
-    } catch(e) { continue; }
-  }
-  return null;
-}
-
 async function tryHuggingFace(prompt, maxTokens) {
   const HF_MODELS = [
     'mistralai/Mistral-7B-Instruct-v0.3',
     'HuggingFaceH4/zephyr-7b-beta',
+    'microsoft/DialoGPT-large',
   ];
   for(const model of HF_MODELS) {
     try {
@@ -1079,7 +1041,7 @@ async function tryHuggingFace(prompt, maxTokens) {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
-          model, max_tokens:Math.min(maxTokens,800), temperature:0.2,
+          model, max_tokens:Math.min(maxTokens,500), temperature:0.2,
           messages:[{role:'user', content:prompt}]
         })
       });
