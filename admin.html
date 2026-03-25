@@ -79,29 +79,42 @@ html,body{height:100%;width:100%;font-family:'DM Sans',sans-serif;background:var
 
 /* ── LAYOUT ── */
 #adminApp{display:none;height:100vh;width:100%;overflow:hidden}
-.layout{display:flex;height:100vh;overflow:hidden}
+.layout{display:flex;height:100vh;overflow:hidden;position:relative}
+
+/* ── SIDEBAR OVERLAY (always in DOM, hidden by default) ── */
+.sb-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(3px);
+  z-index:299;
+  display:none;
+  cursor:pointer;
+}
+.sb-overlay.show{display:block}
 
 /* ── MOBILE LAYOUT FIX ── */
 @media(max-width:768px){
+  /* Sidebar becomes a floating overlay — NEVER part of flex flow */
   .sidebar{
-    position:fixed;left:0;top:0;bottom:0;
+    position:fixed !important;
+    left:0;top:0;bottom:0;
     z-index:300;
-    width:80vw;max-width:280px;
-    transform:translateX(-100%);
+    width:82vw !important;
+    max-width:280px !important;
+    transform:translateX(-110%) !important;
     transition:transform .3s cubic-bezier(.4,0,.2,1);
     box-shadow:4px 0 32px rgba(0,0,0,.7);
+    /* Remove it from flex layout completely */
+    flex-shrink:0;
   }
-  .sidebar.mobile-open{transform:translateX(0)}
-  .sidebar.collapsed{width:80vw;max-width:280px;transform:translateX(-100%)}
-  .sb-overlay{
-    position:fixed;inset:0;
-    background:rgba(0,0,0,.65);
-    backdrop-filter:blur(3px);
-    z-index:299;
-    display:none;
+  .sidebar.mobile-open{transform:translateX(0) !important}
+  /* Main takes full width always on mobile */
+  .main{
+    width:100% !important;
+    min-width:0 !important;
+    flex:1 !important;
+    margin-left:0 !important;
   }
-  .sb-overlay.show{display:block}
-  .main{width:100%;min-width:0}
   .stats-grid{grid-template-columns:1fr 1fr;gap:8px}
   .grid-2,.grid-3{grid-template-columns:1fr;gap:10px}
   .form-grid{grid-template-columns:1fr}
@@ -124,6 +137,11 @@ html,body{height:100%;width:100%;font-family:'DM Sans',sans-serif;background:var
   .btn{font-size:.7rem;padding:7px 12px}
   .btn-sm{font-size:.65rem;padding:5px 9px}
   .page-title{font-size:1.2rem}
+  /* Grant premium input stacks on mobile */
+  #page-doctors .card-body[style*="display:flex"]{flex-direction:column}
+  #grantEmail{width:100%}
+  /* Page header stacks on mobile */
+  .page-hdr[style*="display:flex"]{flex-direction:column;align-items:flex-start;gap:10px}
 }
 
 /* ── SIDEBAR ── */
@@ -133,10 +151,13 @@ html,body{height:100%;width:100%;font-family:'DM Sans',sans-serif;background:var
   border-right:1px solid var(--bd);
   display:flex;flex-direction:column;
   height:100vh;overflow:hidden;
-  transition:width .25s cubic-bezier(.4,0,.2,1);
+  transition:width .25s cubic-bezier(.4,0,.2,1), transform .3s cubic-bezier(.4,0,.2,1);
   position:relative;
 }
-.sidebar.collapsed{width:64px}
+/* Desktop collapse only — mobile uses transform override above */
+@media(min-width:769px){
+  .sidebar.collapsed{width:64px}
+}
 .sidebar::before{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent,var(--tl-bdr),var(--gd-bdr),transparent);
@@ -640,10 +661,13 @@ textarea.inp{resize:vertical;min-height:70px}
 </div>
 <!-- Grant by email -->
 <div class="card">
-<div class="card-hdr"><div class="card-title">⚡ Quick Grant Premium</div></div>
-<div class="card-body" style="display:flex;gap:8px">
-<input class="inp" id="grantEmail" placeholder="doctor@email.com" style="flex:1"/>
-<button class="btn btn-gold" onclick="grantById()">Grant Premium</button>
+<div class="card-hdr"><div class="card-title">⚡ Quick Grant Premium</div><div class="card-sub">Enter doctor's registered email</div></div>
+<div class="card-body">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<input class="inp" id="grantEmail" placeholder="doctor@email.com" style="flex:1;min-width:200px"/>
+<button class="btn btn-gold" onclick="grantById()" id="grantBtn">👑 Grant Premium</button>
+</div>
+<div id="grantStatus" style="font-size:.7rem;margin-top:8px;min-height:18px"></div>
 </div>
 </div>
 </div>
