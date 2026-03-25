@@ -16,19 +16,41 @@ let _diseases = [], _drugs = [], _doctors = [], _rxlogs = [];
 // ── Helpers ──
 function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function toast(msg, dur = 2500) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), dur); }
-function openModal(id) { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+// ACC-01 FIX: modals now set aria-hidden so screen readers know when they're open
+function openModal(id) {
+  const el = document.getElementById(id);
+  el.classList.add('show');
+  el.setAttribute('aria-hidden','false');
+  const closeBtn = el.querySelector('.modal-close');
+  if(closeBtn) setTimeout(()=>closeBtn.focus(), 50);
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('show');
+  el.setAttribute('aria-hidden','true');
+}
 
-// Bug #4 Fix: api() now checks HTTP status and throws on errors
-// Also handles 401 by redirecting to login
+// FUNC-02 FIX: api() now has a 15-second timeout so the UI never freezes
+// waiting forever on a failed request. Network errors show a clear message.
 async function api(path, params = '', method = 'GET', body = null) {
   const token = SESSION ? SESSION.access_token : KEY;
-  const opts = { method, headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } };
+  const opts = {
+    method,
+    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(15000)   // 15-second timeout
+  };
   if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(SB + '/rest/v1/' + path + params, opts);
+  let r;
+  try {
+    r = await fetch(SB + '/rest/v1/' + path + params, opts);
+  } catch (e) {
+    if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+      throw new Error('Request timed out. Check your connection.');
+    }
+    throw new Error('Network error. Check your connection.');
+  }
   if (r.status === 204) return null;
   if (r.status === 401) {
-    // Session expired — clear and redirect
     localStorage.removeItem('sb_session');
     sessionStorage.removeItem('adminUnlocked');
     window.location.href = 'login.html';
@@ -85,6 +107,7 @@ async function unlockAdmin() {
 if (sessionStorage.getItem('adminUnlocked') === '1') {
   document.getElementById('lockScreen').style.display = 'none';
   document.getElementById('adminApp').style.display = 'block';
+  initAdmin();
 }
 
 // ── NAVIGATION ──
@@ -107,11 +130,15 @@ function showPage(id, el) {
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('sbOverlay');
-  if (window.innerWidth <= 768) {
-    sb.classList.toggle('mobile-open');
-    ov.classList.toggle('show');
+  const isOpen = sb.classList.contains('mobile-open');
+  if (isOpen) {
+    sb.classList.remove('mobile-open');
+    ov.classList.remove('show');
+    document.body.style.overflow = '';
   } else {
-    sb.classList.toggle('collapsed');
+    sb.classList.add('mobile-open');
+    ov.classList.add('show');
+    document.body.style.overflow = 'hidden';
   }
 }
 function closeSidebar() {
@@ -119,6 +146,7 @@ function closeSidebar() {
   const ov = document.getElementById('sbOverlay');
   sb.classList.remove('mobile-open');
   ov.classList.remove('show');
+  document.body.style.overflow = '';
 }
 
 // ── INIT ──

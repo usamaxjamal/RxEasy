@@ -1,15 +1,28 @@
 // ══════════════════════════════════════════════════
 // SIDEBAR
+// ACC-01 FIX: sidebar now has proper ARIA attributes and focus management
 // ══════════════════════════════════════════════════
+let _sidebarLastFocus = null;
 function openSidebar() {
-  document.getElementById('sidebar').classList.add('open');
-  document.getElementById('sidebarOverlay').classList.add('show');
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  sb.classList.add('open');
+  sb.setAttribute('aria-hidden','false');
+  ov.classList.add('show');
   document.body.style.overflow='hidden';
+  _sidebarLastFocus = document.activeElement;
+  // Move focus to first interactive item in sidebar
+  const firstBtn = sb.querySelector('button, [href], [tabindex]');
+  if(firstBtn) setTimeout(()=>firstBtn.focus(), 50);
 }
 function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('show');
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  sb.classList.remove('open');
+  sb.setAttribute('aria-hidden','true');
+  ov.classList.remove('show');
   document.body.style.overflow='';
+  if(_sidebarLastFocus) _sidebarLastFocus.focus();
 }
 function sbToggle(titleEl) {
   const section = titleEl.closest('.sb-section');

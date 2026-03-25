@@ -1,8 +1,20 @@
 // ══ SERVICE WORKER REGISTRATION ══
+// FUNC-01 FIX: Proper structured caching — API/CDN calls always go to network,
+// static assets use cache-first. Added cdnjs.cloudflare.com and fonts.gstatic.com
+// to the network-only list so new CDN updates are never accidentally cached.
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE = 'rxeasy-v4';
+    const CACHE = 'rxeasy-v5';
     const CORE = ['./', location.href];
+
+    const NETWORK_ONLY = [
+      'supabase.co',
+      'groq.com',
+      'googleapis.com',
+      'cdnjs.cloudflare.com',
+      'fonts.gstatic.com',
+    ];
+
     self.addEventListener('install', e => {
       e.waitUntil(
         caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())
@@ -17,26 +29,20 @@ if ('serviceWorker' in navigator) {
     });
     self.addEventListener('fetch', e => {
       if (e.request.method !== 'GET') return;
-      // Bug #20 Fix: Add supabase.co to network-first list so API responses are never stale
-      if (
-        e.request.url.includes('groq.com') ||
-        e.request.url.includes('googleapis.com') ||
-        e.request.url.includes('supabase.co')
-      ) {
-        // Network-first for ALL API calls — never serve from cache
+      const isNetworkOnly = NETWORK_ONLY.some(d => e.request.url.includes(d));
+      if (isNetworkOnly) {
         e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-      } else {
-        // Cache-first for static assets only
-        e.respondWith(
-          caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
-            if (resp && resp.status === 200 && resp.type === 'basic') {
-              const clone = resp.clone();
-              caches.open(CACHE).then(c => c.put(e.request, clone));
-            }
-            return resp;
-          }))
-        );
+        return;
       }
+      e.respondWith(
+        caches.match(e.request).then(cached => cached || fetch(e.request).then(resp => {
+          if (resp && resp.status === 200 && resp.type === 'basic') {
+            const clone = resp.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
+          return resp;
+        }))
+      );
     });
   `;
   const blob  = new Blob([swCode], { type: 'application/javascript' });

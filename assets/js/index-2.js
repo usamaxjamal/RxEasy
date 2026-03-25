@@ -579,14 +579,34 @@ function doLogout_old(){
 function toggleDark(){}
 
 // ═══ SHEETS ═══
+// ACC-01 FIX: openSheet and closeSheet now manage ARIA attributes so screen
+// readers know when a dialog is open. Focus is moved into the sheet when
+// opened and returned to the trigger element when closed.
+let _sheetLastFocus = null;
 function openSheet(n){
   if(n==='history')renderHist();
   if(n==='favs')renderFavs();
   if(n==='analytics')renderAnalytics();
   if(n==='pts')renderPts();
-  document.getElementById('ov-'+n).classList.add('show');
+  const ov = document.getElementById('ov-'+n);
+  ov.classList.add('show');
+  ov.setAttribute('aria-hidden','false');
+  const sheet = ov.querySelector('.sheet');
+  if(sheet){
+    sheet.setAttribute('role','dialog');
+    sheet.setAttribute('aria-modal','true');
+  }
+  _sheetLastFocus = document.activeElement;
+  // Move focus to the close button inside the sheet
+  const closeBtn = ov.querySelector('.shdc');
+  if(closeBtn) setTimeout(()=>closeBtn.focus(), 50);
 }
-function closeSheet(n){document.getElementById('ov-'+n).classList.remove('show');}
+function closeSheet(n){
+  const ov = document.getElementById('ov-'+n);
+  ov.classList.remove('show');
+  ov.setAttribute('aria-hidden','true');
+  if(_sheetLastFocus) _sheetLastFocus.focus();
+}
 
 // ═══ HISTORY ═══
 function addHist(q){
