@@ -63,13 +63,14 @@ async function api(path, params = '', method = 'GET', body = null) {
   return r.json();
 }
 
-// apiCount: gets exact row count from Supabase using HEAD + Prefer:count=exact
-// Returns a number or null on failure
-async function apiCount(table, params = '') {
+// apiCount: gets exact row count from Supabase using Prefer:count=exact
+// Uses GET with limit=1 so minimal data is transferred but full count is returned
+async function apiCount(table, filter = '') {
   const token = SESSION ? SESSION.access_token : KEY;
   try {
-    const r = await fetch(SB + '/rest/v1/' + table + '?select=id' + (params ? '&' + params : ''), {
-      method: 'HEAD',
+    const url = SB + '/rest/v1/' + table + '?select=id&limit=1' + (filter ? '&' + filter : '');
+    const r = await fetch(url, {
+      method: 'GET',
       headers: {
         'apikey': KEY,
         'Authorization': 'Bearer ' + token,
@@ -77,12 +78,15 @@ async function apiCount(table, params = '') {
       },
       signal: AbortSignal.timeout(15000)
     });
-    // Supabase returns count in Content-Range header: "0-24/150"
+    if (!r.ok) return null;
+    // Supabase returns total count in Content-Range: "0-0/TOTAL" or "*/TOTAL"
     const range = r.headers.get('content-range');
     if (range) {
-      const total = range.split('/')[1];
+      const parts = range.split('/');
+      const total = parts[1];
       if (total && total !== '*') return parseInt(total, 10);
     }
+    // Fallback: count from returned array length isn't reliable for totals
     return null;
   } catch(e) { return null; }
 }
@@ -183,10 +187,13 @@ function closeSidebar() {
 
 // ── INIT ──
 function initAdmin() {
+  // CRITICAL: Load SESSION first, before any API calls.
+  // If SESSION is null when api() fires, it uses the anon KEY instead of
+  // the user's auth token — Supabase RLS then blocks or limits results.
+  try { SESSION = JSON.parse(localStorage.getItem('sb_session') || 'null'); } catch (e) {}
   startClock();
   initDashboard();
   loadPendingCount();
-  try { SESSION = JSON.parse(localStorage.getItem('sb_session') || 'null'); } catch (e) {}
 }
 
 // Bug #17 Fix: Store interval ID so it can be cleared if needed
@@ -206,6 +213,7 @@ function stopClock() {
 
 // ── DASHBOARD ──
 async function initDashboard() {
+  console.log('[RxEasy] initDashboard — SESSION:', SESSION ? 'loaded (token: ' + SESSION.access_token.slice(0,20) + '...)' : 'NULL ← RLS will block!');
   try {
     // Fetch doctors and premium in parallel
     const [docs, prem] = await Promise.all([
@@ -213,20 +221,25 @@ async function initDashboard() {
       api('doctor_profiles', '?is_premium=eq.true&select=id'),
     ]);
 
+    console.log('[RxEasy] doctors response:', docs);
+    console.log('[RxEasy] premium response:', prem);
+
     const totalDocs = Array.isArray(docs) ? docs.length : 0;
     const totalPrem = Array.isArray(prem) ? prem.length : 0;
 
-    document.getElementById('s-docs').textContent = totalDocs || '—';
-    document.getElementById('s-prem').textContent = totalPrem || '—';
+    document.getElementById('s-docs').textContent = totalDocs || '0';
+    document.getElementById('s-prem').textContent = totalPrem || '0';
 
-    // Get real counts using Supabase count via select=count
+    // Get real counts using Supabase Prefer:count=exact
     try {
       const disCount = await apiCount('diseases');
+      console.log('[RxEasy] diseases count:', disCount);
       document.getElementById('s-dis').textContent = disCount !== null ? disCount : '—';
     } catch(e) { document.getElementById('s-dis').textContent = '—'; }
 
     try {
       const rxCount = await apiCount('prescription_logs');
+      console.log('[RxEasy] rx logs count:', rxCount);
       document.getElementById('s-rx').textContent = rxCount !== null ? rxCount : '—';
     } catch(e) { document.getElementById('s-rx').textContent = '—'; }
 
@@ -236,7 +249,7 @@ async function initDashboard() {
     if (Array.isArray(docs) && docs.length) { loadRecentDocs(docs.slice(-5).reverse()); }
     initRxChart();
     loadTopDiseases();
-  } catch (e) { console.error('Dashboard error:', e); }
+  } catch (e) { console.error('[RxEasy] Dashboard error:', e); }
 }
 
 // Bug #18: All dynamic values use esc() for XSS prevention
@@ -456,15 +469,19 @@ async function grantById() {
   if (!email) { if(status) status.innerHTML='<span style="color:var(--rd)">⚠️ Please enter an email address</span>'; return; }
   if(status) status.innerHTML='<span style="color:var(--tx3)">🔍 Searching...</span>';
   if(btn) { btn.disabled=true; btn.textContent='Searching...'; }
+  console.log('[RxEasy] grantById — email:', email, '| SESSION:', SESSION ? 'loaded' : 'NULL ← will fail RLS!');
   try {
     // CRITICAL: Do NOT use encodeURIComponent — it encodes @ as %40 which
     // Supabase PostgREST does not decode, so the email never matches.
     let docs = await api('doctor_profiles', '?email=ilike.' + email + '&limit=5');
+    console.log('[RxEasy] ilike result:', docs);
     if (!docs || !docs.length) {
       docs = await api('doctor_profiles', '?email=eq.' + email + '&limit=5');
+      console.log('[RxEasy] eq result:', docs);
     }
     if (!docs || !docs.length) {
       docs = await api('doctor_profiles', '?email=ilike.' + rawEmail + '&limit=5');
+      console.log('[RxEasy] rawEmail result:', docs);
     }
     if (!docs || !docs.length) {
       if(status) status.innerHTML='<span style="color:var(--rd)">❌ Doctor not found. Check the email or ensure they have registered first.</span>';
@@ -477,6 +494,7 @@ async function grantById() {
     setTimeout(()=>{ if(status) status.innerHTML=''; }, 4000);
     toast('👑 Premium granted to ' + esc(docs[0].full_name || docs[0].email) + '!');
   } catch(e) {
+    console.error('[RxEasy] grantById error:', e);
     if(status) status.innerHTML='<span style="color:var(--rd)">❌ Error: ' + esc(e.message) + '</span>';
   } finally {
     if(btn) { btn.disabled=false; btn.innerHTML='👑 Grant Premium'; }
