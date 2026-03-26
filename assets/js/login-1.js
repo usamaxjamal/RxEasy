@@ -37,17 +37,49 @@ function setBtn(id, loading, txt) {
 }
 
 // SEC-03 FIX: Verify token validity AND expiry before redirecting.
-// An expired token in localStorage is just as dangerous as a stolen one.
+// REMEMBER ME FIX: If remember_me=true and long_expiry_at is still valid,
+// attempt a silent token refresh via refresh_token before giving up.
 window.addEventListener('load', async function () {
   try {
     const s = JSON.parse(localStorage.getItem('sb_session') || 'null');
     if (s && s.access_token) {
-      // Check local expiry first — avoids a network round-trip for expired tokens
       const now = Math.floor(Date.now() / 1000);
-      if (s.expires_at && s.expires_at < now) {
+
+      // Hard deadline: if long_expiry_at has passed, clear session unconditionally
+      if (s.long_expiry_at && s.long_expiry_at < now) {
         localStorage.removeItem('sb_session');
         return;
       }
+
+      // If access token expired but remember_me is on → try silent refresh
+      if (s.expires_at && s.expires_at < now) {
+        if (s.remember_me && s.refresh_token) {
+          try {
+            const rr = await fetch(SB + '/auth/v1/token?grant_type=refresh_token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'apikey': KEY },
+              body: JSON.stringify({ refresh_token: s.refresh_token })
+            });
+            if (rr.ok) {
+              const rd = await rr.json();
+              localStorage.setItem('sb_session', JSON.stringify({
+                access_token:   rd.access_token,
+                refresh_token:  rd.refresh_token || s.refresh_token,
+                expires_at:     rd.expires_at || (now + (rd.expires_in || 3600)),
+                long_expiry_at: s.long_expiry_at, // preserve original 30-day window
+                remember_me:    true,
+                user:           rd.user || s.user
+              }));
+              window.location.href = 'index.html';
+              return;
+            }
+          } catch(e) { /* fall through to clear */ }
+        }
+        localStorage.removeItem('sb_session');
+        return;
+      }
+
+      // Token not expired — validate against server
       const r = await fetch(SB + '/auth/v1/user', {
         headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + s.access_token }
       });
@@ -67,6 +99,8 @@ async function doLogin() {
   cm();
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPass').value;
+  // REMEMBER ME FIX: read checkbox state — when checked, extend expiry to 30 days
+  const rememberMe = document.getElementById('rememberMe') ? document.getElementById('rememberMe').checked : false;
   if (!email || !pass) { se('Please enter your email and password'); return; }
   setBtn('loginBtn', true, 'Login to RxEasy');
   try {
@@ -77,15 +111,19 @@ async function doLogin() {
     });
     const d = await r.json();
     if (!r.ok) { se(d.error_description || d.msg || 'Login failed. Check your credentials.'); setBtn('loginBtn', false, 'Login to RxEasy'); return; }
-    // SEC-03 NOTE: Tokens are stored in localStorage which is accessible to
-    // any JS running on this page. The CSP meta tag in login.html significantly
-    // reduces XSS risk, but the ideal long-term fix is to migrate to the
-    // official @supabase/supabase-js client configured with httpOnly cookies.
-    // Until then, the session is cleared on any 401 and on logout.
+
+    // REMEMBER ME FIX: When checked → 30 days; when unchecked → server default (~1hr).
+    // We store a custom long_expiry_at so the session checker can distinguish.
+    const serverExpiry = d.expires_at || (Math.floor(Date.now() / 1000) + (d.expires_in || 3600));
+    const longExpiry   = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 days from now
+
     localStorage.setItem('sb_session', JSON.stringify({
-      access_token: d.access_token,
+      access_token:  d.access_token,
       refresh_token: d.refresh_token || '',
-      expires_at: d.expires_at || (Math.floor(Date.now() / 1000) + (d.expires_in || 3600)),
+      expires_at:    serverExpiry,
+      // long_expiry_at: absolute deadline beyond which refresh is also refused
+      long_expiry_at: rememberMe ? longExpiry : serverExpiry,
+      remember_me:   rememberMe,
       user: d.user || {}
     }));
     so('Welcome back! Loading RxEasy...');

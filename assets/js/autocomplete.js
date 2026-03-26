@@ -194,6 +194,7 @@
 
     _dropdown.innerHTML = html;
     _dropdown.style.display = 'block';
+    positionDropdown(); // POSITIONING FIX: enforce above-input placement on every render
     _open = true;
 
     // Bind click events
@@ -292,16 +293,22 @@
   position: absolute;
   z-index: 9999;
   background: #0d1828;
-  border: 1px solid rgba(255,255,255,.1);
-  border-bottom: none;
-  border-radius: 14px 14px 0 0;
-  box-shadow: 0 -12px 40px rgba(0,0,0,.55), 0 -2px 8px rgba(0,0,0,.3);
+  border: 1px solid rgba(255,255,255,.13);
+  border-bottom: 2px solid rgba(0,200,150,.25); /* accent at bottom since it opens upward */
+  border-radius: 14px 14px 4px 4px; /* rounded top, flush bottom connects to input */
+  box-shadow: 0 -16px 48px rgba(0,0,0,.65), 0 -2px 12px rgba(0,0,0,.35);
   max-height: 340px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #1e3045 transparent;
   display: none;
-  /* width & top/left set dynamically */
+  /* POSITIONING FIX: always anchor above the input */
+  bottom: 100%;
+  top: auto;
+  left: 0;
+  right: 0;
+  width: 100%;
+  margin-bottom: 4px; /* small gap between dropdown and input */
 }
 #rxac-dropdown::-webkit-scrollbar { width: 4px; }
 #rxac-dropdown::-webkit-scrollbar-thumb { background: #1e3045; border-radius: 2px; }
@@ -384,14 +391,18 @@
   /* ─── DROPDOWN POSITIONING ─── */
   function positionDropdown () {
     if (!_input || !_dropdown) return;
-    const rect  = _input.getBoundingClientRect();
-    const ibox  = _input.closest('.ibox');
+    const ibox = _input.closest('.ibox');
     if (!ibox) return;
-    const iRect = ibox.getBoundingClientRect();
-    _dropdown.style.width = iRect.width + 'px';
-    _dropdown.style.left  = '0';
-    _dropdown.style.bottom = (ibox.offsetHeight) + "px";
-    _dropdown.style.top   = "auto";
+    // POSITIONING FIX: always render above the input field.
+    // CSS already sets bottom:100% and top:auto, but we enforce it here
+    // in case any parent layout overrides it — critical on mobile where
+    // the software keyboard pushes the input up and the dropdown must
+    // remain visible above it, not hidden below the keyboard.
+    _dropdown.style.bottom = '100%';
+    _dropdown.style.top    = 'auto';
+    _dropdown.style.width  = '100%';
+    _dropdown.style.left   = '0';
+    _dropdown.style.right  = '0';
   }
 
   /* ─── INIT ─── */

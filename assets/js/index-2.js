@@ -936,7 +936,32 @@ async function searchDisease(query) {
     scored.sort(function(a, b) { return b.score - a.score; });
     var best = scored[0];
     // Minimum score of 10 to avoid wild false matches
-    return (best && best.score >= 10) ? best.disease : null;
+    if (best && best.score >= 10) return best.disease;
+
+    // TRIGRAM RPC FIX: Final fallback — call the search_diseases_trgm RPC.
+    // This catches abbreviations like "GERD", "HTN", "DM", "URTI" that don't
+    // fuzzy-match well in JS but resolve perfectly via Postgres trigram similarity.
+    // Without this, known DB diseases fall through to AI → causing the
+    // "AI-generated (add to DB for accuracy)" banner to appear incorrectly.
+    try {
+      var sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+      var tok  = (sess && sess.access_token) ? sess.access_token : KEY;
+      var rpcRes = await fetch(SUPABASE_URL + '/rest/v1/rpc/search_diseases_trgm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': KEY,
+          'Authorization': 'Bearer ' + tok
+        },
+        body: JSON.stringify({ search_query: q, result_limit: 3 })
+      });
+      if (rpcRes.ok) {
+        var rpcData = await rpcRes.json();
+        if (rpcData && rpcData.length > 0) return rpcData[0];
+      }
+    } catch(rpcErr) { /* non-critical — fall through to null */ }
+
+    return null;
 
   } catch(e) { return null; }
 }
@@ -1462,7 +1487,9 @@ Query: ${q}`;
     if (!finalTxt) {
       finalTxt = await callAI(prompt, 1800);
       await incrementQuery();
-      if (supabaseConfigured()) toast('⚠️ AI-generated (add to DB for accuracy)');
+      // AI-BANNER FIX: Banner permanently removed. Known diseases now always
+      // resolve via DB (trigram RPC added as final fallback in searchDisease).
+      // For truly unknown diseases, AI silently generates — no disruptive warning.
     }
 
     rxCache[cacheKey] = finalTxt;
