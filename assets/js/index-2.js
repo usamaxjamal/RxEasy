@@ -841,14 +841,51 @@ async function sbFetch(path, params) {
 
 async function searchDisease(query) {
   try {
-    const byName = await sbFetch('diseases', '?name=ilike.*' + encodeURIComponent(query) + '*&limit=3');
+    var q = query.toLowerCase().trim();
+
+    // Helper: safely parse aliases whether stored as array or JSON string
+    function getAliases(d) {
+      if (!d.aliases) return [];
+      if (Array.isArray(d.aliases)) return d.aliases;
+      try { var parsed = JSON.parse(d.aliases); return Array.isArray(parsed) ? parsed : []; }
+      catch(e) { return []; }
+    }
+
+    // 1. Try exact ilike match on name
+    var byName = await sbFetch('diseases', '?name=ilike.*' + encodeURIComponent(q) + '*&limit=5');
     if (byName && byName.length > 0) return byName[0];
-    const all = await sbFetch('diseases', '?limit=200');
-    const q = query.toLowerCase();
-    return all.find(function(d) {
-      return d.name.toLowerCase().includes(q) ||
-        (d.aliases && d.aliases.some(function(a) { return a.toLowerCase().includes(q); }));
-    }) || null;
+
+    // 2. Try alias search via Supabase (aliases column contains the query term)
+    var byAlias = await sbFetch('diseases', '?aliases=ilike.*' + encodeURIComponent(q) + '*&limit=5');
+    if (byAlias && byAlias.length > 0) return byAlias[0];
+
+    // 3. Fallback: fetch all and do smart JS matching
+    var all = await sbFetch('diseases', '?limit=300');
+    if (!all) return null;
+
+    // Score each disease by match quality
+    var scored = all.map(function(d) {
+      var name = d.name.toLowerCase();
+      var aliases = getAliases(d).map(function(a) { return a.toLowerCase(); });
+      var score = 0;
+      if (name === q) score = 100;
+      else if (aliases.indexOf(q) !== -1) score = 90;
+      else if (name.includes(q)) score = 70;
+      else if (aliases.some(function(a) { return a === q || a.includes(q); })) score = 60;
+      else {
+        var words = q.split(/\s+/).filter(function(w) { return w.length > 2; });
+        var matched = words.filter(function(w) {
+          return name.includes(w) || aliases.some(function(a) { return a.includes(w); });
+        });
+        if (matched.length > 0) score = Math.round((matched.length / words.length) * 50);
+      }
+      return { disease: d, score: score };
+    });
+
+    scored.sort(function(a, b) { return b.score - a.score; });
+    var best = scored[0];
+    return (best && best.score > 0) ? best.disease : null;
+
   } catch(e) { return null; }
 }
 
