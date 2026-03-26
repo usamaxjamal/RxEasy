@@ -440,6 +440,19 @@ textarea.inp{resize:none;min-height:56px}
 <label class="lbl">Password</label>
 <input autocomplete="current-password" class="inp" id="loginPass" placeholder="••••••••" type="password"/>
 </div>
+<!-- REMEMBER ME: persist session 30 days when checked, 1hr when unchecked -->
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;margin-top:-4px">
+  <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none">
+    <span style="position:relative;display:inline-block;width:16px;height:16px;flex-shrink:0">
+      <input type="checkbox" id="rememberMe" style="
+        width:16px;height:16px;border-radius:4px;cursor:pointer;
+        accent-color:var(--tl);background:rgba(255,255,255,.06);
+        border:1px solid rgba(255,255,255,.15);outline:none;
+      " checked/>
+    </span>
+    <span style="font-size:.66rem;color:var(--tx2);font-weight:500;letter-spacing:.1px">Remember me for 30 days</span>
+  </label>
+</div>
 <button class="btn-primary" id="loginBtn" onclick="doLogin()">
         Login to RxEasy
       </button>
