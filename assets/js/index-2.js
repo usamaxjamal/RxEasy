@@ -839,6 +839,28 @@ async function sbFetch(path, params) {
   return res.json();
 }
 
+// ── Fuzzy matching: Levenshtein distance between two strings ──
+function levenshtein(a, b) {
+  var m = a.length, n = b.length;
+  var dp = [];
+  for (var i = 0; i <= m; i++) {
+    dp[i] = [i];
+    for (var j = 1; j <= n; j++) {
+      dp[i][j] = i === 0 ? j :
+        a[i-1] === b[j-1] ? dp[i-1][j-1] :
+        1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+// Allowed typos based on word length
+function fuzzyTolerance(word) {
+  if (word.length <= 4) return 1;
+  if (word.length <= 7) return 2;
+  return 3;
+}
+
 async function searchDisease(query) {
   try {
     var q = query.toLowerCase().trim();
@@ -851,40 +873,70 @@ async function searchDisease(query) {
       catch(e) { return []; }
     }
 
-    // 1. Try exact ilike match on name
+    // 1. Exact ilike match on name
     var byName = await sbFetch('diseases', '?name=ilike.*' + encodeURIComponent(q) + '*&limit=5');
     if (byName && byName.length > 0) return byName[0];
 
-    // 2. Try alias search via Supabase (aliases column contains the query term)
+    // 2. Alias search via Supabase
     var byAlias = await sbFetch('diseases', '?aliases=ilike.*' + encodeURIComponent(q) + '*&limit=5');
     if (byAlias && byAlias.length > 0) return byAlias[0];
 
-    // 3. Fallback: fetch all and do smart JS matching
+    // 3. Fetch all for JS-side matching (Layer 3 + 4)
     var all = await sbFetch('diseases', '?limit=300');
     if (!all) return null;
 
-    // Score each disease by match quality
+    var qWords = q.split(/\s+/).filter(function(w) { return w.length > 2; });
+
     var scored = all.map(function(d) {
       var name = d.name.toLowerCase();
       var aliases = getAliases(d).map(function(a) { return a.toLowerCase(); });
+      var allTerms = [name].concat(aliases);
       var score = 0;
+
+      // Layer 3: exact/contains matching
       if (name === q) score = 100;
       else if (aliases.indexOf(q) !== -1) score = 90;
       else if (name.includes(q)) score = 70;
       else if (aliases.some(function(a) { return a === q || a.includes(q); })) score = 60;
-      else {
-        var words = q.split(/\s+/).filter(function(w) { return w.length > 2; });
-        var matched = words.filter(function(w) {
+      else if (qWords.length > 0) {
+        var matched = qWords.filter(function(w) {
           return name.includes(w) || aliases.some(function(a) { return a.includes(w); });
         });
-        if (matched.length > 0) score = Math.round((matched.length / words.length) * 50);
+        if (matched.length > 0) score = Math.round((matched.length / qWords.length) * 50);
       }
+
+      // Layer 4: fuzzy matching (typo correction) — only if Layer 3 found nothing
+      if (score === 0) {
+        var fuzzyScore = 0;
+
+        // Check full query against each term
+        allTerms.forEach(function(term) {
+          var termWords = term.split(/\s+/);
+          termWords.forEach(function(tw) {
+            if (tw.length < 3) return;
+            qWords.forEach(function(qw) {
+              if (qw.length < 3) return;
+              var dist = levenshtein(qw, tw);
+              var tol  = fuzzyTolerance(qw);
+              if (dist <= tol) {
+                // Closer match = higher score (max 40 for fuzzy)
+                var s = Math.round((1 - dist / (tol + 1)) * 40);
+                if (s > fuzzyScore) fuzzyScore = s;
+              }
+            });
+          });
+        });
+
+        score = fuzzyScore;
+      }
+
       return { disease: d, score: score };
     });
 
     scored.sort(function(a, b) { return b.score - a.score; });
     var best = scored[0];
-    return (best && best.score > 0) ? best.disease : null;
+    // Minimum score of 10 to avoid wild false matches
+    return (best && best.score >= 10) ? best.disease : null;
 
   } catch(e) { return null; }
 }
