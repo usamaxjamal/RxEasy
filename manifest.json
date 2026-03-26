@@ -1,0 +1,37 @@
+{
+  "name": "RxEasy by Dr. Usama Jamal",
+  "short_name": "RxEasy",
+  "description": "AI-powered prescription platform for Pakistan GPs",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#040e1c",
+  "theme_color": "#0c2240",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["medical", "health"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%230c2240'/%3E%3Crect x='8' y='8' width='176' height='176' rx='28' fill='none' stroke='%23c9a84c' stroke-width='2' stroke-opacity='.4'/%3E%3Ctext x='96' y='80' font-family='Georgia,serif' font-size='52' font-weight='bold' text-anchor='middle' fill='white'%3ERx%3C/text%3E%3Crect x='44' y='92' width='104' height='2' rx='1' fill='%2314b88a' opacity='.7'/%3E%3Ctext x='96' y='130' font-family='Georgia,serif' font-size='28' font-weight='bold' text-anchor='middle' fill='%2314b88a'%3EEasy%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%230c2240'/%3E%3Crect x='16' y='16' width='480' height='480' rx='68' fill='none' stroke='%23c9a84c' stroke-width='4' stroke-opacity='.35'/%3E%3Ctext x='256' y='210' font-family='Georgia,serif' font-size='140' font-weight='bold' text-anchor='middle' fill='white'%3ERx%3C/text%3E%3Crect x='110' y='240' width='292' height='5' rx='2.5' fill='%2314b88a' opacity='.7'/%3E%3Ctext x='256' y='350' font-family='Georgia,serif' font-size='80' font-weight='bold' text-anchor='middle' fill='%2314b88a'%3EEasy%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Prescription",
+      "short_name": "Prescribe",
+      "description": "Start a new prescription",
+      "url": "/"
+    }
+  ],
+  "screenshots": []
+}
