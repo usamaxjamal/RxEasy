@@ -823,7 +823,7 @@ const SUPABASE_URL = 'https://epvfbxzuziihhcaaaizp.supabase.co';      // e.g. ht
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdmZieHp1emlpaGhjYWFhaXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDQ2MzIsImV4cCI6MjA4OTY4MDYzMn0.Yq7vX7TWzQ-VXwHl9E4lwHhL-gbzSMKUYcd2CLT8rKw'; // starts with eyJ...
 
 function supabaseConfigured() {
-  return SUPABASE_URL !== 'https://epvfbxzuziihhcaaaizp.supabase.co';
+  return SUPABASE_URL !== '' && SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE';
 }
 
 async function sbFetch(path, params) {
