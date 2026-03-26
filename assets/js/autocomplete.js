@@ -293,9 +293,9 @@
   z-index: 9999;
   background: #0d1828;
   border: 1px solid rgba(255,255,255,.1);
-  border-top: none;
-  border-radius: 0 0 14px 14px;
-  box-shadow: 0 12px 40px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.3);
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -12px 40px rgba(0,0,0,.55), 0 -2px 8px rgba(0,0,0,.3);
   max-height: 340px;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -390,7 +390,8 @@
     const iRect = ibox.getBoundingClientRect();
     _dropdown.style.width = iRect.width + 'px';
     _dropdown.style.left  = '0';
-    _dropdown.style.top   = (ibox.offsetHeight) + 'px';
+    _dropdown.style.bottom = (ibox.offsetHeight) + "px";
+    _dropdown.style.top   = "auto";
   }
 
   /* ─── INIT ─── */
