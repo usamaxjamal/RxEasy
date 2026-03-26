@@ -1429,28 +1429,25 @@ Query: ${q}`;
         const population = getPopulation();
         const dbResult = await buildPrescriptionFromDB(q, population);
         if (dbResult) {
-          // DB found the disease — now let AI format it beautifully
-          const formatPrompt = `You are a prescription formatter for Dr. Usama Jamal MBBS, GP Pakistan.
-Format the following verified prescription data into a clean, professional prescription card.
+          // Use DB output directly — no AI, no hallucination, same result every time
+          var txt = dbResult.structuredRx;
 
-PATIENT: ${ptN||'Not provided'} | Age: ${ptA||'Not provided'} | Weight: ${ptW||'Not provided'} kg
-PATIENT MODE: ${modeStr}
+          // Add patient info header if provided
+          if (ptN || ptA || ptW) {
+            var header = '\u{1F464} PATIENT: ' + (ptN||'—') +
+              (ptA ? ' | Age: ' + ptA : '') +
+              (ptW ? ' | Wt: ' + ptW + 'kg' : '') + '\n' +
+              (modeStr ? '\u{1F3F7}\uFE0F MODE: ' + modeStr + '\n' : '') +
+              '─────────────────────\n';
+            txt = header + txt;
+          }
 
-VERIFIED PRESCRIPTION DATA FROM CLINICAL DATABASE:
-${dbResult.structuredRx}
+          // Urdu footer if enabled
+          if (ur) {
+            txt += '\n\nمریض کے لیے ہدایات:\nدوائیں ڈاکٹر کی ہدایت کے مطابق وقت پر لیں۔ کوئی دوائی خود سے بند نہ کریں۔ اگر کوئی تکلیف ہو تو فوری ڈاکٹر سے رابطہ کریں۔';
+          }
 
-FORMATTING INSTRUCTIONS:
-1. Present this data cleanly and professionally
-2. Do NOT add, remove, or change any drug, dose, or duration
-3. Do NOT add extra medicines not listed above
-4. Use Pakistani dosing notation (BD, TDS, OD, etc.)
-5. Keep brands exactly as provided
-6. ${ur ? 'Add URDU INSTRUCTIONS (مریض کے لیے ہدایات) for the medicines listed above only' : ''}
-7. Add a brief ADVICE section with condition-specific lifestyle/dietary advice only
-8. Format should match: DIAGNOSIS → PRESCRIPTION → (INVESTIGATIONS if listed) → (RED FLAGS if listed) → ADVICE ${ur ? '→ URDU INSTRUCTIONS' : ''}
-
-Query: ${q}`;
-          finalTxt = await callAI(formatPrompt, 1200);
+          finalTxt = txt;
           toast('✅ Database prescription');
         }
       } catch(dbErr) {
