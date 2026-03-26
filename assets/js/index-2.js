@@ -1319,6 +1319,9 @@ async function sendMsg(){
   qi.value='';rsz(qi);
   document.getElementById('wc')&&(document.getElementById('wc').style.display='none');
   addHist(q);
+  // Save query to autocomplete history (both local and Supabase user_search_history)
+  // This is what feeds the "Recent searches" section in the autocomplete dropdown.
+  if (typeof window.rxSaveSearchHistory === 'function') window.rxSaveSearchHistory(q);
   const chat=document.getElementById('chat');
   // User bubble
   const ub=document.createElement('div');ub.className='msg u';
