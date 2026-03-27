@@ -2029,6 +2029,20 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--nv3);outline-of
   border-color:rgba(0,200,150,.2);
 }
 
+/* ── SNAP DX BUTTON ── */
+.sb-item-snapdx{
+  background:linear-gradient(135deg,rgba(20,184,138,.06),rgba(42,122,191,.06));
+  border:1px solid rgba(20,184,138,.15)!important;
+  color:rgba(20,184,138,.9);
+}
+.sb-item-snapdx .sb-ico{
+  background:rgba(20,184,138,.1);
+  border-color:rgba(20,184,138,.2);
+}
+.sb-item-snapdx:hover,.sb-item-snapdx:active{
+  background:linear-gradient(135deg,rgba(20,184,138,.14),rgba(42,122,191,.1))!important;
+  border-color:rgba(20,184,138,.3)!important;
+}
 /* ── FOOTER BUTTONS ── */
 .sb-foot{
   padding:12px 10px 20px;
@@ -3412,6 +3426,9 @@ body { max-width: 480px; margin: 0 auto; }
 <div class="sb-section">Clinical</div>
 <button class="sb-item active" onclick="closeSidebar()">
 <div class="sb-ico">💊</div> Prescriptions
+    </button>
+<button class="sb-item sb-item-snapdx" onclick="closeSidebar();window.location.href='snap-dx.html'">
+<div class="sb-ico">📸</div> Snap Dx
     </button>
 <button class="sb-item" onclick="closeSidebar();openSheet('symptom')">
 <div class="sb-ico">🔍</div> Symptom Checker

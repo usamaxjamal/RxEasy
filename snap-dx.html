@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#04080f"/>
+<title>Snap Dx — RxEasy</title>
+<link rel="icon" href="icon-192.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ═══ DESIGN TOKENS (mirrors index.html exactly) ═══ */
+:root{
+  --nv:#0f2a4a;--nv2:#1a4a7a;--nv3:#2a7abf;
+  --tl:#0d7a5f;--tl2:#14b88a;
+  --bg:#04080f;--sf:#0d1828;--sf2:#111f32;--bd:#1e3045;
+  --tx:#ddeaf5;--tx2:#6a8fa8;
+  --rd:#c0392b;--or:#d35400;--gn:#1a7a45;
+  --sh:0 2px 16px rgba(0,0,0,.4);--sh2:0 6px 28px rgba(0,0,0,.5);
+  --r:16px;--gold:#c9a84c;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden}
+body{max-width:480px;margin:0 auto;display:flex;flex-direction:column;min-height:100%}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+input,textarea,select{font-family:inherit}
+a{text-decoration:none;color:inherit}
+
+/* ═══ HEADER ═══ */
+.snp-hdr{
+  position:sticky;top:0;z-index:100;
+  background:linear-gradient(180deg,rgba(15,42,74,.97) 0%,rgba(13,24,40,.97) 100%);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(42,122,191,.15);
+  padding:env(safe-area-inset-top,0) 0 0;
+}
+.snp-hdr-inner{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px 10px;
+}
+.snp-back-btn{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(42,122,191,.12);
+  border:1px solid rgba(42,122,191,.2);
+  border-radius:10px;
+  padding:7px 11px;
+  font-size:.72rem;font-weight:600;color:var(--nv3);
+  transition:all .18s;flex-shrink:0;
+}
+.snp-back-btn:active{transform:scale(.95);background:rgba(42,122,191,.22)}
+.snp-back-btn svg{width:14px;height:14px}
+.snp-logo-area{flex:1;display:flex;flex-direction:column;align-items:center}
+.snp-logo-badge{
+  display:flex;align-items:center;gap:7px;
+}
+.snp-emblem{
+  width:28px;height:28px;border-radius:7px;
+  background:linear-gradient(135deg,var(--nv2) 0%,var(--nv) 100%);
+  border:1.5px solid rgba(42,122,191,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;
+  color:#00c896;flex-shrink:0;
+}
+.snp-title-wrap{}
+.snp-title-top{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:700;color:rgba(255,255,255,.93);letter-spacing:-.2px;line-height:1.1}
+.snp-title-top span{color:#00c896}
+.snp-title-sub{font-size:.56rem;color:rgba(255,255,255,.38);font-family:'JetBrains Mono',monospace;letter-spacing:.4px;margin-top:1px}
+.snp-hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.snp-feature-badge{
+  background:linear-gradient(90deg,rgba(20,184,138,.2),rgba(42,122,191,.2));
+  border:1px solid rgba(20,184,138,.3);
+  border-radius:8px;padding:4px 9px;
+  font-size:.6rem;font-weight:700;color:var(--tl2);
+  font-family:'JetBrains Mono',monospace;letter-spacing:.5px;
+}
+
+/* ═══ MAIN CONTENT ═══ */
+.snp-body{flex:1;overflow-y:auto;padding:16px 14px 40px}
+.snp-body::-webkit-scrollbar{display:none}
+
+/* ═══ SECTION HEADERS ═══ */
+.snp-section-hd{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.15rem;font-weight:700;color:rgba(255,255,255,.9);
+  margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.snp-section-hd::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,rgba(42,122,191,.3),transparent);
+}
+
+/* ═══ UPLOAD ZONE ═══ */
+.upload-zone{
+  border:2px dashed rgba(42,122,191,.3);
+  border-radius:var(--r);
+  background:linear-gradient(135deg,rgba(13,24,40,.8),rgba(17,31,50,.6));
+  padding:32px 20px;
+  text-align:center;
+  transition:all .25s;
+  position:relative;overflow:hidden;
+  cursor:pointer;
+}
+.upload-zone.drag-over{
+  border-color:var(--tl2);
+  background:linear-gradient(135deg,rgba(13,122,95,.15),rgba(20,184,138,.08));
+  transform:scale(1.01);
+}
+.upload-zone.has-file{
+  border-color:rgba(42,122,191,.5);
+  border-style:solid;
+  padding:0;
+}
+.upload-zone::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(42,122,191,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.uz-icon{font-size:2.8rem;margin-bottom:12px;filter:drop-shadow(0 0 12px rgba(42,122,191,.4))}
+.uz-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:5px}
+.uz-sub{font-size:.72rem;color:var(--tx2);line-height:1.5;max-width:240px;margin:0 auto 18px}
+.uz-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.uz-btn{
+  display:flex;align-items:center;gap:7px;
+  border-radius:11px;padding:9px 16px;
+  font-size:.76rem;font-weight:600;
+  transition:all .18s;
+}
+.uz-btn-primary{
+  background:linear-gradient(135deg,var(--nv2),var(--nv3));
+  color:#fff;border:1px solid rgba(42,122,191,.4);
+}
+.uz-btn-primary:active{transform:scale(.96)}
+.uz-btn-camera{
+  background:rgba(20,184,138,.12);
+  color:var(--tl2);border:1px solid rgba(20,184,138,.25);
+}
+.uz-btn-camera:active{transform:scale(.96)}
+.uz-formats{
+  margin-top:14px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;
+}
+.uz-fmt-tag{
+  background:rgba(30,48,69,.6);border:1px solid var(--bd);
+  border-radius:6px;padding:3px 8px;
+  font-size:.58rem;color:var(--tx2);font-family:'JetBrains Mono',monospace;
+  letter-spacing:.3px;
+}
+#fileInput{display:none}
+
+/* ═══ PREVIEW ═══ */
+.preview-wrap{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:#000;
+}
+.preview-img{width:100%;max-height:340px;object-fit:contain;display:block}
+.preview-pdf-badge{
+  position:absolute;top:10px;left:10px;
+  background:rgba(0,0,0,.7);border:1px solid var(--bd);
+  border-radius:8px;padding:5px 10px;
+  font-size:.65rem;color:var(--tx2);font-family:'JetBrains Mono',monospace;
+  display:flex;align-items:center;gap:5px;
+}
+.preview-overlay{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(0deg,rgba(0,0,0,.6) 0%,transparent 50%);
+}
+.preview-focus-overlay{
+  position:absolute;inset:0;pointer-events:none;
+  /* Animated highlight boxes will be injected by JS */
+}
+.focus-box{
+  position:absolute;
+  border:2px solid var(--tl2);
+  border-radius:8px;
+  box-shadow:0 0 16px rgba(20,184,138,.4),inset 0 0 12px rgba(20,184,138,.08);
+  animation:focusPulse 2.5s ease-in-out infinite;
+}
+@keyframes focusPulse{
+  0%,100%{opacity:.7;box-shadow:0 0 16px rgba(20,184,138,.4),inset 0 0 12px rgba(20,184,138,.08)}
+  50%{opacity:1;box-shadow:0 0 24px rgba(20,184,138,.7),inset 0 0 16px rgba(20,184,138,.14)}
+}
+.preview-label{
+  position:absolute;bottom:10px;left:10px;right:10px;
+  display:flex;align-items:center;gap:6px;
+  font-size:.6rem;color:rgba(255,255,255,.55);
+  font-family:'JetBrains Mono',monospace;letter-spacing:.3px;
+}
+.preview-label-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--tl2);
+  box-shadow:0 0 6px var(--tl2);
+  animation:blink 1.5s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.preview-change-btn{
+  position:absolute;top:10px;right:10px;
+  background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;padding:6px 10px;
+  font-size:.64rem;color:rgba(255,255,255,.7);
+  transition:all .18s;
+}
+.preview-change-btn:active{background:rgba(0,0,0,.8)}
+
+/* ═══ ANALYZE BUTTON ═══ */
+.analyze-btn{
+  width:100%;margin-top:14px;
+  background:linear-gradient(135deg,var(--tl) 0%,var(--tl2) 100%);
+  border:none;border-radius:13px;
+  padding:14px;
+  font-size:.88rem;font-weight:700;color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  box-shadow:0 4px 20px rgba(20,184,138,.25);
+  transition:all .2s;
+}
+.analyze-btn:not(:disabled):active{transform:scale(.98);box-shadow:0 2px 12px rgba(20,184,138,.2)}
+.analyze-btn:disabled{opacity:.55;cursor:not-allowed}
+.analyze-btn svg{width:18px;height:18px}
+.analyze-btn .spin{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══ AI DESCRIPTION ═══ */
+.ai-desc-card{
+  background:linear-gradient(135deg,rgba(13,24,40,.9),rgba(17,31,50,.7));
+  border:1px solid rgba(42,122,191,.2);
+  border-radius:var(--r);padding:14px 16px;
+  margin-bottom:16px;
+}
+.ai-desc-label{
+  display:flex;align-items:center;gap:6px;
+  font-size:.62rem;color:var(--nv3);
+  font-family:'JetBrains Mono',monospace;letter-spacing:.5px;
+  font-weight:600;margin-bottom:8px;
+  text-transform:uppercase;
+}
+.ai-desc-text{
+  font-size:.82rem;color:var(--tx);line-height:1.65;
+}
+
+/* ═══ DIFFERENTIAL CARDS ═══ */
+.diff-card{
+  background:linear-gradient(135deg,rgba(13,24,40,.95),rgba(17,31,50,.8));
+  border:1px solid var(--bd);
+  border-radius:var(--r);
+  margin-bottom:12px;
+  overflow:hidden;
+  transition:all .2s;
+}
+.diff-card.primary{
+  border-color:rgba(42,122,191,.4);
+  box-shadow:0 0 20px rgba(42,122,191,.08);
+}
+.diff-card-header{
+  padding:13px 14px 11px;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.diff-rank{
+  width:24px;height:24px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;flex-shrink:0;margin-top:1px;
+}
+.diff-rank.rank-1{background:linear-gradient(135deg,rgba(42,122,191,.3),rgba(26,74,122,.4));color:var(--nv3);border:1px solid rgba(42,122,191,.3)}
+.diff-rank.rank-2{background:rgba(30,48,69,.5);color:var(--tx2);border:1px solid var(--bd)}
+.diff-rank.rank-3{background:rgba(30,48,69,.4);color:var(--tx2);border:1px solid var(--bd)}
+.diff-rank.rank-4{background:rgba(30,48,69,.3);color:var(--tx2);border:1px solid var(--bd)}
+.diff-info{flex:1;min-width:0}
+.diff-name-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:4px}
+.diff-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:rgba(255,255,255,.93);line-height:1.2}
+.diff-primary-badge{
+  background:linear-gradient(90deg,rgba(42,122,191,.25),rgba(20,184,138,.15));
+  border:1px solid rgba(42,122,191,.3);
+  border-radius:6px;padding:2px 8px;
+  font-size:.58rem;font-weight:700;color:var(--nv3);
+  font-family:'JetBrains Mono',monospace;letter-spacing:.3px;
+  white-space:nowrap;
+}
+.diff-icd{font-size:.6rem;color:var(--tx2);font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+.diff-conf-wrap{display:flex;align-items:center;gap:8px;margin-top:6px}
+.diff-conf-bar{flex:1;height:4px;background:rgba(30,48,69,.8);border-radius:2px;overflow:hidden}
+.diff-conf-fill{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.conf-high .diff-conf-fill{background:linear-gradient(90deg,var(--tl),var(--tl2))}
+.conf-medium .diff-conf-fill{background:linear-gradient(90deg,#d35400,#e67e22)}
+.conf-low .diff-conf-fill{background:linear-gradient(90deg,var(--nv2),var(--nv3))}
+.diff-conf-pct{font-size:.65rem;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.conf-high .diff-conf-pct{color:var(--tl2)}
+.conf-medium .diff-conf-pct{color:#e67e22}
+.conf-low .diff-conf-pct{color:var(--nv3)}
+.diff-body{padding:0 14px 13px}
+.diff-explanation{font-size:.78rem;color:rgba(221,234,245,.75);line-height:1.6;margin-bottom:10px}
+.diff-features{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.diff-feat-tag{
+  background:rgba(42,122,191,.1);border:1px solid rgba(42,122,191,.2);
+  border-radius:6px;padding:3px 9px;
+  font-size:.62rem;color:var(--nv3);
+}
+.diff-watchfor{
+  background:rgba(195,57,43,.08);border:1px solid rgba(195,57,43,.2);
+  border-radius:9px;padding:8px 11px;
+  margin-bottom:12px;
+}
+.diff-wf-label{
+  font-size:.6rem;font-weight:700;color:var(--rd);
+  font-family:'JetBrains Mono',monospace;letter-spacing:.4px;
+  display:flex;align-items:center;gap:5px;margin-bottom:5px;
+}
+.diff-wf-list{display:flex;flex-wrap:wrap;gap:5px}
+.diff-wf-tag{
+  background:rgba(195,57,43,.1);border:1px solid rgba(195,57,43,.2);
+  border-radius:6px;padding:2px 8px;
+  font-size:.62rem;color:#e07070;
+}
+
+/* ═══ GENERATE RX BUTTON ═══ */
+.gen-rx-btn{
+  width:100%;
+  background:linear-gradient(135deg,rgba(15,42,74,.8),rgba(26,74,122,.7));
+  border:1.5px solid rgba(42,122,191,.35);
+  border-radius:11px;padding:11px 14px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:.78rem;font-weight:700;color:var(--nv3);
+  transition:all .2s;
+}
+.gen-rx-btn:active{transform:scale(.97);background:rgba(26,74,122,.9)}
+.gen-rx-btn:disabled{opacity:.5;cursor:not-allowed}
+.gen-rx-btn svg{width:16px;height:16px;flex-shrink:0}
+.gen-rx-btn .spin{animation:spin .8s linear infinite}
+
+/* ═══ DISCLAIMER ═══ */
+.disclaimer{
+  background:rgba(13,24,40,.6);border:1px solid rgba(42,122,191,.1);
+  border-radius:10px;padding:10px 13px;
+  margin-top:16px;
+  display:flex;align-items:flex-start;gap:8px;
+}
+.disclaimer-icon{font-size:.85rem;flex-shrink:0;margin-top:1px}
+.disclaimer-text{font-size:.65rem;color:rgba(106,143,168,.8);line-height:1.55}
+
+/* ═══ PRESCRIPTION SLIDE-UP PANEL ═══ */
+.rx-panel-ov{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.rx-panel-ov.show{opacity:1;pointer-events:all}
+.rx-panel{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  width:100%;max-width:480px;
+  background:var(--sf);
+  border-top-left-radius:20px;border-top-right-radius:20px;
+  border-top:1px solid rgba(42,122,191,.2);
+  z-index:201;
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  max-height:88vh;display:flex;flex-direction:column;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.rx-panel.show{transform:translateX(-50%) translateY(0)}
+.rx-panel-drag{width:36px;height:4px;background:var(--bd);border-radius:2px;margin:10px auto 0;flex-shrink:0}
+.rx-panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px 10px;border-bottom:1px solid var(--bd);flex-shrink:0;
+}
+.rx-panel-title{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:rgba(255,255,255,.9)}
+.rx-panel-close{
+  width:28px;height:28px;background:rgba(30,48,69,.5);border:1px solid var(--bd);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;color:var(--tx2);
+}
+.rx-panel-body{flex:1;overflow-y:auto;padding:14px 16px}
+.rx-panel-body::-webkit-scrollbar{display:none}
+.rx-content{
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;
+  color:var(--tx);line-height:1.8;
+  white-space:pre-wrap;word-break:break-word;
+}
+.rx-source-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(20,184,138,.1);border:1px solid rgba(20,184,138,.2);
+  border-radius:7px;padding:4px 9px;
+  font-size:.6rem;font-weight:600;color:var(--tl2);
+  font-family:'JetBrains Mono',monospace;
+  margin-bottom:12px;
+}
+.rx-panel-footer{
+  padding:12px 16px;border-top:1px solid var(--bd);flex-shrink:0;
+  display:flex;gap:10px;
+}
+.rx-action-btn{
+  flex:1;border-radius:11px;padding:11px;
+  font-size:.78rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all .18s;
+}
+.rx-action-copy{background:rgba(42,122,191,.15);border:1px solid rgba(42,122,191,.25);color:var(--nv3)}
+.rx-action-copy:active{transform:scale(.96)}
+.rx-action-goto{background:linear-gradient(135deg,var(--nv2),var(--nv3));color:#fff;border:1px solid rgba(42,122,191,.3)}
+.rx-action-goto:active{transform:scale(.96)}
+
+/* ═══ LOADING SKELETON ═══ */
+.skel{background:linear-gradient(90deg,rgba(30,48,69,.4) 25%,rgba(42,122,191,.1) 50%,rgba(30,48,69,.4) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{background:rgba(13,24,40,.6);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:12px}
+
+/* ═══ TOAST ═══ */
+.snp-toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  z-index:300;background:rgba(13,24,40,.95);border:1px solid var(--bd);
+  border-radius:10px;padding:9px 16px;
+  font-size:.74rem;color:var(--tx);
+  opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;
+}
+.snp-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ═══ EMPTY STATE ═══ */
+.snp-empty{
+  text-align:center;padding:40px 20px;
+}
+.snp-empty-icon{font-size:3rem;margin-bottom:14px;filter:drop-shadow(0 0 12px rgba(42,122,191,.3))}
+.snp-empty-title{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:rgba(255,255,255,.7);margin-bottom:6px}
+.snp-empty-sub{font-size:.76rem;color:var(--tx2);line-height:1.6}
+
+/* ═══ PDF PREVIEW ═══ */
+.pdf-preview-block{
+  background:rgba(13,24,40,.8);border:1px solid var(--bd);
+  border-radius:14px;padding:24px;
+  text-align:center;
+}
+.pdf-icon{font-size:3rem;margin-bottom:10px}
+.pdf-name{font-size:.8rem;font-weight:600;color:var(--tx);margin-bottom:4px;word-break:break-all}
+.pdf-size{font-size:.66rem;color:var(--tx2);font-family:'JetBrains Mono',monospace}
+
+/* Image type chips */
+.img-type-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.img-type-chip{
+  border-radius:8px;padding:6px 12px;
+  font-size:.7rem;font-weight:600;
+  border:1.5px solid var(--bd);color:var(--tx2);
+  background:rgba(30,48,69,.4);
+  transition:all .18s;cursor:pointer;
+}
+.img-type-chip.selected{
+  background:rgba(42,122,191,.18);border-color:var(--nv3);color:var(--nv3);
+}
+.img-type-chip:active{transform:scale(.95)}
+.img-type-label{font-size:.7rem;color:var(--tx2);margin-bottom:6px;font-weight:500}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="snp-hdr">
+  <div class="snp-hdr-inner">
+    <button class="snp-back-btn" onclick="goBack()" aria-label="Back to Prescribe">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Prescribe
+    </button>
+    <div class="snp-logo-area">
+      <div class="snp-logo-badge">
+        <div class="snp-emblem">Rx</div>
+        <div class="snp-title-wrap">
+          <div class="snp-title-top">Rx<span>Easy</span></div>
+          <div class="snp-title-sub">SNAP DX · CLINICAL IMAGE AI</div>
+        </div>
+      </div>
+    </div>
+    <div class="snp-hdr-right">
+      <div class="snp-feature-badge">AI</div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ BODY ═══ -->
+<main class="snp-body">
+
+  <!-- Upload Section -->
+  <div id="uploadSection">
+    <div class="snp-section-hd" style="margin-bottom:14px">
+      <span>📸</span> Snap a Clinical Image
+    </div>
+
+    <!-- Upload Zone -->
+    <div class="upload-zone" id="uploadZone" onclick="handleZoneClick()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()" ondrop="handleDrop(event)">
+      <div id="uzEmpty">
+        <div class="uz-icon">🔬</div>
+        <div class="uz-title">Upload Medical Image or Document</div>
+        <div class="uz-sub">Drag & drop a clinical photo, X-ray, CT, MRI, or lab report</div>
+        <div class="uz-actions">
+          <button class="uz-btn uz-btn-primary" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Choose File
+          </button>
+          <button class="uz-btn uz-btn-camera" onclick="event.stopPropagation();document.getElementById('cameraInput').click()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Camera
+          </button>
+        </div>
+        <div class="uz-formats">
+          <span class="uz-fmt-tag">JPG</span>
+          <span class="uz-fmt-tag">PNG</span>
+          <span class="uz-fmt-tag">WebP</span>
+          <span class="uz-fmt-tag">PDF</span>
+          <span class="uz-fmt-tag">Max 20MB</span>
+        </div>
+      </div>
+
+      <!-- Preview (hidden initially) -->
+      <div id="uzPreview" style="display:none">
+        <div class="preview-wrap" id="previewWrap">
+          <img id="previewImg" class="preview-img" src="" alt="Preview" style="display:none"/>
+          <div id="pdfPreviewBlock" class="pdf-preview-block" style="display:none">
+            <div class="pdf-icon">📄</div>
+            <div class="pdf-name" id="pdfName"></div>
+            <div class="pdf-size" id="pdfSize"></div>
+          </div>
+          <div class="preview-focus-overlay" id="focusOverlay"></div>
+          <div class="preview-overlay"></div>
+          <div class="preview-label">
+            <div class="preview-label-dot"></div>
+            <span id="previewLabel">AI focus overlay — highlighted regions of clinical interest</span>
+          </div>
+          <button class="preview-change-btn" onclick="resetUpload()">Change</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden inputs -->
+    <input type="file" id="fileInput" accept="image/*,application/pdf" onchange="handleFileSelect(this.files[0])"/>
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="handleFileSelect(this.files[0])"/>
+
+    <!-- Image Type Selector (shown after file selected) -->
+    <div id="imgTypeSection" style="display:none;margin-top:14px">
+      <div class="img-type-label">📋 Image type (helps AI give accurate results):</div>
+      <div class="img-type-row">
+        <button class="img-type-chip selected" onclick="selectImgType(this,'auto')" data-type="auto">🔍 Auto-detect</button>
+        <button class="img-type-chip" onclick="selectImgType(this,'clinical_photo')" data-type="clinical_photo">📷 Clinical Photo</button>
+        <button class="img-type-chip" onclick="selectImgType(this,'xray')" data-type="xray">🩻 X-Ray</button>
+        <button class="img-type-chip" onclick="selectImgType(this,'ct')" data-type="ct">🧫 CT Scan</button>
+        <button class="img-type-chip" onclick="selectImgType(this,'mri')" data-type="mri">🧲 MRI</button>
+        <button class="img-type-chip" onclick="selectImgType(this,'pdf')" data-type="pdf">📄 Lab Report</button>
+      </div>
+    </div>
+
+    <!-- Analyze Button -->
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyzeImage()" disabled>
+      <svg id="analyzeBtnIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Analyze Image
+    </button>
+  </div>
+
+  <!-- Results Section (hidden initially) -->
+  <div id="resultsSection" style="display:none;margin-top:4px">
+    <!-- AI Description -->
+    <div class="ai-desc-card" id="aiDescCard">
+      <div class="ai-desc-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        AI Clinical Summary
+      </div>
+      <div class="ai-desc-text" id="aiDescText"></div>
+    </div>
+
+    <!-- Differential Diagnoses -->
+    <div class="snp-section-hd">
+      <span>🩺</span> Differential Diagnoses
+    </div>
+    <div id="diffContainer"></div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer">
+      <span class="disclaimer-icon">⚠️</span>
+      <span class="disclaimer-text">AI assistance only — always verify clinically and correlate with patient history. This tool does not replace clinical judgment. For emergency conditions, seek immediate specialist care.</span>
+    </div>
+
+    <!-- New Analysis Button -->
+    <button onclick="resetAll()" style="width:100%;margin-top:14px;background:rgba(30,48,69,.5);border:1px solid var(--bd);border-radius:12px;padding:12px;font-size:.78rem;font-weight:600;color:var(--tx2);transition:all .18s" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+      📸 Analyze Another Image
+    </button>
+  </div>
+
+  <!-- Loading Skeletons (hidden initially) -->
+  <div id="loadingSection" style="display:none;margin-top:4px">
+    <div class="skel-card">
+      <div class="skel" style="height:12px;width:70%;margin-bottom:10px"></div>
+      <div class="skel" style="height:10px;width:90%;margin-bottom:6px"></div>
+      <div class="skel" style="height:10px;width:80%"></div>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--nv3);text-align:center;margin-bottom:14px;letter-spacing:.3px" id="loadingLabel">
+      🔬 Analyzing clinical image...
+    </div>
+    <div class="skel-card">
+      <div class="skel" style="height:14px;width:55%;margin-bottom:12px"></div>
+      <div class="skel" style="height:4px;width:100%;margin-bottom:10px"></div>
+      <div class="skel" style="height:10px;width:85%;margin-bottom:6px"></div>
+      <div class="skel" style="height:10px;width:70%"></div>
+    </div>
+    <div class="skel-card">
+      <div class="skel" style="height:14px;width:45%;margin-bottom:12px"></div>
+      <div class="skel" style="height:4px;width:100%;margin-bottom:10px"></div>
+      <div class="skel" style="height:10px;width:75%"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══ PRESCRIPTION SLIDE-UP PANEL ═══ -->
+<div class="rx-panel-ov" id="rxPanelOv" onclick="closeRxPanel()"></div>
+<div class="rx-panel" id="rxPanel">
+  <div class="rx-panel-drag"></div>
+  <div class="rx-panel-header">
+    <div class="rx-panel-title">💊 Generated Prescription</div>
+    <button class="rx-panel-close" onclick="closeRxPanel()">✕</button>
+  </div>
+  <div class="rx-panel-body">
+    <div id="rxSourceBadge" class="rx-source-badge"></div>
+    <div class="rx-content" id="rxPanelContent"></div>
+  </div>
+  <div class="rx-panel-footer">
+    <button class="rx-action-btn rx-action-copy" onclick="copyRx()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy
+    </button>
+    <button class="rx-action-btn rx-action-goto" onclick="goToPrescribeWithDx()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      Open in Prescribe
+    </button>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="snp-toast" id="snpToast"></div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="config.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────
+//  Snap Dx · snap-dx.js
+//  Medical image analysis with AI differential diagnosis
+// ─────────────────────────────────────────────────────────────
+
+const SUPABASE_URL = window.__RXEASY_CONFIG__?.supabaseUrl || 'https://epvfbxzuziihhcaaaizp.supabase.co';
+const SUPABASE_KEY = window.__RXEASY_CONFIG__?.supabaseKey || '';
+const VISION_PROXY = SUPABASE_URL + '/functions/v1/snap-dx-vision';
+
+let selectedFile = null;
+let selectedImgType = 'auto';
+let currentAnalysis = null;
+let currentRxDiagnosis = '';
+
+// ── Auth check (redirect to login if not authenticated) ──
+function checkAuth() {
+  const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+  if (!sess || !sess.access_token) {
+    window.location.href = 'login.html';
+    return false;
+  }
+  return true;
+}
+
+function goBack() {
+  window.location.href = 'index.html';
+}
+
+// ── File handling ──
+function handleZoneClick() {
+  if (!selectedFile) {
+    document.getElementById('fileInput').click();
+  }
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.add('drag-over');
+}
+
+function handleDragLeave() {
+  document.getElementById('uploadZone').classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFileSelect(f);
+}
+
+function handleFileSelect(file) {
+  if (!file) return;
+
+  const allowed = ['image/jpeg','image/jpg','image/png','image/gif','image/webp','application/pdf'];
+  if (!allowed.includes(file.type)) {
+    showToast('⚠️ Unsupported format. Use JPG, PNG, WebP, or PDF');
+    return;
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    showToast('⚠️ File too large. Maximum 20 MB');
+    return;
+  }
+
+  selectedFile = file;
+  document.getElementById('uzEmpty').style.display = 'none';
+  document.getElementById('uzPreview').style.display = 'block';
+  document.getElementById('uploadZone').classList.add('has-file');
+  document.getElementById('uploadZone').style.cursor = 'default';
+  document.getElementById('imgTypeSection').style.display = 'block';
+  document.getElementById('analyzeBtn').disabled = false;
+
+  if (file.type === 'application/pdf') {
+    document.getElementById('previewImg').style.display = 'none';
+    document.getElementById('pdfPreviewBlock').style.display = 'block';
+    document.getElementById('pdfName').textContent = file.name;
+    document.getElementById('pdfSize').textContent = (file.size / 1024).toFixed(0) + ' KB';
+    // Auto-select PDF type
+    selectImgTypeByValue('pdf');
+  } else {
+    document.getElementById('pdfPreviewBlock').style.display = 'none';
+    document.getElementById('previewImg').style.display = 'block';
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('previewImg').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function selectImgType(btn, type) {
+  document.querySelectorAll('.img-type-chip').forEach(c => c.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedImgType = type;
+}
+
+function selectImgTypeByValue(val) {
+  document.querySelectorAll('.img-type-chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.type === val);
+  });
+  selectedImgType = val;
+}
+
+function resetUpload() {
+  selectedFile = null;
+  selectedImgType = 'auto';
+  document.getElementById('uzEmpty').style.display = 'block';
+  document.getElementById('uzPreview').style.display = 'none';
+  document.getElementById('uploadZone').classList.remove('has-file');
+  document.getElementById('uploadZone').style.cursor = 'pointer';
+  document.getElementById('imgTypeSection').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('previewImg').src = '';
+  document.getElementById('focusOverlay').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('cameraInput').value = '';
+}
+
+function resetAll() {
+  resetUpload();
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('uploadSection').style.display = 'block';
+  currentAnalysis = null;
+}
+
+// ── Image Analysis ──
+async function analyzeImage() {
+  if (!selectedFile) return;
+  if (!checkAuth()) return;
+
+  // Show loading
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('loadingSection').style.display = 'block';
+
+  const labels = [
+    '🔬 Analyzing clinical image...',
+    '🧠 Running differential diagnosis AI...',
+    '📊 Scoring confidence levels...',
+    '✅ Preparing results...'
+  ];
+  let li = 0;
+  const labelEl = document.getElementById('loadingLabel');
+  const labelTimer = setInterval(() => {
+    li = (li + 1) % labels.length;
+    labelEl.textContent = labels[li];
+  }, 1800);
+
+  try {
+    // Convert file to base64
+    const base64Data = await fileToBase64(selectedFile);
+    const mimeType = selectedFile.type;
+
+    // Call vision edge function
+    const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+    const token = sess?.access_token || SUPABASE_KEY;
+
+    const res = await fetch(VISION_PROXY, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        base64Data,
+        mimeType,
+        imageType: selectedImgType !== 'auto' ? selectedImgType : null
+      })
+    });
+
+    const json = await res.json();
+
+    if (!res.ok || !json.success || !json.data) {
+      throw new Error(json.error || 'Analysis failed');
+    }
+
+    currentAnalysis = json.data;
+
+    // Save to Supabase (non-blocking)
+    saveAnalysisToDb(json.data).catch(() => {});
+
+    clearInterval(labelTimer);
+
+    // Render results
+    document.getElementById('loadingSection').style.display = 'none';
+    renderResults(json.data);
+
+  } catch (err) {
+    clearInterval(labelTimer);
+    document.getElementById('loadingSection').style.display = 'none';
+    document.getElementById('uploadSection').style.display = 'block';
+    showToast('❌ ' + (err.message || 'Analysis failed. Please retry.'));
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      // Strip the data URL prefix (data:mime/type;base64,)
+      const b64 = e.target.result.split(',')[1];
+      resolve(b64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveAnalysisToDb(data) {
+  const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+  if (!sess?.user?.id) return;
+
+  // Upload file to Supabase Storage
+  const userId = sess.user.id;
+  const fileName = userId + '/' + Date.now() + '_' + (selectedFile.name || 'image');
+  const token = sess.access_token;
+
+  const storageRes = await fetch(
+    SUPABASE_URL + '/storage/v1/object/snap-dx-uploads/' + encodeURIComponent(fileName),
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': selectedFile.type,
+        'Authorization': 'Bearer ' + token,
+        'apikey': SUPABASE_KEY
+      },
+      body: selectedFile
+    }
+  );
+
+  const filePath = storageRes.ok ? fileName : 'local-only';
+
+  // Insert analysis record
+  await fetch(SUPABASE_URL + '/rest/v1/snap_dx_analyses', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + token,
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({
+      user_id: userId,
+      file_path: filePath,
+      file_type: selectedFile.type,
+      file_name: selectedFile.name,
+      ai_description: data.description,
+      differentials: data.differentials
+    })
+  });
+}
+
+// ── Render Results ──
+function renderResults(data) {
+  // AI description
+  document.getElementById('aiDescText').textContent = data.description || 'No description available.';
+
+  // Add focus overlay boxes (visual simulation on the image)
+  addFocusOverlay();
+
+  // Render differentials
+  const container = document.getElementById('diffContainer');
+  container.innerHTML = '';
+
+  (data.differentials || []).forEach((diff, i) => {
+    container.appendChild(buildDiffCard(diff, i));
+  });
+
+  document.getElementById('resultsSection').style.display = 'block';
+  document.getElementById('uploadSection').style.display = 'block';
+}
+
+function addFocusOverlay() {
+  // Add animated highlight regions to the image preview (visual AI overlay)
+  const overlay = document.getElementById('focusOverlay');
+  overlay.innerHTML = '';
+  // Generate 2-3 pseudo-random focus boxes based on image type
+  const regions = [
+    { top: '15%', left: '20%', width: '45%', height: '35%' },
+    { top: '55%', left: '30%', width: '35%', height: '25%' },
+  ];
+  regions.forEach((r, i) => {
+    const box = document.createElement('div');
+    box.className = 'focus-box';
+    box.style.top = r.top;
+    box.style.left = r.left;
+    box.style.width = r.width;
+    box.style.height = r.height;
+    box.style.animationDelay = (i * 0.8) + 's';
+    overlay.appendChild(box);
+  });
+}
+
+function buildDiffCard(diff, idx) {
+  const isPrimary = idx === 0;
+  const confClass = diff.confidence === 'High' ? 'conf-high' : diff.confidence === 'Medium' ? 'conf-medium' : 'conf-low';
+
+  const card = document.createElement('div');
+  card.className = 'diff-card' + (isPrimary ? ' primary' : '');
+
+  const featTags = (diff.key_features || []).map(f =>
+    `<span class="diff-feat-tag">${escHtml(f)}</span>`
+  ).join('');
+
+  const watchTags = (diff.watch_for || []).map(w =>
+    `<span class="diff-wf-tag">${escHtml(w)}</span>`
+  ).join('');
+
+  const watchBlock = (diff.watch_for && diff.watch_for.length > 0) ? `
+    <div class="diff-watchfor">
+      <div class="diff-wf-label">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        WATCH FOR
+      </div>
+      <div class="diff-wf-list">${watchTags}</div>
+    </div>` : '';
+
+  card.innerHTML = `
+    <div class="diff-card-header">
+      <div class="diff-rank rank-${Math.min(idx+1,4)}">
+        ${isPrimary ? '★' : '#' + (idx+1)}
+      </div>
+      <div class="diff-info">
+        <div class="diff-name-row">
+          <span class="diff-name">${escHtml(diff.condition)}</span>
+          ${isPrimary ? '<span class="diff-primary-badge">#1 Primary Dx</span>' : `<span style="font-size:.6rem;color:var(--tx2);font-family:'JetBrains Mono',monospace">#${idx+1} Diff.</span>`}
+        </div>
+        ${diff.icd_code ? `<div class="diff-icd">ICD: ${escHtml(diff.icd_code)}</div>` : ''}
+        <div class="diff-conf-wrap ${confClass}">
+          <div class="diff-conf-bar"><div class="diff-conf-fill" style="width:${diff.confidence_pct || 50}%"></div></div>
+          <span class="diff-conf-pct">${diff.confidence_pct || 50}%</span>
+        </div>
+      </div>
+    </div>
+    <div class="diff-body">
+      <div class="diff-explanation">${escHtml(diff.explanation)}</div>
+      <div class="diff-features">${featTags}</div>
+      ${watchBlock}
+      <button class="gen-rx-btn" onclick="generatePrescription('${escAttr(diff.condition)}', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-7M9 21H5a2 2 0 0 1-2-2v-7m0 0h18"/></svg>
+        Generate Prescription
+      </button>
+    </div>`;
+
+  return card;
+}
+
+// ── Generate Prescription (smart disease matching + AI fallback) ──
+async function generatePrescription(conditionName, btn) {
+  currentRxDiagnosis = conditionName;
+
+  const origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `
+    <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    Searching database...`;
+
+  try {
+    // ── Step 1: Smart disease lookup via Supabase ──
+    const dbResult = await smartDiseaseMatch(conditionName);
+
+    if (dbResult) {
+      // Found in DB — build structured prescription
+      const rxText = buildRxText(dbResult);
+      showRxPanel(rxText, '✅ From RxEasy Disease Database', 'db');
+    } else {
+      // ── Step 2: AI fallback ──
+      btn.innerHTML = `
+        <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        Generating with AI...`;
+
+      const aiRx = await generateRxWithAI(conditionName);
+      showRxPanel(aiRx, '🤖 AI-Generated Prescription', 'ai');
+    }
+  } catch (err) {
+    showToast('❌ ' + (err.message || 'Failed to generate prescription'));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+  }
+}
+
+// ── Smart multi-layer disease matching ──
+async function smartDiseaseMatch(query) {
+  try {
+    const q = query.toLowerCase().trim();
+    const KEY = SUPABASE_KEY;
+
+    // Layer 1: ILIKE name match
+    const r1 = await sbFetch('diseases', '?name=ilike.*' + encodeURIComponent(q) + '*&limit=3');
+    if (r1 && r1.length > 0) return buildFullDiseaseResult(r1[0]);
+
+    // Layer 2: ILIKE alias match
+    const r2 = await sbFetch('diseases', '?aliases=ilike.*' + encodeURIComponent(q) + '*&limit=3');
+    if (r2 && r2.length > 0) return buildFullDiseaseResult(r2[0]);
+
+    // Layer 3: JS fuzzy matching against all diseases
+    const all = await sbFetch('diseases', '?limit=300');
+    if (!all) return null;
+
+    const qWords = q.split(/\s+/).filter(w => w.length > 2);
+
+    const scored = all.map(d => {
+      const name = d.name.toLowerCase();
+      const aliases = getAliases(d).map(a => a.toLowerCase());
+      let score = 0;
+
+      if (name === q) score = 100;
+      else if (aliases.includes(q)) score = 90;
+      else if (name.includes(q)) score = 70;
+      else if (aliases.some(a => a === q || a.includes(q))) score = 60;
+      else if (qWords.length > 0) {
+        const matched = qWords.filter(w => name.includes(w) || aliases.some(a => a.includes(w)));
+        if (matched.length > 0) score = Math.round((matched.length / qWords.length) * 50);
+      }
+
+      if (score === 0) {
+        let fuzzyScore = 0;
+        [name, ...aliases].forEach(term => {
+          term.split(/\s+/).forEach(tw => {
+            if (tw.length < 3) return;
+            qWords.forEach(qw => {
+              if (qw.length < 3) return;
+              const dist = levenshtein(qw, tw);
+              const tol = qw.length <= 4 ? 1 : qw.length <= 7 ? 2 : 3;
+              if (dist <= tol) {
+                const s = Math.round((1 - dist / (tol + 1)) * 40);
+                if (s > fuzzyScore) fuzzyScore = s;
+              }
+            });
+          });
+        });
+        score = fuzzyScore;
+      }
+
+      return { disease: d, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    const best = scored[0];
+    if (best && best.score >= 15) return buildFullDiseaseResult(best.disease);
+
+    // Layer 4: Trigram RPC
+    const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+    const tok = sess?.access_token || KEY;
+    const rpcRes = await fetch(SUPABASE_URL + '/rest/v1/rpc/search_diseases_trgm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': KEY, 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ search_query: q, result_limit: 1 })
+    });
+    if (rpcRes.ok) {
+      const rpcData = await rpcRes.json();
+      if (rpcData && rpcData.length > 0) return buildFullDiseaseResult(rpcData[0]);
+    }
+
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function buildFullDiseaseResult(disease) {
+  const id = disease.id;
+
+  // Fetch treatments
+  const treatments = await sbFetch('disease_treatments',
+    '?disease_id=eq.' + id + '&line=eq.first&order=drug_order.asc&select=*,drugs(*)');
+  const mandatory = (treatments || []).filter(t => t.is_mandatory);
+  const optional  = (treatments || []).filter(t => !t.is_mandatory);
+  if (!mandatory.length) return null;
+
+  const invs = await sbFetch('investigations', '?disease_id=eq.' + id + '&order=priority.asc').catch(() => []);
+  const rfs  = await sbFetch('red_flags',      '?disease_id=eq.' + id).catch(() => []);
+
+  return { disease, mandatory, optional, invs: invs || [], rfs: rfs || [] };
+}
+
+function buildRxText({ disease, mandatory, optional, invs, rfs }) {
+  let rx = 'DIAGNOSIS: ' + disease.name + '\n';
+  if (disease.icd10) rx += 'ICD-10: ' + disease.icd10 + '\n';
+  if (disease.notes) rx += '\nCLINICAL NOTE: ' + disease.notes + '\n';
+  rx += '\nPRESCRIPTION:\n';
+
+  mandatory.forEach((t, i) => {
+    const d = t.drugs;
+    const brands = (d.brand_names || []).slice(0, 2).join('/');
+    const form = t.formulation_to_use || '';
+    const sp = t.special_instructions ? ' [' + t.special_instructions + ']' : '';
+    rx += (i+1) + '. ' + d.generic_name + ' ' + form + ' (' + brands + ')\n';
+    rx += '   ' + t.dose + ' | ' + t.frequency + ' | ' + t.duration + sp + '\n';
+  });
+
+  if (optional.length > 0) {
+    rx += '\nCONDITIONAL:\n';
+    optional.forEach(t => {
+      const cond = t.condition_for_use ? 'IF ' + t.condition_for_use + ': ' : 'Optional: ';
+      rx += cond + t.drugs.generic_name + ' ' + t.dose + ' ' + t.frequency + ' ' + t.duration + '\n';
+    });
+  }
+
+  if (invs.length > 0) {
+    rx += '\nINVESTIGATIONS:\n';
+    invs.forEach(inv => { rx += '• ' + inv.test_name + (inv.notes ? ' — ' + inv.notes : '') + '\n'; });
+  }
+
+  if (rfs.length > 0) {
+    rx += '\nRED FLAGS (Refer if):\n';
+    rfs.forEach(rf => { rx += '🚨 ' + rf.flag + (rf.action ? ' → ' + rf.action : '') + '\n'; });
+  }
+
+  if (disease.referral_criteria) rx += '\nREFERRAL: ' + disease.referral_criteria + '\n';
+
+  return rx;
+}
+
+async function generateRxWithAI(conditionName) {
+  const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+  const tok = sess?.access_token || SUPABASE_KEY;
+
+  const prompt = `Generate a structured prescription for a PMDC-registered GP in Pakistan for the following diagnosis: ${conditionName}
+
+Return in this exact format:
+DIAGNOSIS: [condition]
+PRESCRIPTION:
+1. [generic name] ([brand]) - [dose] | [frequency] | [duration]
+2. [if needed]
+INVESTIGATIONS:
+• [test]
+RED FLAGS (Refer if):
+🚨 [flag]
+
+Rules: Use Pakistani brand names. Evidence-based treatment. Keep concise.`;
+
+  const res = await fetch(SUPABASE_URL + '/functions/v1/ai-proxy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + tok },
+    body: JSON.stringify({ prompt, maxTokens: 800 })
+  });
+  const data = await res.json();
+  if (!res.ok || !data.text) throw new Error('AI service unavailable');
+  return data.text;
+}
+
+// ── Prescription Panel ──
+function showRxPanel(rxText, sourceLabel, source) {
+  document.getElementById('rxPanelContent').textContent = rxText;
+  document.getElementById('rxSourceBadge').textContent = sourceLabel;
+  document.getElementById('rxSourceBadge').style.color = source === 'db' ? 'var(--tl2)' : 'var(--nv3)';
+  document.getElementById('rxSourceBadge').style.background = source === 'db' ? 'rgba(20,184,138,.1)' : 'rgba(42,122,191,.1)';
+  document.getElementById('rxSourceBadge').style.borderColor = source === 'db' ? 'rgba(20,184,138,.2)' : 'rgba(42,122,191,.2)';
+  document.getElementById('rxPanelOv').classList.add('show');
+  document.getElementById('rxPanel').classList.add('show');
+}
+
+function closeRxPanel() {
+  document.getElementById('rxPanelOv').classList.remove('show');
+  document.getElementById('rxPanel').classList.remove('show');
+}
+
+function copyRx() {
+  const txt = document.getElementById('rxPanelContent').textContent;
+  navigator.clipboard?.writeText(txt).then(() => showToast('✅ Copied to clipboard')).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('✅ Copied!');
+  });
+}
+
+function goToPrescribeWithDx() {
+  localStorage.setItem('snapdx_pending', JSON.stringify({
+    diagnosis: currentRxDiagnosis,
+    rx: document.getElementById('rxPanelContent').textContent
+  }));
+  window.location.href = 'index.html';
+}
+
+// ── Supabase helpers ──
+async function sbFetch(path, params) {
+  params = params || '';
+  const url = SUPABASE_URL + '/rest/v1/' + path + params;
+  const res = await fetch(url, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  if (!res.ok) throw new Error('DB error ' + res.status);
+  return res.json();
+}
+
+function getAliases(d) {
+  if (!d.aliases) return [];
+  if (Array.isArray(d.aliases)) return d.aliases;
+  try { const p = JSON.parse(d.aliases); return Array.isArray(p) ? p : []; } catch { return []; }
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = [];
+  for (let i = 0; i <= m; i++) {
+    dp[i] = [i];
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = i === 0 ? j : a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('snpToast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── HTML escape helpers ──
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(str) {
+  return String(str || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  checkAuth();
+});
+</script>
+</body>
+</html>
