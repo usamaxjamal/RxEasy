@@ -176,3 +176,33 @@ function closeSheet(n){
   ov.setAttribute('aria-hidden','true');
   if(_sheetLastFocus) _sheetLastFocus.focus();
 }
+
+// ─── SNAP DX RETURN HANDLER ───────────────────────────────────
+// When a doctor hits "Open in Prescribe" from snap-dx.html,
+// the diagnosis is stored in localStorage('snapdx_pending').
+// We pick it up here on index.html load and pre-fill the input.
+(function checkSnapDxReturn(){
+  const snapPending = localStorage.getItem('snapdx_pending');
+  if (!snapPending) return;
+  try {
+    const snap = JSON.parse(snapPending);
+    localStorage.removeItem('snapdx_pending');
+    if (!snap.diagnosis) return;
+    // Wait for DOM ready
+    const tryFill = () => {
+      const qi = document.getElementById('qi');
+      if (qi) {
+        qi.value = snap.diagnosis;
+        if (typeof rsz === 'function') rsz(qi);
+        if (typeof toast === 'function') toast('📸 Snap Dx: "' + snap.diagnosis + '" loaded');
+      } else {
+        setTimeout(tryFill, 300);
+      }
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', tryFill);
+    } else {
+      setTimeout(tryFill, 400);
+    }
+  } catch(_) {}
+})();
