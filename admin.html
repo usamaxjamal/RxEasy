@@ -33,8 +33,6 @@
 }
 
 html,body{height:100%;width:100%;font-family:'DM Sans',sans-serif;background:var(--ink);color:var(--tx);overflow:hidden}
-/* Ensure content area always scrolls fully */
-.content{flex:1;overflow-y:auto !important;overflow-x:hidden;padding:20px 20px 60px;-webkit-overflow-scrolling:touch;min-height:0}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
@@ -82,9 +80,6 @@ html,body{height:100%;width:100%;font-family:'DM Sans',sans-serif;background:var
 /* ── LAYOUT ── */
 #adminApp{display:none;height:100vh;width:100%;overflow:hidden}
 .layout{display:flex;height:100vh;overflow:hidden;position:relative}
-
-/* ── MAIN CONTENT ── */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--ink);min-width:0;min-height:0}
 
 /* ── SIDEBAR OVERLAY (always in DOM, hidden by default) ── */
 .sb-overlay{
@@ -233,7 +228,8 @@ html,body{height:100%;width:100%;font-family:'DM Sans',sans-serif;background:var
 }
 .sb-logout:hover{background:rgba(224,85,85,.12)}
 
-/* ── MAIN CONTENT — defined above near layout ── */
+/* ── MAIN CONTENT ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--ink)}
 
 /* Topbar */
 .topbar{
@@ -259,7 +255,8 @@ html,body{height:100%;width:100%;font-family:'DM Sans',sans-serif;background:var
   font-size:.58rem;font-weight:700;color:var(--gd);
 }
 
-/* Content area — this is overridden by the rule injected above */
+/* Content area */
+.content{flex:1;overflow-y:auto;padding:20px;-webkit-overflow-scrolling:touch}
 
 /* Pages */
 .page{display:none}
@@ -491,10 +488,6 @@ textarea.inp{resize:vertical;min-height:70px}
 <div class="sb-section">Logs</div>
 <div class="nav-item" onclick="showPage('rxlogs',this)">
 <div class="ni">📋</div><span>Rx Logs</span>
-</div>
-<div class="nav-item" onclick="showPage('inbox',this)">
-<div class="ni">💬</div><span>Inbox</span>
-<span class="nav-badge" id="inboxBadge" style="display:none">0</span>
 </div>
 <div class="sb-section">System</div>
 <div class="nav-item" onclick="showPage('settings',this)">
@@ -731,39 +724,6 @@ textarea.inp{resize:vertical;min-height:70px}
 </div>
 </div>
 </div>
-<!-- ══ INBOX ══ -->
-<div class="page" id="page-inbox">
-<div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-  <div>
-    <div class="page-title">💬 Feedback Inbox</div>
-    <div class="page-sub">Suggestions, bug reports & complaints from doctors</div>
-  </div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <select class="search-inp" id="inboxFilter" onchange="loadInbox()" style="flex:none;min-width:130px;padding:8px 12px">
-      <option value="">All Types</option>
-      <option value="suggestion">💡 Suggestions</option>
-      <option value="bug">🐛 Bug Reports</option>
-      <option value="complaint">⚠️ Complaints</option>
-      <option value="feature">✨ Feature Requests</option>
-    </select>
-    <select class="search-inp" id="inboxStatusFilter" onchange="loadInbox()" style="flex:none;min-width:120px;padding:8px 12px">
-      <option value="">All Status</option>
-      <option value="new">🆕 New</option>
-      <option value="read">👁 Read</option>
-      <option value="resolved">✅ Resolved</option>
-    </select>
-  </div>
-</div>
-
-<!-- Summary Stats -->
-<div class="stats-grid" id="inboxStats" style="margin-bottom:16px"></div>
-
-<!-- Feedback List -->
-<div id="inboxList">
-  <div class="empty"><div class="empty-ico">💬</div>Loading inbox...</div>
-</div>
-</div>
-
 <!-- ══ SETTINGS ══ -->
 <div class="page" id="page-settings">
 <div class="page-hdr">
@@ -844,219 +804,6 @@ textarea.inp{resize:vertical;min-height:70px}
 </div>
 </div>
 </div>
-<!-- REPLY MODAL -->
-<div class="modal-overlay" id="replyModal" onclick="if(event.target===this)closeModal('replyModal')" role="dialog" aria-modal="true" aria-hidden="true">
-<div class="modal">
-<div class="modal-hdr">
-  <div class="modal-title">💬 Reply to Feedback</div>
-  <button class="modal-close" onclick="closeModal('replyModal')">✕ Close</button>
-</div>
-<div class="modal-body">
-  <div id="replyFeedbackContext" style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:.74rem;color:var(--tx2);line-height:1.6"></div>
-  <div class="field" style="margin-bottom:10px">
-    <label>Your Reply</label>
-    <textarea class="inp" id="replyText" placeholder="Write your reply to the doctor..." style="min-height:80px"></textarea>
-  </div>
-  <div class="field">
-    <label>Update Status</label>
-    <select class="inp" id="replyStatus">
-      <option value="read">👁 Read</option>
-      <option value="resolved">✅ Resolved</option>
-      <option value="new">🆕 Keep as New</option>
-    </select>
-  </div>
-  <input type="hidden" id="replyFeedbackId"/>
-</div>
-<div class="modal-foot">
-  <button class="btn btn-ghost" onclick="closeModal('replyModal')">Cancel</button>
-  <button class="btn btn-primary" onclick="submitReply()">📩 Send Reply & Update</button>
-</div>
-</div>
-</div>
-
-<!-- INBOX JS -->
-<script>
-// ═══ INBOX PAGE LOGIC ═══
-const _SURL = window.__RXEASY_CONFIG__?.supabaseUrl || '';
-const _SKEY = window.__RXEASY_CONFIG__?.supabaseKey || '';
-
-async function loadInbox() {
-  const typeFilter = document.getElementById('inboxFilter')?.value || '';
-  const statusFilter = document.getElementById('inboxStatusFilter')?.value || '';
-  const listEl = document.getElementById('inboxList');
-  if (!listEl) return;
-  listEl.innerHTML = '<div class="empty"><div class="empty-ico">⏳</div>Loading...</div>';
-
-  let url = _SURL + '/rest/v1/user_feedback?order=created_at.desc&limit=100';
-  if (typeFilter) url += '&type=eq.' + typeFilter;
-  if (statusFilter) url += '&status=eq.' + statusFilter;
-
-  try {
-    const res = await fetch(url, {
-      headers: { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _SKEY }
-    });
-    const data = await res.json();
-
-    // Stats
-    const statsEl = document.getElementById('inboxStats');
-    if (statsEl) {
-      const allRes = await fetch(_SURL + '/rest/v1/user_feedback?select=type,status', {
-        headers: { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _SKEY }
-      });
-      const all = await allRes.json();
-      const newCount = all.filter(x => x.status === 'new').length;
-      const bugCount = all.filter(x => x.type === 'bug').length;
-      const featCount = all.filter(x => x.type === 'feature').length;
-      const resolvedCount = all.filter(x => x.status === 'resolved').length;
-      if (newCount > 0) {
-        const badge = document.getElementById('inboxBadge');
-        if (badge) { badge.textContent = newCount; badge.style.display = 'inline'; }
-      }
-      statsEl.innerHTML = `
-        <div class="stat-card or"><div class="stat-icon">🆕</div><div class="stat-label">Unread</div><div class="stat-value">${newCount}</div></div>
-        <div class="stat-card rd"><div class="stat-icon">🐛</div><div class="stat-label">Bugs</div><div class="stat-value">${bugCount}</div></div>
-        <div class="stat-card bl"><div class="stat-icon">✨</div><div class="stat-label">Features</div><div class="stat-value">${featCount}</div></div>
-        <div class="stat-card tl"><div class="stat-icon">✅</div><div class="stat-label">Resolved</div><div class="stat-value">${resolvedCount}</div></div>
-      `;
-    }
-
-    if (!data || data.length === 0) {
-      listEl.innerHTML = '<div class="empty"><div class="empty-ico">📭</div>No feedback yet</div>';
-      return;
-    }
-
-    const typeIcon = { suggestion:'💡', bug:'🐛', complaint:'⚠️', feature:'✨' };
-    const typeName = { suggestion:'Suggestion', bug:'Bug Report', complaint:'Complaint', feature:'Feature Request' };
-    const priColor = { low:'var(--tl)', medium:'var(--or)', high:'var(--rd)' };
-    const priLabel = { low:'🟢 Low', medium:'🟡 Medium', high:'🔴 High' };
-    const statusColor = { new:'var(--or)', read:'var(--bl)', resolved:'var(--tl)' };
-
-    listEl.innerHTML = data.map(f => `
-      <div class="card" style="margin-bottom:10px;${f.status==='new'?'border-color:rgba(200,130,50,.3)':''}">
-        <div class="card-hdr" style="cursor:pointer" onclick="toggleFeedbackDetail('fd-${f.id}')">
-          <div style="display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0">
-            <div style="width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">${typeIcon[f.type]||'💬'}</div>
-            <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
-                <span style="font-size:.8rem;font-weight:700;color:var(--tx)">${escAdm(f.subject)}</span>
-                ${f.status==='new'?'<span class="badge or">NEW</span>':''}
-              </div>
-              <div style="font-size:.62rem;color:var(--tx3)">${escAdm(f.user_email)} · ${new Date(f.created_at).toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
-              <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
-                <span class="badge gray">${typeName[f.type]||f.type}</span>
-                <span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:.55rem;font-weight:700;background:rgba(255,255,255,.04);color:${priColor[f.priority]||'var(--tx3)'};border:1px solid rgba(255,255,255,.07)">${priLabel[f.priority]||f.priority||''}</span>
-                <span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:.55rem;font-weight:700;background:rgba(255,255,255,.04);color:${statusColor[f.status]||'var(--tx3)'};border:1px solid rgba(255,255,255,.07)">${(f.status||'new').toUpperCase()}</span>
-              </div>
-            </div>
-          </div>
-          <div style="font-size:1rem;color:var(--tx3);flex-shrink:0">▾</div>
-        </div>
-        <div id="fd-${f.id}" style="display:none">
-          <div class="card-body" style="padding-top:0">
-            <div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:11px 13px;font-size:.76rem;color:var(--tx2);line-height:1.7;margin-bottom:12px;white-space:pre-wrap">${escAdm(f.message)}</div>
-            ${f.admin_reply ? `<div style="background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.2);border-radius:10px;padding:11px 13px;font-size:.73rem;color:rgba(0,200,150,.85);line-height:1.6;margin-bottom:12px"><strong>Your Reply:</strong> ${escAdm(f.admin_reply)}</div>` : ''}
-            <div style="display:flex;gap:7px;flex-wrap:wrap">
-              <button class="btn btn-primary btn-sm" onclick="openReply('${f.id}','${escAdm(f.subject)}','${escAdm(f.message).replace(/'/g,'&#39;')}')">💬 Reply</button>
-              ${f.status !== 'resolved' ? `<button class="btn btn-ghost btn-sm" onclick="markFeedback('${f.id}','resolved')">✅ Mark Resolved</button>` : ''}
-              ${f.status === 'new' ? `<button class="btn btn-ghost btn-sm" onclick="markFeedback('${f.id}','read')">👁 Mark Read</button>` : ''}
-              <button class="btn btn-danger btn-sm" onclick="deleteFeedback('${f.id}')">🗑 Delete</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `).join('');
-  } catch(e) {
-    listEl.innerHTML = '<div class="empty"><div class="empty-ico">❌</div>Failed to load inbox</div>';
-  }
-}
-
-function toggleFeedbackDetail(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-
-function openReply(id, subject, message) {
-  document.getElementById('replyFeedbackId').value = id;
-  document.getElementById('replyFeedbackContext').innerHTML =
-    '<strong style="color:var(--tx)">Subject:</strong> ' + escAdm(subject) + '<br/><strong style="color:var(--tx)">Message:</strong> ' + escAdm(message);
-  document.getElementById('replyText').value = '';
-  document.getElementById('replyStatus').value = 'resolved';
-  openModal('replyModal');
-}
-
-async function submitReply() {
-  const id = document.getElementById('replyFeedbackId').value;
-  const reply = document.getElementById('replyText').value.trim();
-  const status = document.getElementById('replyStatus').value;
-  if (!reply) { showAdmToast('❌ Reply cannot be empty'); return; }
-  try {
-    const res = await fetch(_SURL + '/rest/v1/user_feedback?id=eq.' + id, {
-      method: 'PATCH',
-      headers: { 'Content-Type':'application/json', 'apikey':_SKEY, 'Authorization':'Bearer '+_SKEY, 'Prefer':'return=minimal' },
-      body: JSON.stringify({ admin_reply: reply, status, replied_at: new Date().toISOString() })
-    });
-    if (res.ok) {
-      showAdmToast('✅ Reply sent & status updated');
-      closeModal('replyModal');
-      loadInbox();
-    } else { showAdmToast('❌ Failed to save reply'); }
-  } catch(e) { showAdmToast('❌ Network error'); }
-}
-
-async function markFeedback(id, status) {
-  try {
-    await fetch(_SURL + '/rest/v1/user_feedback?id=eq.' + id, {
-      method: 'PATCH',
-      headers: { 'Content-Type':'application/json', 'apikey':_SKEY, 'Authorization':'Bearer '+_SKEY, 'Prefer':'return=minimal' },
-      body: JSON.stringify({ status })
-    });
-    showAdmToast('✅ Status updated to ' + status);
-    loadInbox();
-  } catch(e) {}
-}
-
-async function deleteFeedback(id) {
-  if (!confirm('Delete this feedback permanently?')) return;
-  try {
-    await fetch(_SURL + '/rest/v1/user_feedback?id=eq.' + id, {
-      method: 'DELETE',
-      headers: { 'apikey':_SKEY, 'Authorization':'Bearer '+_SKEY }
-    });
-    showAdmToast('🗑 Deleted');
-    loadInbox();
-  } catch(e) {}
-}
-
-// Hook into existing showPage if present
-(function(){
-  const origShow = window.showPage;
-  window.showPage = function(id, el){
-    if(typeof origShow === 'function') origShow.apply(this, arguments);
-    if(id === 'inbox') setTimeout(loadInbox, 100);
-  };
-  // Load inbox badge on startup
-  setTimeout(async () => {
-    try {
-      const r = await fetch(_SURL + '/rest/v1/user_feedback?status=eq.new&select=id', {
-        headers: { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _SKEY }
-      });
-      const d = await r.json();
-      if (d && d.length > 0) {
-        const b = document.getElementById('inboxBadge');
-        if (b) { b.textContent = d.length; b.style.display = 'inline'; }
-      }
-    } catch(e){}
-  }, 2000);
-})();
-
-function escAdm(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function showAdmToast(m) {
-  const t = document.getElementById('toast');
-  if (t) { t.textContent = m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
-}
-</script>
-
 <!-- SEC-01 FIX: config.js provides window.__RXEASY_CONFIG__ -->
 <script src="config.js"></script>
 <script src="assets/js/admin-1.js"></script>
