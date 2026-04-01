@@ -2043,6 +2043,20 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--nv3);outline-of
   background:linear-gradient(135deg,rgba(20,184,138,.14),rgba(42,122,191,.1))!important;
   border-color:rgba(20,184,138,.3)!important;
 }
+/* ── FEEDBACK BUTTON ── */
+.sb-item-feedback{
+  background:linear-gradient(135deg,rgba(200,160,50,.06),rgba(255,180,0,.04));
+  border:1px solid rgba(200,160,50,.18)!important;
+  color:rgba(200,160,50,.9);
+}
+.sb-item-feedback .sb-ico{
+  background:rgba(200,160,50,.1);
+  border-color:rgba(200,160,50,.2);
+}
+.sb-item-feedback:hover,.sb-item-feedback:active{
+  background:rgba(200,160,50,.12)!important;
+  border-color:rgba(200,160,50,.3)!important;
+}
 /* ── FOOTER BUTTONS ── */
 .sb-foot{
   padding:12px 10px 20px;
@@ -3420,6 +3434,9 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 <div class="sb-doc-name" id="docName">Dr. Usama Jamal</div>
 <div class="sb-doc-status free" id="docStatus">Free Account — 3 queries left</div>
+<button onclick="closeSidebar();openSheet('editprofile')" style="margin-top:9px;width:100%;background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.18);border-radius:9px;padding:7px 12px;font-size:.65rem;font-weight:600;color:#00c896;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;">
+  ✏️ Edit My Profile
+</button>
 </div>
 <!-- Navigation -->
 <div class="sb-nav">
@@ -3445,6 +3462,10 @@ body { max-width: 480px; margin: 0 auto; }
 <div class="sb-section">Tools</div>
 <button class="sb-item" onclick="closeSidebar();openSheet('calc')">
 <div class="sb-ico">🧮</div> Calculators
+    </button>
+<div class="sb-section">Feedback</div>
+<button class="sb-item sb-item-feedback" onclick="closeSidebar();openSheet('feedback')">
+<div class="sb-ico">💬</div> Suggestions / Complaints
     </button>
 <div class="sb-section">About</div>
 <button class="sb-item" onclick="closeSidebar();showAbout()">
@@ -3981,5 +4002,454 @@ Try it: rxeasy.dr-usama.com</textarea>
 <button class="pw-btn-later" onclick="closePaywall()">Maybe Later — Continue Browsing</button>
 </div>
 </div>
-</div></div><script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js");});}</script>
+</div></div><!-- ═══ EDIT PROFILE SHEET ═══ -->
+<div class="ov" id="ov-editprofile" onclick="closeSheet('editprofile')" role="dialog" aria-modal="true" aria-hidden="true">
+<div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
+<div class="shdl"></div>
+<div class="shdr"><div class="shdt">✏️ Edit My Profile</div><button class="shdc" onclick="closeSheet('editprofile')">✕</button></div>
+<div class="shdb">
+
+<!-- Profile Photo -->
+<div style="text-align:center;margin-bottom:18px">
+  <div style="position:relative;display:inline-block">
+    <div id="epAvatarPreview" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,rgba(0,200,150,.2),rgba(42,122,191,.2));border:2.5px solid rgba(200,160,50,.4);display:flex;align-items:center;justify-content:center;font-size:2.2rem;overflow:hidden;margin:0 auto;cursor:pointer;box-shadow:0 0 0 5px rgba(200,160,50,.08),0 8px 24px rgba(0,0,0,.4)" onclick="document.getElementById('epAvatarFile').click()">👨‍⚕️</div>
+    <div onclick="document.getElementById('epAvatarFile').click()" style="position:absolute;bottom:0;right:0;width:24px;height:24px;background:#00c896;border-radius:50%;border:2px solid #0d1828;display:flex;align-items:center;justify-content:center;font-size:.6rem;cursor:pointer">📷</div>
+    <input type="file" id="epAvatarFile" accept="image/*" style="display:none" onchange="epPreviewAvatar(this)"/>
+  </div>
+  <div style="font-size:.62rem;color:rgba(255,255,255,.3);margin-top:8px">Tap photo to change</div>
+</div>
+
+<!-- Name -->
+<div style="margin-bottom:10px">
+  <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Full Name</div>
+  <input class="sinp" id="epName" placeholder="Dr. Your Full Name" type="text"/>
+</div>
+
+<!-- Qualification + Gender row -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+  <div>
+    <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Qualification</div>
+    <select class="sinp" id="epQual">
+      <option value="">Select...</option>
+      <option value="MBBS">MBBS</option>
+      <option value="BDS">BDS</option>
+      <option value="MBBS, MD">MBBS, MD</option>
+      <option value="MBBS, FCPS">MBBS, FCPS</option>
+      <option value="MBBS, MCPS">MBBS, MCPS</option>
+      <option value="MBBS, MRCP">MBBS, MRCP</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+  <div>
+    <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Gender</div>
+    <select class="sinp" id="epGender">
+      <option value="">Select...</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+</div>
+
+<!-- Date of Birth + Phone row -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+  <div>
+    <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Date of Birth</div>
+    <input class="sinp" id="epDob" type="date"/>
+  </div>
+  <div>
+    <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Phone / WhatsApp</div>
+    <input class="sinp" id="epPhone" placeholder="+92 300 1234567" type="tel"/>
+  </div>
+</div>
+
+<!-- PMDC -->
+<div style="margin-bottom:10px">
+  <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">PMDC Registration No.</div>
+  <input class="sinp" id="epPmdc" placeholder="PMDC-XXXXX (optional)"/>
+</div>
+
+<!-- Speciality -->
+<div style="margin-bottom:10px">
+  <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Speciality / Practice</div>
+  <input class="sinp" id="epSpeciality" placeholder="e.g. General Practitioner, Cardiologist..."/>
+</div>
+
+<!-- City + Province row -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+  <div>
+    <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">City</div>
+    <input class="sinp" id="epCity" placeholder="e.g. Lahore"/>
+  </div>
+  <div>
+    <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Province</div>
+    <select class="sinp" id="epProvince">
+      <option value="">Select...</option>
+      <option value="KPK">KPK</option>
+      <option value="Punjab">Punjab</option>
+      <option value="Sindh">Sindh</option>
+      <option value="Balochistan">Balochistan</option>
+      <option value="Islamabad">Islamabad</option>
+      <option value="AJK">AJK</option>
+      <option value="GB">Gilgit-Baltistan</option>
+    </select>
+  </div>
+</div>
+
+<!-- Clinic Name -->
+<div style="margin-bottom:16px">
+  <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Clinic / Hospital Name</div>
+  <input class="sinp" id="epClinic" placeholder="e.g. Al-Shifa Clinic, DHQ Hospital..."/>
+</div>
+
+<!-- Status message -->
+<div id="epStatus" style="font-size:.7rem;min-height:20px;text-align:center;margin-bottom:10px"></div>
+
+<!-- Save Button -->
+<button onclick="saveUserProfile()" style="width:100%;background:linear-gradient(135deg,#00c896,#009e78);color:#021a10;border:none;border-radius:12px;padding:13px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 16px rgba(0,200,150,.25);display:flex;align-items:center;justify-content:center;gap:7px">
+  💾 Save Profile
+</button>
+<div style="font-size:.58rem;color:rgba(255,255,255,.2);text-align:center;margin-top:9px">Your profile info is stored securely in RxEasy</div>
+</div>
+</div>
+</div>
+
+<!-- ═══ SUGGESTIONS / COMPLAINTS SHEET ═══ -->
+<div class="ov" id="ov-feedback" onclick="closeSheet('feedback')" role="dialog" aria-modal="true" aria-hidden="true">
+<div class="sheet" onclick="event.stopPropagation()" style="max-height:92vh">
+<div class="shdl"></div>
+<div class="shdr"><div class="shdt">💬 Suggestions & Complaints</div><button class="shdc" onclick="closeSheet('feedback')">✕</button></div>
+<div class="shdb">
+
+<!-- Hero -->
+<div style="background:linear-gradient(135deg,rgba(200,160,50,.1),rgba(42,122,191,.08));border:1px solid rgba(200,160,50,.2);border-radius:14px;padding:14px 16px;text-align:center;margin-bottom:18px">
+  <div style="font-size:1.8rem;margin-bottom:6px">💡</div>
+  <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:4px">Help Us Improve RxEasy</div>
+  <div style="font-size:.68rem;color:rgba(221,234,245,.45);line-height:1.5">Your feedback goes directly to Dr. Usama Jamal.<br/>Every suggestion is read and considered.</div>
+</div>
+
+<!-- Type Selector -->
+<div style="font-size:.6rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Type of Feedback</div>
+<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px" id="fbTypeRow">
+  <button class="fb-type-chip active" onclick="setFbType(this,'suggestion')" data-type="suggestion" style="flex:1;min-width:80px;padding:8px 10px;border-radius:10px;border:1.5px solid rgba(0,200,150,.3);background:rgba(0,200,150,.12);color:#00c896;font-size:.68rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s">💡 Suggestion</button>
+  <button class="fb-type-chip" onclick="setFbType(this,'bug')" data-type="bug" style="flex:1;min-width:80px;padding:8px 10px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(221,234,245,.5);font-size:.68rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s">🐛 Bug Report</button>
+  <button class="fb-type-chip" onclick="setFbType(this,'complaint')" data-type="complaint" style="flex:1;min-width:80px;padding:8px 10px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(221,234,245,.5);font-size:.68rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s">⚠️ Complaint</button>
+  <button class="fb-type-chip" onclick="setFbType(this,'feature')" data-type="feature" style="flex:1;min-width:80px;padding:8px 10px;border-radius:10px;border:1.5px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(221,234,245,.5);font-size:.68rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s">✨ Feature Request</button>
+</div>
+<input type="hidden" id="fbType" value="suggestion"/>
+
+<!-- Subject -->
+<div style="margin-bottom:10px">
+  <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Subject <span style="color:var(--tl2)">*</span></div>
+  <input class="sinp" id="fbSubject" placeholder="Brief title of your feedback..."/>
+</div>
+
+<!-- Message -->
+<div style="margin-bottom:10px">
+  <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Message <span style="color:var(--tl2)">*</span></div>
+  <textarea class="sinp" id="fbMessage" placeholder="Describe in detail — the more specific, the better we can help..." style="height:100px;resize:none"></textarea>
+</div>
+
+<!-- Priority -->
+<div style="margin-bottom:16px">
+  <div style="font-size:.58rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Priority</div>
+  <select class="sinp" id="fbPriority">
+    <option value="low">🟢 Low — Nice to have</option>
+    <option value="medium" selected>🟡 Medium — Would really help</option>
+    <option value="high">🔴 High — Urgent / Blocking me</option>
+  </select>
+</div>
+
+<!-- Status msg -->
+<div id="fbStatus" style="font-size:.7rem;min-height:20px;text-align:center;margin-bottom:10px"></div>
+
+<!-- Submit -->
+<button onclick="submitFeedback()" style="width:100%;background:linear-gradient(135deg,rgba(200,160,50,.9),rgba(160,120,30,.8));color:#0a0600;border:none;border-radius:12px;padding:13px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 16px rgba(200,160,50,.2);display:flex;align-items:center;justify-content:center;gap:7px">
+  📩 Send to Admin
+</button>
+
+<!-- Previous submissions -->
+<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)">
+  <div style="font-size:.62rem;font-weight:700;color:rgba(221,234,245,.38);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Your Previous Submissions</div>
+  <div id="myFeedbackList" style="max-height:200px;overflow-y:auto"></div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+// ═══ EDIT PROFILE — JS ═══
+function openSheet(id) {
+  const el = document.getElementById('ov-' + id);
+  if (!el) return;
+  el.classList.add('show');
+  el.setAttribute('aria-hidden','false');
+  if (id === 'editprofile') loadUserProfileForm();
+  if (id === 'feedback') loadMyFeedback();
+}
+
+async function loadUserProfileForm() {
+  const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+  if (!sess?.user?.id) return;
+  const SUPABASE_URL = window.__RXEASY_CONFIG__?.supabaseUrl || '';
+  const SUPABASE_KEY = window.__RXEASY_CONFIG__?.supabaseKey || '';
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/user_profiles?user_id=eq.' + sess.user.id + '&limit=1', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sess.access_token || SUPABASE_KEY) }
+    });
+    const data = await res.json();
+    if (data && data.length > 0) {
+      const p = data[0];
+      document.getElementById('epName').value = p.full_name || '';
+      document.getElementById('epQual').value = p.qualification || '';
+      document.getElementById('epGender').value = p.gender || '';
+      document.getElementById('epDob').value = p.date_of_birth || '';
+      document.getElementById('epPhone').value = p.phone || '';
+      document.getElementById('epPmdc').value = p.pmdc_no || '';
+      document.getElementById('epSpeciality').value = p.speciality || '';
+      document.getElementById('epCity').value = p.city || '';
+      document.getElementById('epProvince').value = p.province || '';
+      document.getElementById('epClinic').value = p.clinic_name || '';
+      if (p.avatar_url) {
+        const av = document.getElementById('epAvatarPreview');
+        av.innerHTML = '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
+      }
+    }
+  } catch(e) {}
+}
+
+function epPreviewAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const av = document.getElementById('epAvatarPreview');
+    av.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
+    av._newFile = file;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveUserProfile() {
+  const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+  if (!sess?.user?.id) { showToastMsg('❌ Not logged in'); return; }
+  const SUPABASE_URL = window.__RXEASY_CONFIG__?.supabaseUrl || '';
+  const SUPABASE_KEY = window.__RXEASY_CONFIG__?.supabaseKey || '';
+  const tok = sess.access_token || SUPABASE_KEY;
+  const statusEl = document.getElementById('epStatus');
+  statusEl.style.color = '#6a8fa8';
+  statusEl.textContent = '⏳ Saving...';
+
+  let avatarUrl = null;
+  const avEl = document.getElementById('epAvatarPreview');
+  if (avEl._newFile) {
+    try {
+      const f = avEl._newFile;
+      const ext = f.name.split('.').pop();
+      const path = sess.user.id + '/avatar_' + Date.now() + '.' + ext;
+      const upRes = await fetch(SUPABASE_URL + '/storage/v1/object/avatars/' + encodeURIComponent(path), {
+        method: 'POST',
+        headers: { 'Content-Type': f.type, 'Authorization': 'Bearer ' + tok, 'apikey': SUPABASE_KEY },
+        body: f
+      });
+      if (upRes.ok) {
+        avatarUrl = SUPABASE_URL + '/storage/v1/object/public/avatars/' + encodeURIComponent(path);
+      }
+    } catch(e) {}
+  }
+
+  const payload = {
+    user_id: sess.user.id,
+    full_name: document.getElementById('epName').value.trim(),
+    qualification: document.getElementById('epQual').value,
+    gender: document.getElementById('epGender').value,
+    date_of_birth: document.getElementById('epDob').value || null,
+    phone: document.getElementById('epPhone').value.trim(),
+    pmdc_no: document.getElementById('epPmdc').value.trim(),
+    speciality: document.getElementById('epSpeciality').value.trim(),
+    city: document.getElementById('epCity').value.trim(),
+    province: document.getElementById('epProvince').value,
+    clinic_name: document.getElementById('epClinic').value.trim(),
+    updated_at: new Date().toISOString()
+  };
+  if (avatarUrl) payload.avatar_url = avatarUrl;
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/user_profiles', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + tok,
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok || res.status === 201 || res.status === 204) {
+      statusEl.style.color = '#00c896';
+      statusEl.textContent = '✅ Profile saved successfully!';
+      // Update sidebar display name
+      if (payload.full_name) {
+        const dn = document.getElementById('docName');
+        if (dn) dn.textContent = payload.full_name;
+      }
+      // Update avatar in sidebar
+      if (avatarUrl) {
+        const sav = document.getElementById('docAvatar');
+        if (sav) sav.innerHTML = '<img src="' + avatarUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
+      }
+      setTimeout(() => { closeSheet('editprofile'); statusEl.textContent = ''; }, 1400);
+    } else {
+      const err = await res.text();
+      statusEl.style.color = '#e05555';
+      statusEl.textContent = '❌ Save failed. Try again.';
+    }
+  } catch(e) {
+    statusEl.style.color = '#e05555';
+    statusEl.textContent = '❌ Network error. Try again.';
+  }
+}
+
+// ═══ FEEDBACK / SUGGESTIONS — JS ═══
+let _fbType = 'suggestion';
+function setFbType(btn, type) {
+  _fbType = type;
+  document.getElementById('fbType').value = type;
+  document.querySelectorAll('.fb-type-chip').forEach(b => {
+    b.style.border = '1.5px solid rgba(255,255,255,.08)';
+    b.style.background = 'rgba(255,255,255,.04)';
+    b.style.color = 'rgba(221,234,245,.5)';
+  });
+  btn.style.border = '1.5px solid rgba(0,200,150,.35)';
+  btn.style.background = 'rgba(0,200,150,.12)';
+  btn.style.color = '#00c896';
+  if (type === 'bug') { btn.style.borderColor = 'rgba(192,57,43,.35)'; btn.style.background = 'rgba(192,57,43,.1)'; btn.style.color = '#e07070'; }
+  if (type === 'complaint') { btn.style.borderColor = 'rgba(200,80,50,.35)'; btn.style.background = 'rgba(200,80,50,.1)'; btn.style.color = '#e08060'; }
+  if (type === 'feature') { btn.style.borderColor = 'rgba(42,122,191,.35)'; btn.style.background = 'rgba(42,122,191,.1)'; btn.style.color = '#4a9fe8'; }
+}
+
+async function submitFeedback() {
+  const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+  const SUPABASE_URL = window.__RXEASY_CONFIG__?.supabaseUrl || '';
+  const SUPABASE_KEY = window.__RXEASY_CONFIG__?.supabaseKey || '';
+  const tok = sess?.access_token || SUPABASE_KEY;
+  const subject = document.getElementById('fbSubject').value.trim();
+  const message = document.getElementById('fbMessage').value.trim();
+  const statusEl = document.getElementById('fbStatus');
+
+  if (!subject || !message) {
+    statusEl.style.color = '#e05555';
+    statusEl.textContent = '❌ Subject and message are required.';
+    return;
+  }
+  statusEl.style.color = '#6a8fa8';
+  statusEl.textContent = '⏳ Sending...';
+
+  const payload = {
+    user_id: sess?.user?.id || null,
+    user_email: sess?.user?.email || 'anonymous',
+    type: _fbType,
+    subject,
+    message,
+    priority: document.getElementById('fbPriority').value,
+    status: 'new',
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/user_feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + tok,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok || res.status === 201) {
+      statusEl.style.color = '#00c896';
+      statusEl.textContent = '✅ Sent! Thank you — Dr. Usama will review it.';
+      document.getElementById('fbSubject').value = '';
+      document.getElementById('fbMessage').value = '';
+      document.getElementById('fbPriority').value = 'medium';
+      loadMyFeedback();
+    } else {
+      statusEl.style.color = '#e05555';
+      statusEl.textContent = '❌ Failed to send. Please retry.';
+    }
+  } catch(e) {
+    statusEl.style.color = '#e05555';
+    statusEl.textContent = '❌ Network error.';
+  }
+}
+
+async function loadMyFeedback() {
+  const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+  if (!sess?.user?.id) return;
+  const SUPABASE_URL = window.__RXEASY_CONFIG__?.supabaseUrl || '';
+  const SUPABASE_KEY = window.__RXEASY_CONFIG__?.supabaseKey || '';
+  const tok = sess.access_token || SUPABASE_KEY;
+  const listEl = document.getElementById('myFeedbackList');
+  if (!listEl) return;
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/user_feedback?user_id=eq.' + sess.user.id + '&order=created_at.desc&limit=10', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + tok }
+    });
+    const data = await res.json();
+    if (!data || data.length === 0) {
+      listEl.innerHTML = '<div style="font-size:.68rem;color:rgba(221,234,245,.28);text-align:center;padding:12px 0">No submissions yet</div>';
+      return;
+    }
+    const typeIcon = { suggestion:'💡', bug:'🐛', complaint:'⚠️', feature:'✨' };
+    const statusColor = { new:'#c8a032', read:'#2a7abf', resolved:'#00c896' };
+    listEl.innerHTML = data.map(f => `
+      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:9px 11px;margin-bottom:7px">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+          <span style="font-size:.85rem">${typeIcon[f.type] || '💬'}</span>
+          <span style="font-size:.74rem;font-weight:600;color:rgba(221,234,245,.85);flex:1">${escHtmlFb(f.subject)}</span>
+          <span style="font-size:.55rem;font-weight:700;padding:2px 7px;border-radius:8px;background:rgba(255,255,255,.06);color:${statusColor[f.status]||'#6a8fa8'}">${(f.status||'new').toUpperCase()}</span>
+        </div>
+        <div style="font-size:.63rem;color:rgba(221,234,245,.38)">${new Date(f.created_at).toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'})}</div>
+        ${f.admin_reply ? `<div style="margin-top:6px;background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.15);border-radius:7px;padding:7px 9px;font-size:.65rem;color:rgba(0,200,150,.85);line-height:1.5"><strong>Admin Reply:</strong> ${escHtmlFb(f.admin_reply)}</div>` : ''}
+      </div>
+    `).join('');
+  } catch(e) {
+    listEl.innerHTML = '<div style="font-size:.65rem;color:#e05555;text-align:center">Could not load history</div>';
+  }
+}
+function escHtmlFb(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// Load profile data on sidebar open (augment existing openSidebar if exists)
+(function(){
+  const orig = window.openSidebar;
+  window.openSidebar = function(){
+    if(typeof orig === 'function') orig.apply(this, arguments);
+    // Load profile into sidebar avatar
+    const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+    if (!sess?.user?.id) return;
+    const SUPABASE_URL = window.__RXEASY_CONFIG__?.supabaseUrl || '';
+    const SUPABASE_KEY = window.__RXEASY_CONFIG__?.supabaseKey || '';
+    fetch(SUPABASE_URL + '/rest/v1/user_profiles?user_id=eq.' + sess.user.id + '&limit=1', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sess.access_token || SUPABASE_KEY) }
+    }).then(r=>r.json()).then(data => {
+      if (data && data.length > 0) {
+        const p = data[0];
+        if (p.full_name) {
+          const dn = document.getElementById('docName');
+          if (dn) dn.textContent = p.full_name;
+        }
+        if (p.avatar_url) {
+          const av = document.getElementById('docAvatar');
+          if (av) av.innerHTML = '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>';
+        }
+      }
+    }).catch(()=>{});
+  };
+})();
+function showToastMsg(m){const t=document.getElementById('toast');if(t){t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}}
+</script>
+
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js");});}</script>
 </body></html>
