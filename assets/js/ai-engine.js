@@ -1,11 +1,15 @@
-// ═══════════════════════════════════════════════
-// ai-engine.js — AI fallback chain
-// Groq, HuggingFace, OpenRouter models + callAI()
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// ai-engine.js — AI fallback chain  (FIXED v3)
+//
+// Chain:
+//   1. Supabase secure proxy (Groq → Gemini → OpenRouter → Pollinations)
+//   2. Pollinations AI — called DIRECTLY from browser (CORS OK, no key needed)
+//   3. Error shown to user
+//
+// Layer 2 is the key fix: even if the proxy fails entirely, the browser
+// calls Pollinations directly — bypassing any server-side issues.
+// ═══════════════════════════════════════════════════════════════
 
-// ═══ GROQ AI ENGINE ═══
-// GROQ_API_KEY now handled by GROQ_KEYS array in tryGroq()
-// GROQ_MODELS kept for badge display reference
 const GROQ_MODELS = ['llama-3.3-70b-versatile','llama-3.1-8b-instant','gemma2-9b-it'];
 const rxCache = {};
 let _curModel = 'LLaMA 3.3 70B';
@@ -26,96 +30,111 @@ function saveKey(){
   closeSheet('settings');
 }
 
-// ═══ AI FALLBACK CHAIN ═══
-// Multiple Groq keys for rotation (each has separate daily limit)
-
-
-// Extended Groq models list
-const GROQ_MODELS_ALL = [
-  'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant',
-  'gemma2-9b-it',
-  'meta-llama/llama-4-scout-17b-16e-instruct',
-  'qwen/qwen-3-32b',
-  'mixtral-8x7b-32768',
-  'llama3-70b-8192',
-  'llama3-8b-8192',
-  'llama-3.1-70b-versatile',
-  'deepseek-r1-distill-llama-70b',
-];
-
-// OpenRouter free models
-const OPENROUTER_MODELS = [
-  'mistralai/mistral-7b-instruct:free',
-  'microsoft/phi-3-mini-128k-instruct:free',
-  'google/gemma-2-9b-it:free',
-  'meta-llama/llama-3.2-3b-instruct:free',
-  'qwen/qwen-2-7b-instruct:free',
-];
-
-// ═══ SECURE AI PROXY ═══
-// All API keys are stored securely in Supabase Edge Function secrets.
-// No keys are stored in this file. Do NOT add keys here.
-
+// ════════════════════════════════════════════════
+// callAI — main entry point for prescription AI
+// ════════════════════════════════════════════════
 async function callAI(prompt, maxTokens) {
-  if(!maxTokens) maxTokens = 1800;
+  if (!maxTokens) maxTokens = 1800;
 
   const cfg = window.__RXEASY_CONFIG__;
   const PROXY_URL = cfg.supabaseUrl + '/functions/v1/ai-proxy';
 
-  // 1. Try Groq + Gemini via secure Supabase proxy
+  // ── LAYER 1: Supabase secure proxy (tries Groq/Gemini/OpenRouter/Pollinations server-side) ──
   try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 30000); // 30s max wait for proxy
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': cfg.supabaseKey },
-      body: JSON.stringify({ prompt, maxTokens })
+      body: JSON.stringify({ prompt, maxTokens }),
+      signal: ctrl.signal,
     });
+    clearTimeout(tid);
     const data = await res.json();
     if (res.ok && data.text) {
       _curModel = data.model || 'AI';
       updateModelBadge();
       return data.text;
     }
-    console.warn('Proxy failed:', data?.error);
-  } catch(e) {
-    console.warn('Proxy unreachable:', e);
+    console.warn('[RxEasy] Proxy returned:', data?.error || 'no text');
+  } catch (e) {
+    console.warn('[RxEasy] Proxy failed/timed out:', e.message);
   }
 
-  // 2. Fallback: Hugging Face (completely free, no key needed)
-  const hfResult = await tryHuggingFace(prompt, maxTokens);
-  if(hfResult) return hfResult;
+  // ── LAYER 2: Direct Pollinations AI from browser (CORS-enabled, no key needed) ──
+  // This bypasses the proxy entirely — runs straight in the user's browser.
+  // Pollinations is a free aggregator that routes to OpenAI/Mistral/LLaMA models.
+  const polResult = await _tryPollinationsDirect(prompt, maxTokens);
+  if (polResult) return polResult;
 
+  // ── All failed ──
   throw new Error('⏳ AI services are temporarily busy. Please try again in 1 minute.');
 }
 
-async function tryHuggingFace(prompt, maxTokens) {
-  const HF_MODELS = [
-    'mistralai/Mistral-7B-Instruct-v0.3',
-    'HuggingFaceH4/zephyr-7b-beta',
-    'microsoft/DialoGPT-large',
-  ];
-  for(const model of HF_MODELS) {
+// Direct browser call to Pollinations — no API key, CORS enabled, always free
+async function _tryPollinationsDirect(prompt, maxTokens) {
+  const models = ['openai', 'mistral', 'llama'];
+
+  for (const model of models) {
     try {
-      const res = await fetch(`https://api-inference.huggingface.co/models/${model}/v1/chat/completions`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          model, max_tokens:Math.min(maxTokens,500), temperature:0.2,
-          messages:[{role:'user', content:prompt}]
-        })
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 25000); // 25s per model
+
+      // POST to /openai endpoint — returns OpenAI-compatible JSON
+      const res = await fetch('https://text.pollinations.ai/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: model,
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: Math.min(maxTokens, 1000),
+          temperature: 0.3,
+          private: true,
+          seed: 42,
+        }),
+        signal: ctrl.signal,
       });
-      const data = await res.json();
-      if(res.ok && data.choices?.[0]?.message?.content) {
-        _curModel = model.split('/').pop().substring(0,15);
-        updateModelBadge();
-        return data.choices[0].message.content;
+      clearTimeout(tid);
+
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.choices?.[0]?.message?.content;
+        if (text && text.trim().length > 50) {
+          _curModel = 'Pollinations';
+          updateModelBadge();
+          return text.trim();
+        }
       }
-      continue;
-    } catch(e) { continue; }
+    } catch (e) {
+      console.warn('[RxEasy] Pollinations/' + model + ' failed:', e.message);
+    }
   }
+
+  // Last resort: Pollinations simple GET endpoint (prompt in URL)
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 20000);
+    // Use only first 800 chars of prompt to avoid URL length limits
+    const shortPrompt = prompt.substring(0, 800);
+    const res = await fetch(
+      'https://text.pollinations.ai/' + encodeURIComponent(shortPrompt) + '?model=openai&private=true',
+      { method: 'GET', signal: ctrl.signal }
+    );
+    clearTimeout(tid);
+    if (res.ok) {
+      const text = await res.text();
+      if (text && text.trim().length > 50) {
+        _curModel = 'Pollinations';
+        updateModelBadge();
+        return text.trim();
+      }
+    }
+  } catch (e) {
+    console.warn('[RxEasy] Pollinations GET failed:', e.message);
+  }
+
   return null;
 }
 
 // Simple hash for cache key
 function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return h;}
-
