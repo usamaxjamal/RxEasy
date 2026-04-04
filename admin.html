@@ -877,8 +877,20 @@ textarea.inp{resize:vertical;min-height:70px}
 <!-- INBOX JS -->
 <script>
 // ═══ INBOX PAGE LOGIC ═══
+// FIXED: All feedback fetches now use the admin's session JWT via _adminToken().
+// Using only the anon key (_SKEY) makes RLS see no user → blocks all rows.
+// The "Admin can view all feedback" RLS policy checks auth.uid(), so we need
+// a real authenticated token, not the public anon key.
 const _SURL = window.__RXEASY_CONFIG__?.supabaseUrl || '';
 const _SKEY = window.__RXEASY_CONFIG__?.supabaseKey || '';
+
+// Always returns the best available auth token: session JWT > anon key
+function _adminToken() {
+  try {
+    const sess = JSON.parse(localStorage.getItem('sb_session') || 'null');
+    return (sess && sess.access_token) ? sess.access_token : _SKEY;
+  } catch(e) { return _SKEY; }
+}
 
 async function loadInbox() {
   const typeFilter = document.getElementById('inboxFilter')?.value || '';
@@ -893,7 +905,7 @@ async function loadInbox() {
 
   try {
     const res = await fetch(url, {
-      headers: { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _SKEY }
+      headers: { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _adminToken() }
     });
     const data = await res.json();
 
@@ -901,7 +913,7 @@ async function loadInbox() {
     const statsEl = document.getElementById('inboxStats');
     if (statsEl) {
       const allRes = await fetch(_SURL + '/rest/v1/user_feedback?select=type,status', {
-        headers: { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _SKEY }
+        headers: { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _adminToken() }
       });
       const all = await allRes.json();
       const newCount = all.filter(x => x.status === 'new').length;
@@ -993,7 +1005,7 @@ async function submitReply() {
   try {
     const res = await fetch(_SURL + '/rest/v1/user_feedback?id=eq.' + id, {
       method: 'PATCH',
-      headers: { 'Content-Type':'application/json', 'apikey':_SKEY, 'Authorization':'Bearer '+_SKEY, 'Prefer':'return=minimal' },
+      headers: { 'Content-Type':'application/json', 'apikey':_SKEY, 'Authorization':'Bearer '+_adminToken(), 'Prefer':'return=minimal' },
       body: JSON.stringify({ admin_reply: reply, status, replied_at: new Date().toISOString() })
     });
     if (res.ok) {
@@ -1008,7 +1020,7 @@ async function markFeedback(id, status) {
   try {
     await fetch(_SURL + '/rest/v1/user_feedback?id=eq.' + id, {
       method: 'PATCH',
-      headers: { 'Content-Type':'application/json', 'apikey':_SKEY, 'Authorization':'Bearer '+_SKEY, 'Prefer':'return=minimal' },
+      headers: { 'Content-Type':'application/json', 'apikey':_SKEY, 'Authorization':'Bearer '+_adminToken(), 'Prefer':'return=minimal' },
       body: JSON.stringify({ status })
     });
     showAdmToast('✅ Status updated to ' + status);
@@ -1021,7 +1033,7 @@ async function deleteFeedback(id) {
   try {
     await fetch(_SURL + '/rest/v1/user_feedback?id=eq.' + id, {
       method: 'DELETE',
-      headers: { 'apikey':_SKEY, 'Authorization':'Bearer '+_SKEY }
+      headers: { 'apikey':_SKEY, 'Authorization':'Bearer '+_adminToken() }
     });
     showAdmToast('🗑 Deleted');
     loadInbox();
@@ -1039,7 +1051,7 @@ async function deleteFeedback(id) {
   setTimeout(async () => {
     try {
       const r = await fetch(_SURL + '/rest/v1/user_feedback?status=eq.new&select=id', {
-        headers: { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _SKEY }
+        headers: { 'apikey': _SKEY, 'Authorization': 'Bearer ' + _adminToken() }
       });
       const d = await r.json();
       if (d && d.length > 0) {
