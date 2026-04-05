@@ -11,12 +11,7 @@ window.onload=()=>{
   const pin=localStorage.getItem('app_pin');
   const pinOn=localStorage.getItem('pin_enabled')==='1';
   if(pinOn&&pin)document.getElementById('pinLock').classList.add('show');
-  const k=localStorage.getItem('gkey');
-  if(k){
-    const el1=document.getElementById('k1');if(el1)el1.value=k;
-    const el2=document.getElementById('k2');if(el2)el2.value=k;
-    const ac=document.getElementById('ac');if(ac)ac.style.display='none';
-  }
+  // API keys are managed server-side via Supabase Edge Function secrets.
   updateModelBadge();
   if(localStorage.getItem('dark')==='1'){document.body.classList.add('dark');document.getElementById('dkT').checked=true;document.getElementById('dkBtn').textContent='☀️';}
   const h=localStorage.getItem('rxh');if(h)rxHist=JSON.parse(h);
