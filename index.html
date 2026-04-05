@@ -2719,14 +2719,7 @@ body { max-width: 480px; margin: 0 auto; }
 </div>
 </div>
 </div>
-<div class="acard" id="ac" style="display:none">
-<div class="at">🔑 Activate AI — Free Groq Key</div>
-<p class="ap">Visit <a href="https://console.groq.com" target="_blank">console.groq.com</a> → Sign up free → API Keys → Create → paste below</p>
-<div class="arow">
-<input id="k1" placeholder="gsk_..." type="password">
-<button class="asv" onclick="saveKey()">Save ✅</button>
-</input></div>
-</div>
+<!-- API keys managed via Supabase Edge Function secrets -->
 </div>
 <!-- INPUT -->
 <div class="inparea">
@@ -2804,11 +2797,7 @@ body { max-width: 480px; margin: 0 auto; }
 <div class="shdl"></div>
 <div class="shdr"><div class="shdt">⚙️ Settings</div><button class="shdc" onclick="closeSheet('settings')">✕</button></div>
 <div class="shdb">
-<div style="display:none">
-<div class="sl" style="margin-bottom:5px;font-weight:600">🔑 Groq API Key <span style="font-size:.6rem;color:var(--tx2)">(free at console.groq.com)</span></div>
-<input class="sinp" id="k2" placeholder="gsk_..." type="password"/>
-<button class="asv" onclick="saveKey()" style="width:100%;padding:8px;border-radius:7px;font-size:.77rem">✅ Save Key</button>
-</div>
+
 <div class="sr"><div><div class="sl">🇵🇰 Urdu Instructions</div><div class="ss">Show Urdu on each prescription</div></div><label class="tgl"><input checked="" id="urT" type="checkbox"/><span class="tsl"></span></label></div>
 <div class="sr"><div><div class="sl">🧪 Investigations</div><div class="ss">CBC, Urine D/R etc per condition</div></div><label class="tgl"><input checked="" id="invT" type="checkbox"/><span class="tsl"></span></label></div>
 <div class="sr"><div><div class="sl">🔀 Alternative Drugs</div><div class="ss">2nd line options on prescription</div></div><label class="tgl"><input checked="" id="altT" type="checkbox"/><span class="tsl"></span></label></div>
