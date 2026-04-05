@@ -15,6 +15,10 @@
 //  All credentials live in Supabase Edge Function secrets only.
 // ═══════════════════════════════════════════════════════════════
 
+// ── Prescription cache (keyed by prompt hash) ──────────────────
+// Referenced in prescription.js OUTSIDE the try block — must exist.
+const rxCache = {};
+
 // ── Model badge (shows which model responded) ──────────────────
 let _curModel = 'Groq AI';
 
