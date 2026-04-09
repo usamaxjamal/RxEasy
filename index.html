@@ -728,23 +728,6 @@
   margin-bottom:6px;
 }
 
-/* Medicine lines */
-.rxmeds{margin-bottom:6px;}
-.rxmed{
-  display:flex;gap:9px;
-  padding:8px 0;
-  border-bottom:1px solid rgba(255,255,255,.04);
-}
-.rxmed:last-child{border-bottom:none;padding-bottom:0;}
-.rxnum{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.58rem;color:#00c896;
-  font-weight:500;width:14px;flex-shrink:0;padding-top:2px;
-}
-.rxmn{font-size:.82rem;font-weight:600;color:rgba(255,255,255,.92);margin-bottom:2px;}
-.rxmb{font-size:.65rem;color:rgba(200,160,50,.65);font-style:italic;margin-bottom:2px;}
-.rxmd{font-size:.68rem;color:rgba(232,237,245,.45);font-family:'JetBrains Mono',monospace;letter-spacing:.2px;}
-
 /* Section boxes */
 .rxbx{
   background:rgba(255,255,255,.03);
@@ -935,11 +918,24 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--nv3);outline-of
 .mb-el{background:#f0f4ff;color:#3a4a9f;border:1px solid #9aaae8}
 .dark .mb-ch{background:#0a2520;color:#14b88a}
 .rxmeds{margin-bottom:8px}
-.rxmed{display:flex;gap:6px;margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid var(--bd)}
+.rxmed{display:flex;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
 .rxmed:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-.rxnum{font-family:"JetBrains Mono",monospace;font-size:.62rem;color:var(--nv3);font-weight:600;width:13px;flex-shrink:0;padding-top:1px}
-.rxmn{font-size:.79rem;font-weight:600;color:var(--tx);margin-bottom:1px}
-.rxmb{font-size:.63rem;color:var(--nv3);font-style:italic;margin-bottom:1px}
+.rxnum{font-family:"JetBrains Mono",monospace;font-size:.65rem;color:var(--nv3);font-weight:700;width:16px;flex-shrink:0;padding-top:3px;line-height:1}
+.rxmed-body{flex:1;min-width:0}
+.rxmn{font-size:.84rem;font-weight:700;color:var(--tx);margin-bottom:2px;line-height:1.3}
+.rxmb{font-size:.63rem;color:var(--nv3);font-style:italic;margin-bottom:5px}
+.rxchips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.rxchip{display:inline-flex;flex-direction:column;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:3px 8px;font-size:.65rem;color:rgba(232,237,245,.75);font-family:"JetBrains Mono",monospace;line-height:1.4}
+.rxchip-qty{background:rgba(0,200,150,.07);border-color:rgba(0,200,150,.22);color:rgba(0,200,150,.95)}
+.rxclbl{font-size:.46rem;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.28);font-weight:700;display:block;margin-bottom:1px}
+.rxchip-qty .rxclbl{color:rgba(0,200,150,.5)}
+.light .rxchip{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.1);color:#334}
+.light .rxchip-qty{background:rgba(0,150,100,.07);border-color:rgba(0,150,100,.2);color:#00785a}
+.light .rxclbl{color:rgba(0,0,0,.35)}
+.rxadmin{font-size:.64rem;color:rgba(255,210,80,.7);margin-bottom:4px;line-height:1.4}
+.light .rxadmin{color:#7a5c00}
+.rxpurpose{font-size:.63rem;color:rgba(232,237,245,.35);font-style:italic;line-height:1.5;border-left:2px solid rgba(255,255,255,.07);padding-left:7px}
+.light .rxpurpose{color:#667;border-left-color:rgba(0,0,0,.1)}
 .rxmd{font-size:.68rem;color:var(--tx2);font-family:"JetBrains Mono",monospace}
 .rxqty{font-size:.59rem;color:var(--tl);font-weight:600;margin-top:2px}
 .cond{background:var(--sf2);border-left:3px solid var(--nv3);padding:5px 8px;border-radius:0 6px 6px 0;margin:6px 0;font-size:.69rem;color:var(--tx2);font-style:italic}
