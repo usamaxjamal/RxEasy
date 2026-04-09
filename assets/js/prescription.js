@@ -104,7 +104,7 @@ RESPOND IN THIS FORMAT — BE CONCISE:
 DIAGNOSIS: [Specific condition name]
 
 PRESCRIPTION:
-[Numbered drugs max 4. Format: 1. GenericName (Brand) dose frequency duration]
+[Numbered drugs max 4. Use EXACTLY this 3-line format per drug:\n1. GenericName FormType (Brand1/Brand2)\n   Dose | Freq | Duration = Quantity [purpose: clinical indication in 6 words or less]\n   ADMIN: Before/After/With meal — or With or without food\nNo blank lines between drugs.]
 
 ${inv?'INVESTIGATIONS:\n[Relevant tests only — max 3]':''}
 
@@ -210,23 +210,91 @@ function renderRx(txt,q,chat){
     if(m)sections[key]=m[1].trim();
   });
 
-  // Render prescription lines
-  function renderLines(text,isRx=false){
+  // Render prescription lines — rich multi-line drug cards
+  function renderLines(text, isRx=false){
     if(!text)return'';
-    return text.split('\n').map(line=>{
-      line=line.trim();if(!line)return'';
-      if(isRx&&/^\d+\./.test(line)){
+    if(!isRx){
+      return text.split('\n').map(l=>{
+        l=l.trim();if(!l)return'';
+        return `<div class="bxi">${esc(l)}</div>`;
+      }).join('');
+    }
+
+    // Rx section: group drug header + continuation lines per drug
+    const lines=text.split('\n');
+    let html='';
+    let i=0;
+
+    while(i<lines.length){
+      const line=lines[i].trim();
+      if(!line){i++;continue;}
+
+      if(/^\d+\./.test(line)){
+        // ── Drug header ──
         const num=line.match(/^(\d+)\./)[1];
         const rest=line.replace(/^\d+\.\s*/,'');
-        // Try to parse brand in parentheses
-        const brandMatch=rest.match(/^(.+?)\s*\(([^)]+)\)\s*(.*)$/);
-        let name,brand,dose;
-        if(brandMatch){name=brandMatch[1];brand=brandMatch[2];dose=brandMatch[3];}
-        else{name=rest;brand='';dose='';}
-        return `<div class="rxmed"><div class="rxnum">${num}.</div><div><div class="rxmn">${esc(name)}</div>${brand?`<div class="rxmb">${esc(brand)}</div>`:''}<div class="rxmd">${esc(dose)}</div></div></div>`;
+        const bm=rest.match(/^(.+?)\s*\(([^)]+)\)\s*(.*)$/);
+        let name,brand,inlineDose;
+        if(bm){name=bm[1].trim();brand=bm[2].trim();inlineDose=bm[3].trim();}
+        else{name=rest.trim();brand='';inlineDose='';}
+
+        // Collect continuation lines until next drug or end
+        const detLines=[];
+        i++;
+        while(i<lines.length){
+          const nt=lines[i].trim();
+          if(!nt){i++;continue;}
+          if(/^\d+\./.test(nt))break;
+          detLines.push(nt);
+          i++;
+        }
+
+        // First detail line = dose info; remaining = admin/purpose
+        let doseRaw=inlineDose||(detLines.length>0?detLines[0]:'');
+        const otherLines=inlineDose?detLines:detLines.slice(1);
+
+        // Extract [purpose] from dose line
+        let purpose='';
+        const pm=doseRaw.match(/\[([^\]]+)\]/);
+        if(pm){purpose=pm[1];doseRaw=doseRaw.replace(/\[[^\]]*\]/,'').trim();}
+
+        // Check remaining lines for ADMIN: / PURPOSE: keywords
+        let admin='';
+        otherLines.forEach(dl=>{
+          if(/^ADMIN:/i.test(dl))admin=dl.replace(/^ADMIN:\s*/i,'');
+          else if(/^PURPOSE:/i.test(dl)){if(!purpose)purpose=dl.replace(/^PURPOSE:\s*/i,'');}
+        });
+
+        // Parse pipe-separated dose parts: "625mg | BD | 7 days = 14 tabs"
+        const rawParts=doseRaw.split('|').map(p=>p.trim()).filter(Boolean);
+        const chipLabels=['Dose','Freq','Duration'];
+        let chips='';
+        rawParts.forEach((part,idx)=>{
+          const qm=part.match(/^(.+?)\s*=\s*(\d+\s*(?:units?|tabs?|caps?|ml|sachets?|pieces?))\s*$/i);
+          if(qm){
+            chips+=`<span class="rxchip"><span class="rxclbl">${chipLabels[idx]||''}</span>${esc(qm[1].trim())}</span>`;
+            chips+=`<span class="rxchip rxchip-qty"><span class="rxclbl">Qty</span>${esc(qm[2].trim())}</span>`;
+          }else{
+            chips+=`<span class="rxchip"><span class="rxclbl">${chipLabels[idx]||''}</span>${esc(part)}</span>`;
+          }
+        });
+
+        html+=`<div class="rxmed">
+  <div class="rxnum">${num}.</div>
+  <div class="rxmed-body">
+    <div class="rxmn">${esc(name)}</div>
+    ${brand?`<div class="rxmb">${esc(brand)}</div>`:''}
+    ${chips?`<div class="rxchips">${chips}</div>`:''}
+    ${admin?`<div class="rxadmin">🍽 ${esc(admin)}</div>`:''}
+    ${purpose?`<div class="rxpurpose">${esc(purpose)}</div>`:''}
+  </div>
+</div>`;
+      }else{
+        html+=`<div class="bxi">${esc(line)}</div>`;
+        i++;
       }
-      return `<div class="bxi">${esc(line)}</div>`;
-    }).join('');
+    }
+    return html;
   }
 
   const rxLines=renderLines(sections['PRESCRIPTION']||'',true);

@@ -134,9 +134,23 @@ function formatDrugLineDB(t, idx) {
   var form   = t.formulation_to_use || '';
   var qtyEl  = document.getElementById('qtyT');
   var qty    = (qtyEl && qtyEl.checked) ? calcQtyDB(t.frequency, t.duration) : '';
-  var sp     = t.special_instructions ? ' [' + t.special_instructions + ']' : '';
-  return idx + '. ' + d.generic_name + ' ' + form + ' (' + brands + ')\n   ' +
-         t.dose + ' | ' + t.frequency + ' | ' + t.duration + qty + sp;
+  var sp     = t.special_instructions || '';
+
+  // Separate food instruction from clinical note
+  var foodRe = /(?:after|before|with(?:out)?)\s+(?:meal|food)/i;
+  var foodNote = '';
+  var clinNote = sp;
+  var fm = sp.match(foodRe);
+  if (fm) {
+    foodNote = fm[0].charAt(0).toUpperCase() + fm[0].slice(1) + ' meal';
+    clinNote  = sp.replace(foodRe, '').replace(/^\s*[,;.\-]\s*/, '').trim();
+  }
+
+  var purposePart = clinNote ? ' [' + clinNote + ']' : '';
+  var line = idx + '. ' + d.generic_name + (form ? ' ' + form : '') + ' (' + brands + ')\n   ' +
+             t.dose + ' | ' + t.frequency + ' | ' + t.duration + qty + purposePart;
+  if (foodNote) line += '\n   ADMIN: ' + foodNote;
+  return line;
 }
 
 // ═══════════════════════════════════════════════════════════════
