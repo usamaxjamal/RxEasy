@@ -848,7 +848,20 @@
 }
 .rxbx.bx-flg .bxi{color:rgba(240,140,140,.9);font-weight:600;}
 .rxbx.bx-inv .bxi{color:rgba(180,215,255,.65);}
-.bx-inv-list .bxi{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.bx-inv-list{display:flex;flex-direction:column;gap:0;}
+.bx-inv-list .bxi{
+  padding:5px 0;
+  border-bottom:1px solid rgba(42,130,200,.08);
+  display:flex;align-items:flex-start;gap:7px;
+  font-size:.73rem;
+  color:rgba(180,215,255,.75);
+  line-height:1.4;
+}
+.bx-inv-list .bxi::before{
+  content:'✦';
+  font-size:.45rem;color:rgba(42,130,200,.5);
+  flex-shrink:0;margin-top:3px;
+}
 .bx-inv-list .bxi:last-child{border-bottom:none;}
 
 /* ── MODE BADGES ── */
