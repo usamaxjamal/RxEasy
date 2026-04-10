@@ -104,7 +104,7 @@ RESPOND IN THIS FORMAT — BE CONCISE:
 DIAGNOSIS: [Specific condition name]
 
 PRESCRIPTION:
-[Numbered drugs max 4. Use EXACTLY this 3-line format per drug:\n1. GenericName FormType (Brand1/Brand2)\n   Dose | Freq | Duration = Quantity [purpose: clinical indication in 6 words or less]\n   ADMIN: Before/After/With meal — or With or without food\nNo blank lines between drugs.]
+[Numbered drugs max 4. Use EXACTLY this format — one drug per block:\n1. GenericName (Brand1/Brand2)\n   FormType Dose | Frequency | Duration = Quantity [reason in ≤5 words]\n   ADMIN: After meal  ← choose: Before / After / With / Without food\nCRITICAL: Do NOT repeat brand names in line 2. No blank lines between drugs.\nExample:\n1. Co-amoxiclav (Augmentin/Amclave)\n   Tab 625mg | BD | 7 days = 14 tabs [bacterial URTI first-line]\n   ADMIN: After meal]
 
 ${inv?'INVESTIGATIONS:\n[Relevant tests only — max 3]':''}
 
@@ -220,25 +220,41 @@ function renderRx(txt,q,chat){
       }).join('');
     }
 
-    // Rx section: group drug header + continuation lines per drug
+    // ── Rx section: group multi-line drug entries ──
     const lines=text.split('\n');
     let html='';
     let i=0;
+    // Regex to detect and strip formulation suffix from drug name
+    const vehicleRe=/\s+(Tab(?:s?|lets?)?|Cap(?:s|sules?)?|Syp|Syrup|Inj(?:ection)?|Susp(?:ension)?|Cream|Gel|Drops?|Lotion|Oint(?:ment)?|Inhaler|Spray|Sachet)\b.*/i;
+    // Detect brand-only chunk like "(Risek/Lopraz)" — skip in dose chips
+    const isBrandOnly=s=>/^\([A-Za-z][A-Za-z0-9\s\/\-\.]*\)$/.test(s.trim());
 
     while(i<lines.length){
       const line=lines[i].trim();
       if(!line){i++;continue;}
 
       if(/^\d+\./.test(line)){
-        // ── Drug header ──
+        // ── Drug header line ──
         const num=line.match(/^(\d+)\./)[1];
         const rest=line.replace(/^\d+\.\s*/,'');
-        const bm=rest.match(/^(.+?)\s*\(([^)]+)\)\s*(.*)$/);
-        let name,brand,inlineDose;
-        if(bm){name=bm[1].trim();brand=bm[2].trim();inlineDose=bm[3].trim();}
-        else{name=rest.trim();brand='';inlineDose='';}
 
-        // Collect continuation lines until next drug or end
+        // Extract last set of parentheses as brand
+        const bm=rest.match(/^(.+?)\s*\(([^)]+)\)\s*(.*)$/);
+        let rawName,brand,inlineDose;
+        if(bm){rawName=bm[1].trim();brand=bm[2].trim();inlineDose=bm[3].trim();}
+        else{rawName=rest.trim();brand='';inlineDose='';}
+
+        // Strip formulation suffix from name (e.g. "Tab 10mg", "Syp") → clean display
+        let formLabel='';
+        const vm=rawName.match(vehicleRe);
+        if(vm){formLabel=vm[0].trim();rawName=rawName.replace(vehicleRe,'').trim();}
+        // If formLabel has dose info, also strip trailing dose from generic name
+        if(formLabel&&/\d/.test(formLabel)){
+          rawName=rawName.replace(/\s+\d+(?:\/\d+)*\s*(?:mg|mcg|g|ml|iu|mEq)\s*$/i,'').trim();
+        }
+        const name=rawName;
+
+        // Collect continuation lines until next drug entry
         const detLines=[];
         i++;
         while(i<lines.length){
@@ -249,43 +265,47 @@ function renderRx(txt,q,chat){
           i++;
         }
 
-        // First detail line = dose info; remaining = admin/purpose
+        // First detail line = dose/schedule; rest = admin/purpose
         let doseRaw=inlineDose||(detLines.length>0?detLines[0]:'');
         const otherLines=inlineDose?detLines:detLines.slice(1);
 
-        // Extract [purpose] from dose line
+        // Extract [purpose] from brackets in dose line
         let purpose='';
         const pm=doseRaw.match(/\[([^\]]+)\]/);
         if(pm){purpose=pm[1];doseRaw=doseRaw.replace(/\[[^\]]*\]/,'').trim();}
 
-        // Check remaining lines for ADMIN: / PURPOSE: keywords
+        // Scan other lines for ADMIN: and PURPOSE: keywords
         let admin='';
         otherLines.forEach(dl=>{
-          if(/^ADMIN:/i.test(dl))admin=dl.replace(/^ADMIN:\s*/i,'');
-          else if(/^PURPOSE:/i.test(dl)){if(!purpose)purpose=dl.replace(/^PURPOSE:\s*/i,'');}
+          if(/^ADMIN:/i.test(dl))admin=dl.replace(/^ADMIN:\s*/i,'').trim();
+          else if(/^PURPOSE:/i.test(dl)){if(!purpose)purpose=dl.replace(/^PURPOSE:\s*/i,'').trim();}
         });
 
-        // Parse pipe-separated dose parts: "625mg | BD | 7 days = 14 tabs"
-        const rawParts=doseRaw.split('|').map(p=>p.trim()).filter(Boolean);
+        // Parse pipe-separated dose parts; skip brand-only chunks
+        const rawParts=doseRaw.split('|').map(p=>p.trim()).filter(p=>p&&!isBrandOnly(p));
+        // Fallback: if nothing parsed and formLabel has content, use it
+        if(rawParts.length===0&&formLabel)rawParts.push(formLabel);
+
         const chipLabels=['Dose','Freq','Duration'];
         let chips='';
-        rawParts.forEach((part,idx)=>{
+        rawParts.forEach((part,ci)=>{
+          // Split "7 days = 14 tabs" into Duration chip + Qty chip
           const qm=part.match(/^(.+?)\s*=\s*(\d+\s*(?:units?|tabs?|caps?|ml|sachets?|pieces?))\s*$/i);
           if(qm){
-            chips+=`<span class="rxchip"><span class="rxclbl">${chipLabels[idx]||''}</span>${esc(qm[1].trim())}</span>`;
-            chips+=`<span class="rxchip rxchip-qty"><span class="rxclbl">Qty</span>${esc(qm[2].trim())}</span>`;
+            chips+=`<div class="rxchip"><div class="rxclbl">${chipLabels[ci]||'Info'}</div><div class="rxcval">${esc(qm[1].trim())}</div></div>`;
+            chips+=`<div class="rxchip rxchip-qty"><div class="rxclbl">Qty</div><div class="rxcval">${esc(qm[2].trim())}</div></div>`;
           }else{
-            chips+=`<span class="rxchip"><span class="rxclbl">${chipLabels[idx]||''}</span>${esc(part)}</span>`;
+            chips+=`<div class="rxchip"><div class="rxclbl">${chipLabels[ci]||'Info'}</div><div class="rxcval">${esc(part)}</div></div>`;
           }
         });
 
         html+=`<div class="rxmed">
   <div class="rxnum">${num}.</div>
   <div class="rxmed-body">
-    <div class="rxmn">${esc(name)}</div>
+    <div class="rxmn">${esc(name)}${formLabel?`<span class="rxform"> ${esc(formLabel)}</span>`:''}</div>
     ${brand?`<div class="rxmb">${esc(brand)}</div>`:''}
     ${chips?`<div class="rxchips">${chips}</div>`:''}
-    ${admin?`<div class="rxadmin">🍽 ${esc(admin)}</div>`:''}
+    ${admin?`<div class="rxadmin"><span>🍽</span> ${esc(admin)}</div>`:''}
     ${purpose?`<div class="rxpurpose">${esc(purpose)}</div>`:''}
   </div>
 </div>`;
