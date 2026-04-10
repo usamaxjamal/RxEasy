@@ -62,29 +62,88 @@ async function sbRpc(fnName, body) {
 // Handles text[] aliases, fuzzy matching, abbreviations.
 // Returns a disease object or null.
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// searchDisease(query)
+//
+// 4-layer fallback: RPC → ILIKE name → ILIKE first word → trigram
+// Tolerates RPC failures, spelling variants (diarrhea/diarrhoea),
+// abbreviations (URTI, GERD, HTN), and partial word matches.
+// ═══════════════════════════════════════════════════════════════
 async function searchDisease(query) {
+  const q = (query || '').trim();
+  if (!q) return null;
+
+  // Normalise: remove filler words, keep core terms
+  const stopWords = /\b(fever|with|and|or|the|a|an|due|to|of|in|for|type)\b/gi;
+  const qClean = q.replace(stopWords, ' ').replace(/\s+/g, ' ').trim();
+  // First meaningful word (4+ chars)
+  const firstKw = qClean.split(/\s+/).find(function(w){ return w.length >= 4; }) || qClean.split(/\s+/)[0];
+
+  // ── Layer 1: search_disease_match RPC (best, handles aliases + trigram) ──
   try {
-    const q = query.trim();
-    if (!q) return null;
-
-    // Single server-side RPC handles everything:
-    // exact name, aliases (text[]), word overlap, trigram fuzzy
-    const results = await sbRpc('search_disease_match', { search_query: q });
-
-    if (results && results.length > 0 && results[0].match_score >= 60) {
-      return results[0];
+    const r1 = await sbRpc('search_disease_match', { search_query: q });
+    if (r1 && r1.length > 0 && r1[0].match_score >= 50) {
+      console.log('[DB] Layer1 RPC match:', r1[0].name, 'score:', r1[0].match_score);
+      return r1[0];
     }
-
-    return null;
-  } catch (e) {
-    console.warn('[RxEasy DB] searchDisease failed:', e.message);
-    return null;
+    // If score is low but we got something and nothing else works, hold it
+    var rpcFallback = (r1 && r1.length > 0) ? r1[0] : null;
+  } catch(e1) {
+    console.warn('[DB] Layer1 RPC failed:', e1.message);
+    var rpcFallback = null;
   }
+
+  // ── Layer 2: direct ILIKE on disease name (exact substring) ──
+  try {
+    const r2 = await sbFetch('diseases',
+      '?name=ilike.*' + encodeURIComponent(q) + '*&limit=3&select=*');
+    if (r2 && r2.length > 0) {
+      console.log('[DB] Layer2 ILIKE name match:', r2[0].name);
+      return r2[0];
+    }
+  } catch(e2) {
+    console.warn('[DB] Layer2 ILIKE failed:', e2.message);
+  }
+
+  // ── Layer 3: ILIKE on first keyword (catches spelling variants) ──
+  try {
+    if (firstKw) {
+      const r3 = await sbFetch('diseases',
+        '?name=ilike.*' + encodeURIComponent(firstKw) + '*&limit=5&select=*');
+      if (r3 && r3.length > 0) {
+        console.log('[DB] Layer3 keyword match:', r3[0].name, 'via keyword:', firstKw);
+        return r3[0];
+      }
+    }
+  } catch(e3) {
+    console.warn('[DB] Layer3 keyword failed:', e3.message);
+  }
+
+  // ── Layer 4: trigram similarity RPC (older function, low threshold) ──
+  try {
+    const r4 = await sbRpc('search_diseases_trgm', {
+      search_term: q, threshold: 0.15, result_limit: 3
+    });
+    if (r4 && r4.length > 0) {
+      console.log('[DB] Layer4 trigram match:', r4[0].name || r4[0].id);
+      return r4[0];
+    }
+  } catch(e4) {
+    console.warn('[DB] Layer4 trigram failed:', e4.message);
+  }
+
+  // ── Layer 5: return low-score RPC result rather than nothing ──
+  if (rpcFallback) {
+    console.log('[DB] Layer5 using low-score RPC result:', rpcFallback.name);
+    return rpcFallback;
+  }
+
+  console.warn('[DB] All layers failed for query:', q);
+  return null;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// getTreatmentFromDB(diseaseId, population)
-// ═══════════════════════════════════════════════════════════════
+// getTreatmentFromDB
 async function getTreatmentFromDB(diseaseId, population) {
   const pops = [population, 'all'];
   const treatments = await sbFetch('disease_treatments',

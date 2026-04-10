@@ -106,9 +106,9 @@ DIAGNOSIS: [Specific condition name]
 PRESCRIPTION:
 [Numbered drugs max 4. One drug per block — EXACTLY this 2-line format:\n1. GenericName (Brand1/Brand2)\n   FormType Dose  Frequency  Duration × Qty  FoodInstruction  [reason ≤5 words]\nAll on ONE continuation line. No pipes. No extra lines.\nExample:\n1. Co-amoxiclav (Augmentin/Amclave)\n   Tab 625mg  BD  7 days × 14 tablets  After meal  [bacterial URTI]\nCRITICAL: Never repeat brand on line 2. Keep format consistent.]
 
-${inv?'INVESTIGATIONS:\n[Relevant tests only — max 3]':''}
+${inv?'INVESTIGATIONS:\\n[ONLY lab/imaging tests — e.g. CBC, CXR, HbA1c. MAX 5 items. NEVER include alternative drugs, Rx lines, or lifestyle advice here — those go in ALTERNATIVE RX section]':''}
 
-${alt?'ALTERNATIVE RX:\n[2nd line options only — one line each]':''}
+${alt?'ALTERNATIVE RX:\\n[2nd/3rd line drugs ONLY — one line each. Format: Tab DrugName (Brand) dose freq dur. Include ONLY drug alternatives, NOT the main Rx above]':''}
 
 ${rf?'RED FLAGS:\n[Emergency signs — max 3 bullet points]':''}
 
@@ -210,6 +210,43 @@ function renderRx(txt,q,chat){
     if(m)sections[key]=m[1].trim();
   });
 
+  /* ── POST-PROCESS: AI sometimes dumps "Rx 1st line / Rx 2nd line / Lifestyle"
+     into INVESTIGATIONS. Surgically split them out. ── */
+  if (sections['INVESTIGATIONS']) {
+    let inv = sections['INVESTIGATIONS'];
+
+    // Detect misplaced Alternative Rx content (starts with "Rx 1st/2nd/OPD/Hospital")
+    const rxAltMatch = inv.match(/\bRx\s+(?:\d+(?:st|nd|rd|th)?\s+line|OPD|IV|Hospital|alternative|Children)[:\s]/i);
+    if (rxAltMatch) {
+      const splitIdx = inv.indexOf(rxAltMatch[0]);
+      const altChunk = inv.slice(splitIdx).trim();
+      inv = inv.slice(0, splitIdx).trim();
+      // Inject into ALTERNATIVE RX section if not already present
+      if (!sections['ALTERNATIVE RX'] && altChunk) {
+        sections['ALTERNATIVE RX'] = altChunk
+          .replace(/^Rx\s+\d+(?:st|nd|rd|th)?\s+line[:\s]*/i, '')
+          .trim();
+      }
+    }
+
+    // Strip Lifestyle advice from investigations
+    inv = inv.replace(/\bLifestyle[:\s].*/is, '').trim();
+
+    // Keep only lines that look like actual investigations
+    // A real investigation item: starts with a capital letter or is a medical abbreviation
+    // Filter out lines that start with "Rx", "If", "Patient", "Consider"
+    const invLines = inv.split(/[,\n]/)
+      .map(l => l.trim())
+      .filter(l => {
+        if (!l || l.length < 2) return false;
+        // Remove lines that are clearly prescriptions or advice
+        if (/^(Rx\b|If\s|Patient|Consider|Note:|NB:|Important|lifestyle|diet|exercise|stop\s)/i.test(l)) return false;
+        return true;
+      });
+
+    sections['INVESTIGATIONS'] = invLines.join('\n').trim();
+  }
+
   // Render prescription lines — rich multi-line drug cards
   /* ─────────────────────────────────────────────
      renderLines — clean prescription renderer
@@ -220,11 +257,26 @@ function renderRx(txt,q,chat){
     if(!text)return'';
 
     if(!isRx){
-      // For non-drug sections: render each line as a clean item
-      return text.split('\n').map(l=>{
-        l=l.trim();if(!l)return'';
-        // Strip leading bullet chars for clean display
-        l=l.replace(/^[\*\-•·]\s*/,'').replace(/^\d+\.\s*/,'');
+      // For non-drug sections: split on newlines AND commas, render each as clean item
+      // This handles both "CBC, CXR, HbA1c" (comma list) and newline-separated text
+      const rawItems = text.split('\n');
+      let items = [];
+      rawItems.forEach(function(line){
+        const l = line.trim();
+        if(!l) return;
+        // If line looks like a comma-separated list of short items (investigations),
+        // split it further — but only if items are short (not sentences)
+        const parts = l.split(',').map(function(p){ return p.trim(); }).filter(Boolean);
+        const allShort = parts.every(function(p){ return p.length < 60 && !/\bRx\b/i.test(p); });
+        if(parts.length > 1 && allShort){
+          parts.forEach(function(p){ items.push(p); });
+        } else {
+          items.push(l);
+        }
+      });
+      return items.map(function(l){
+        l = l.replace(/^[\*\-•·🚨]\s*/,'').replace(/^\d+\.\s*/,'').trim();
+        if(!l) return '';
         return `<div class="bxi">${esc(l)}</div>`;
       }).filter(Boolean).join('');
     }
