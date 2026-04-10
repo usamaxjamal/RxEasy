@@ -129,39 +129,47 @@ function calcQtyDB(freq, dur) {
 }
 
 function formatDrugLineDB(t, idx) {
-  var d = t.drugs;
-  var brands = (d.brand_names || []).slice(0,3).join(' / ');
-  var form   = (t.formulation_to_use || '').trim();
-  var qtyEl  = document.getElementById('qtyT');
-  var qty    = (qtyEl && qtyEl.checked) ? calcQtyDB(t.frequency, t.duration) : '';
-  var sp     = t.special_instructions || '';
+  var d   = t.drugs;
+  var brands   = (d.brand_names || []).slice(0, 3).join(' / ');
+  var form     = (t.formulation_to_use || '').trim();
+  var qtyEl    = document.getElementById('qtyT');
+  var showQty  = qtyEl && qtyEl.checked;
+  var sp       = t.special_instructions || '';
 
-  // Extract delivery vehicle (Tab/Cap/Syp etc.) from formulation for dose line
-  var vehicleMatch = form.match(/^(Tab(?:s?|lets?)?|Cap(?:s|sules?)?|Syp|Syrup|Inj(?:ection)?|Susp(?:ension)?|Cream|Gel|Drops?|Lotion|Oint(?:ment)?|Inhaler|Spray|Sachet)\b/i);
-  var vehicle = vehicleMatch ? vehicleMatch[0] : '';
-  // Use specific t.dose with vehicle prefix; fallback to formulation if no t.dose
-  var doseDesc = t.dose ? (vehicle ? vehicle + ' ' + t.dose : t.dose) : form;
-
-  // Extract food instruction — match "after/before/with meal(s)/food(s)"
-  var foodRe = /(?:after|before|with(?:out)?)\s+(?:meals?|foods?)/i;
+  // Separate food instruction from clinical note
+  var foodRe   = /(?:after|before|with(?:out)?)\s+(?:meals?|foods?)/i;
   var foodNote = '';
   var clinNote = sp;
-  var fm = sp.match(foodRe);
+  var fm       = sp.match(foodRe);
   if (fm) {
-    // Capitalize matched phrase — NO extra suffix (fm[0] already has "meal")
     foodNote = fm[0].charAt(0).toUpperCase() + fm[0].slice(1);
-    // Clean remainder: strip leftover 's' from "meals", leading punctuation
-    clinNote = sp.replace(foodRe, '').replace(/^s?\b\s*(?:and\b\s*|[,;.\s\-]+)?/i, '').trim();
+    // strip the food phrase from clinical note
+    clinNote = sp.replace(fm[0], '').replace(/^[,;\s\-]+/, '').trim();
   }
 
-  var purposePart = clinNote ? ' [' + clinNote + ']' : '';
+  // Quantity string: e.g. " × 14 tablets"
+  var qtyStr = '';
+  if (showQty) {
+    var fmap = { 'OD':1, 'BD':2, 'TDS':3, 'QID':4, 'HS':1 };
+    var dm = t.duration ? t.duration.match(/(\d+)/) : null;
+    var fk = null;
+    for (var k in fmap) { if ((t.frequency||'').includes(k)) { fk = fmap[k]; break; } }
+    if (dm && fk) qtyStr = ' \u00d7 ' + (parseInt(dm[1]) * fk) + ' tablets';
+  }
 
-  // Line 1: pure generic name + brands in parentheses (NO formulation in name)
-  var line = idx + '. ' + d.generic_name + ' (' + brands + ')\n   ';
-  // Line 2: formType dose | frequency | duration = qty [purpose]
-  line += doseDesc + ' | ' + t.frequency + ' | ' + t.duration + qty + purposePart;
-  // Line 3: ADMIN (only if food instruction found)
-  if (foodNote) line += '\n   ADMIN: ' + foodNote;
+  // Line 1: generic name (brands)
+  var line = idx + '. ' + d.generic_name + ' (' + brands + ')\n';
+  // Line 2: formulation · dose · frequency · duration [× qty] [food note]
+  var doseParts = [];
+  if (form)        doseParts.push(form);
+  if (t.dose)      doseParts.push(t.dose);
+  if (t.frequency) doseParts.push(t.frequency);
+  if (t.duration)  doseParts.push(t.duration);
+  if (qtyStr)      doseParts.push(qtyStr.trim());
+  if (foodNote)    doseParts.push(foodNote);
+  line += '   ' + doseParts.join('  ');
+  // Clinical note as purpose bracket
+  if (clinNote) line += '  [' + clinNote + ']';
   return line;
 }
 

@@ -104,7 +104,7 @@ RESPOND IN THIS FORMAT — BE CONCISE:
 DIAGNOSIS: [Specific condition name]
 
 PRESCRIPTION:
-[Numbered drugs max 4. Use EXACTLY this format — one drug per block:\n1. GenericName (Brand1/Brand2)\n   FormType Dose | Frequency | Duration = Quantity [reason in ≤5 words]\n   ADMIN: After meal  ← choose: Before / After / With / Without food\nCRITICAL: Do NOT repeat brand names in line 2. No blank lines between drugs.\nExample:\n1. Co-amoxiclav (Augmentin/Amclave)\n   Tab 625mg | BD | 7 days = 14 tabs [bacterial URTI first-line]\n   ADMIN: After meal]
+[Numbered drugs max 4. One drug per block — EXACTLY this 2-line format:\n1. GenericName (Brand1/Brand2)\n   FormType Dose  Frequency  Duration × Qty  FoodInstruction  [reason ≤5 words]\nAll on ONE continuation line. No pipes. No extra lines.\nExample:\n1. Co-amoxiclav (Augmentin/Amclave)\n   Tab 625mg  BD  7 days × 14 tablets  After meal  [bacterial URTI]\nCRITICAL: Never repeat brand on line 2. Keep format consistent.]
 
 ${inv?'INVESTIGATIONS:\n[Relevant tests only — max 3]':''}
 
@@ -211,157 +211,216 @@ function renderRx(txt,q,chat){
   });
 
   // Render prescription lines — rich multi-line drug cards
+  /* ─────────────────────────────────────────────
+     renderLines — clean prescription renderer
+     Drug format: number | name | brand | dose
+     Works with any AI output format (piped or free-text)
+  ───────────────────────────────────────────── */
   function renderLines(text, isRx=false){
     if(!text)return'';
+
     if(!isRx){
+      // For non-drug sections: render each line as a clean item
       return text.split('\n').map(l=>{
         l=l.trim();if(!l)return'';
+        // Strip leading bullet chars for clean display
+        l=l.replace(/^[\*\-•·]\s*/,'').replace(/^\d+\.\s*/,'');
         return `<div class="bxi">${esc(l)}</div>`;
-      }).join('');
+      }).filter(Boolean).join('');
     }
 
-    // ── Rx section: group multi-line drug entries ──
-    const lines=text.split('\n');
-    let html='';
-    let i=0;
-    // Regex to detect and strip formulation suffix from drug name
-    const vehicleRe=/\s+(Tab(?:s?|lets?)?|Cap(?:s|sules?)?|Syp|Syrup|Inj(?:ection)?|Susp(?:ension)?|Cream|Gel|Drops?|Lotion|Oint(?:ment)?|Inhaler|Spray|Sachet)\b.*/i;
-    // Detect brand-only chunk like "(Risek/Lopraz)" — skip in dose chips
-    const isBrandOnly=s=>/^\([A-Za-z][A-Za-z0-9\s\/\-\.]*\)$/.test(s.trim());
+    /* ── Drug section parser ──
+       Handles both formats:
+       A) "1. Generic (Brand)\n   dose | freq | dur"  (pipe format)
+       B) "1. Generic (Brand) dose freq dur × qty"     (inline format)
+    */
+    const lines = text.split('\n');
+    let html = '';
+    let i = 0;
 
-    while(i<lines.length){
-      const line=lines[i].trim();
-      if(!line){i++;continue;}
+    while(i < lines.length){
+      const line = lines[i].trim();
+      if(!line){ i++; continue; }
 
       if(/^\d+\./.test(line)){
-        // ── Drug header line ──
-        const num=line.match(/^(\d+)\./)[1];
-        const rest=line.replace(/^\d+\.\s*/,'');
+        const num  = line.match(/^(\d+)\./)[1];
+        const rest = line.replace(/^\d+\.\s*/, '').trim();
 
-        // Extract last set of parentheses as brand
-        const bm=rest.match(/^(.+?)\s*\(([^)]+)\)\s*(.*)$/);
-        let rawName,brand,inlineDose;
-        if(bm){rawName=bm[1].trim();brand=bm[2].trim();inlineDose=bm[3].trim();}
-        else{rawName=rest.trim();brand='';inlineDose='';}
+        /* Extract brand from parentheses — last () group */
+        let rawName = rest, brand = '', inlineDose = '';
+        const bm = rest.match(/^(.*?)\s*\(([^)]+)\)\s*(.*)$/);
+        if(bm){ rawName = bm[1].trim(); brand = bm[2].trim(); inlineDose = bm[3].trim(); }
 
-        // Strip formulation suffix from name (e.g. "Tab 10mg", "Syp") → clean display
-        let formLabel='';
-        const vm=rawName.match(vehicleRe);
-        if(vm){formLabel=vm[0].trim();rawName=rawName.replace(vehicleRe,'').trim();}
-        // If formLabel has dose info, also strip trailing dose from generic name
-        if(formLabel&&/\d/.test(formLabel)){
-          rawName=rawName.replace(/\s+\d+(?:\/\d+)*\s*(?:mg|mcg|g|ml|iu|mEq)\s*$/i,'').trim();
-        }
-        const name=rawName;
+        /* Strip vehicle prefix (Tab/Cap/Syp…) from name for clean display
+           Keep it as a suffix label                                       */
+        const vehicleRe = /^(Tab(?:lets?)?|Cap(?:sules?)?|Syp\.?|Syrup|Inj\.?|Susp\.?|Cream|Drops?|Oint(?:ment)?|Spray|Inhaler|Sachet)\s*/i;
+        let vehiclePrefix = '';
+        const vpm = rawName.match(vehicleRe);
+        if(vpm){ vehiclePrefix = vpm[1]; rawName = rawName.replace(vehicleRe,'').trim(); }
 
-        // Collect continuation lines until next drug entry
-        const detLines=[];
+        const name = rawName;
+
+        /* Collect continuation lines until next numbered drug */
+        const detLines = [];
         i++;
-        while(i<lines.length){
-          const nt=lines[i].trim();
-          if(!nt){i++;continue;}
-          if(/^\d+\./.test(nt))break;
+        while(i < lines.length){
+          const nt = lines[i].trim();
+          if(!nt){ i++; continue; }
+          if(/^\d+\./.test(nt)) break;
           detLines.push(nt);
           i++;
         }
 
-        // First detail line = dose/schedule; rest = admin/purpose
-        let doseRaw=inlineDose||(detLines.length>0?detLines[0]:'');
-        const otherLines=inlineDose?detLines:detLines.slice(1);
-
-        // Extract [purpose] from brackets in dose line
-        let purpose='';
-        const pm=doseRaw.match(/\[([^\]]+)\]/);
-        if(pm){purpose=pm[1];doseRaw=doseRaw.replace(/\[[^\]]*\]/,'').trim();}
-
-        // Scan other lines for ADMIN: and PURPOSE: keywords
-        let admin='';
-        otherLines.forEach(dl=>{
-          if(/^ADMIN:/i.test(dl))admin=dl.replace(/^ADMIN:\s*/i,'').trim();
-          else if(/^PURPOSE:/i.test(dl)){if(!purpose)purpose=dl.replace(/^PURPOSE:\s*/i,'').trim();}
+        /* Build the dose display string */
+        let doseDisplay = '';
+        // Prefer first continuation line over inline dose (more complete)
+        let doseRaw = (detLines.length > 0 && detLines[0].length > inlineDose.length)
+          ? detLines[0] : inlineDose;
+        // Strip any ADMIN: prefix if present
+        doseRaw = doseRaw.replace(/^ADMIN:\s*/i,'').trim();
+        // Strip [purpose bracket] — show it separately
+        let purposeNote = '';
+        const pm = doseRaw.match(/\[([^\]]+)\]/);
+        if(pm){ purposeNote = pm[1]; doseRaw = doseRaw.replace(/\[[^\]]*\]/,'').trim(); }
+        // Pipe-separated → join with spaces as clean single line
+        if(doseRaw.includes('|')){
+          const parts = doseRaw.split('|').map(p=>p.trim()).filter(Boolean);
+          doseDisplay = parts.join('  ·  ');
+        } else {
+          doseDisplay = doseRaw;
+        }
+        // Check remaining detail lines for ADMIN
+        let adminNote = '';
+        detLines.slice(1).forEach(dl=>{
+          if(/^ADMIN:/i.test(dl)) adminNote = dl.replace(/^ADMIN:\s*/i,'').trim();
+          else if(/^PURPOSE:/i.test(dl) && !purposeNote) purposeNote = dl.replace(/^PURPOSE:\s*/i,'').trim();
         });
+        // If doseDisplay still empty but vehiclePrefix+brand exist, build minimal
+        if(!doseDisplay && vehiclePrefix) doseDisplay = vehiclePrefix;
 
-        // Parse pipe-separated dose parts; skip brand-only chunks
-        const rawParts=doseRaw.split('|').map(p=>p.trim()).filter(p=>p&&!isBrandOnly(p));
-        // Fallback: if nothing parsed and formLabel has content, use it
-        if(rawParts.length===0&&formLabel)rawParts.push(formLabel);
-
-        const chipLabels=['Dose','Freq','Duration'];
-        let chips='';
-        rawParts.forEach((part,ci)=>{
-          // Split "7 days = 14 tabs" into Duration chip + Qty chip
-          const qm=part.match(/^(.+?)\s*=\s*(\d+\s*(?:units?|tabs?|caps?|ml|sachets?|pieces?))\s*$/i);
-          if(qm){
-            chips+=`<div class="rxchip"><div class="rxclbl">${chipLabels[ci]||'Info'}</div><div class="rxcval">${esc(qm[1].trim())}</div></div>`;
-            chips+=`<div class="rxchip rxchip-qty"><div class="rxclbl">Qty</div><div class="rxcval">${esc(qm[2].trim())}</div></div>`;
-          }else{
-            chips+=`<div class="rxchip"><div class="rxclbl">${chipLabels[ci]||'Info'}</div><div class="rxcval">${esc(part)}</div></div>`;
-          }
-        });
-
-        html+=`<div class="rxmed">
+        html += `<div class="rxmed">
   <div class="rxnum">${num}.</div>
   <div class="rxmed-body">
-    <div class="rxmn">${esc(name)}${formLabel?`<span class="rxform"> ${esc(formLabel)}</span>`:''}</div>
-    ${brand?`<div class="rxmb">${esc(brand)}</div>`:''}
-    ${chips?`<div class="rxchips">${chips}</div>`:''}
-    ${admin?`<div class="rxadmin"><span>🍽</span> ${esc(admin)}</div>`:''}
-    ${purpose?`<div class="rxpurpose">${esc(purpose)}</div>`:''}
+    <div class="rxmn">${esc(name)}${vehiclePrefix?`<span class="rxvehicle">${esc(vehiclePrefix)}</span>`:''}</div>
+    ${brand ? `<div class="rxmb">${esc(brand)}</div>` : ''}
+    ${doseDisplay ? `<div class="rxdose">${esc(doseDisplay)}${adminNote?`<span class="rxdose-admin"> · ${esc(adminNote)}</span>`:''}</div>` : ''}
+    ${purposeNote ? `<div class="rxpurpose">${esc(purposeNote)}</div>` : ''}
   </div>
 </div>`;
-      }else{
-        html+=`<div class="bxi">${esc(line)}</div>`;
+      } else {
+        html += `<div class="bxi">${esc(line.replace(/^[\*\-•·]\s*/,''))}</div>`;
         i++;
       }
     }
     return html;
   }
 
-  const rxLines=renderLines(sections['PRESCRIPTION']||'',true);
-  const condLines=sections['CONDITIONAL MEDICINES']?`<div class="rxbx bx-adv"><div class="bxt">➕ Conditional</div>${renderLines(sections['CONDITIONAL MEDICINES'])}</div>`:'';
-  const invLines=sections['INVESTIGATIONS']?`<div class="rxbx bx-inv"><div class="bxt">🧪 Investigations</div>${renderLines(sections['INVESTIGATIONS'])}</div>`:'';
-  const altId='alt_'+Date.now();
-  const altLines=sections['ALTERNATIVE RX']?`<div class="rxbx bx-alt" style="cursor:pointer" onclick="this.querySelector('.alt-body').style.display=this.querySelector('.alt-body').style.display==='none'?'block':'none'"><div class="bxt" style="display:flex;align-items:center;justify-content:space-between">🔀 Alternative Rx <span style="font-size:.6rem;color:rgba(200,160,50,.5);font-weight:400">tap to expand ▾</span></div><div class="alt-body" style="display:none">${renderLines(sections['ALTERNATIVE RX'])}</div></div>`:'';
-  const warnLines=sections['DRUG INTERACTIONS']?`<div class="rxbx bx-wrn"><div class="bxt">⚠️ Warnings</div>${renderLines(sections['DRUG INTERACTIONS'])}</div>`:'';
-  const rfLines=sections['RED FLAGS']?`<div class="rxbx bx-flg"><div class="bxt">🚨 Red Flags</div>${renderLines(sections['RED FLAGS'])}</div>`:'';
-  const advLines='';
-  const urduLines=sections['URDU INSTRUCTIONS']?`<div class="bx-urdu"><div class="urdu-t">Urdu Instructions</div><div class="urdu-x">${esc(sections['URDU INSTRUCTIONS'])}</div></div>`:'';
+  const rxLines   = renderLines(sections['PRESCRIPTION']||'', true);
+  const condLines = sections['CONDITIONAL MEDICINES']
+    ? `<div class="rxbx bx-adv">
+        <div class="bxt">➕ If Specifically Indicated</div>
+        ${renderLines(sections['CONDITIONAL MEDICINES'])}
+       </div>` : '';
+  const invLines  = sections['INVESTIGATIONS']
+    ? `<div class="rxbx bx-inv">
+        <div class="bxt">✏ Investigations</div>
+        <div class="bx-inv-list">${renderLines(sections['INVESTIGATIONS'])}</div>
+       </div>` : '';
+  const altLines  = sections['ALTERNATIVE RX']
+    ? `<div class="rxbx bx-alt" onclick="var b=this.querySelector('.alt-body');var a=this.querySelector('.alt-arr');b.style.display=b.style.display==='block'?'none':'block';a.style.transform=b.style.display==='block'?'rotate(180deg)':'';" style="cursor:pointer">
+        <div class="bxt bxt-row">
+          <span>🔀 Alternative Rx</span>
+          <span class="alt-arr" style="font-size:.55rem;color:rgba(200,160,50,.55);transition:transform .2s">▾</span>
+        </div>
+        <div class="alt-body" style="display:none;margin-top:6px">${renderLines(sections['ALTERNATIVE RX'])}</div>
+       </div>` : '';
+  const warnLines = sections['DRUG INTERACTIONS']
+    ? `<div class="rxbx bx-wrn">
+        <div class="bxt">⚠️ Drug Interactions</div>
+        ${renderLines(sections['DRUG INTERACTIONS'])}
+       </div>` : '';
+  const rfLines   = sections['RED FLAGS']
+    ? `<div class="rxbx bx-flg">
+        <div class="bxt">🚨 Red Flags — Refer Immediately</div>
+        ${renderLines(sections['RED FLAGS'])}
+       </div>` : '';
+  const urduLines = sections['URDU INSTRUCTIONS']
+    ? `<div class="bx-urdu">
+        <div class="urdu-t">مریض کی ہدایات</div>
+        <div class="urdu-x">${esc(sections['URDU INSTRUCTIONS'])}</div>
+       </div>` : '';
+  const advLines = '';
 
-  const card=document.createElement('div');
-  card.className='msg a';
-  card.innerHTML=`
+  const card = document.createElement('div');
+  card.className = 'msg a';
+  card.innerHTML = `
 <div class="av">Rx</div>
-<div style="max-width:87%;width:100%">
+<div style="max-width:90%;width:100%">
 <div class="rxcard" id="rxc_${Date.now()}">
+
+  <!-- ══ LETTERHEAD ══ -->
   <div class="rxlh">
-    <div class="rxlh-brand">
-      <div class="rxlh-logo-badge">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="rgba(20,184,138,.9)"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="rgba(20,184,138,.6)" stroke-width="1.5"/></svg>
-      </div>
-      <div>
-        <div class="rxlh-logo-text">Rx<span>Easy</span></div>
-        <div class="rxlh-logo-sub">AI Prescription</div>
+    <div class="rxlh-top">
+      <div class="rxlh-brand">
+        <div class="rxlh-logo-badge">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" fill="rgba(20,184,138,.95)"/>
+            <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="rgba(20,184,138,.55)" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="rxlh-logo-text">Rx<span>Easy</span></div>
+          <div class="rxlh-logo-sub">AI&nbsp;Prescription</div>
+        </div>
       </div>
     </div>
-    <div class="rxlh-mt">
-      <div class="rxlh-pt">${ptN?esc(ptN):'Patient'}${ptA?' · Age '+ptA:''}</div>
+    <div class="rxlh-divider"></div>
+    <div class="rxlh-meta">
+      <div class="rxlh-pt">
+        <span class="rxlh-pt-icon">👤</span>
+        ${ptN ? esc(ptN) : 'Patient'}${ptA ? ' &nbsp;·&nbsp; Age ' + ptA : ''}${ptW ? ' &nbsp;·&nbsp; ' + ptW + ' kg' : ''}
+      </div>
       <div class="rxlh-dt">${dt}</div>
     </div>
   </div>
+
+  <!-- ══ BODY ══ -->
   <div class="rxbody">
     ${badge}
-    <div class="rxsym">${diag?esc(diag):esc(q)}</div>
+
+    <!-- Diagnosis -->
+    <div class="rxdiag">
+      <span class="rxdiag-badge">Dx</span>
+      <span class="rxdiag-text">${diag ? esc(diag) : esc(q)}</span>
+    </div>
+    <div class="rxdiag-sep"></div>
+
+    <!-- ℞ Symbol -->
     <div class="rx-symbol">&#8478;</div>
+
+    <!-- Medications -->
     <div class="rxmeds">${rxLines}</div>
-    ${condLines}${invLines}${altLines}${warnLines}${rfLines}${advLines}${urduLines}
+
+    <!-- Sections -->
+    ${condLines}${invLines}${altLines}${warnLines}${rfLines}${urduLines}${advLines}
   </div>
+
+  <!-- ══ ACTION BAR ══ -->
   <div class="rxacts">
-    <button class="rxbtn bwa" onclick="waShare('${encodeURIComponent(txt)}')"><div class="bii">📲</div><div class="bll">WhatsApp</div></button>
-    <button class="rxbtn bcp" onclick="cpyTxt('${encodeURIComponent(txt)}')"><div class="bii">📋</div><div class="bll">Copy</div></button>
-    <button class="rxbtn bsv" onclick="saveFav('${encodeURIComponent(q)}')"><div class="bii">⭐</div><div class="bll">Save</div></button>
+    <button class="rxbtn bwa" onclick="waShare('${encodeURIComponent(txt)}')">
+      <div class="bii">📲</div><div class="bll">WhatsApp</div>
+    </button>
+    <button class="rxbtn bcp" onclick="cpyTxt('${encodeURIComponent(txt)}')">
+      <div class="bii">📋</div><div class="bll">Copy Rx</div>
+    </button>
+    <button class="rxbtn bsv" onclick="saveFav('${encodeURIComponent(q)}')">
+      <div class="bii">⭐</div><div class="bll">Save</div>
+    </button>
   </div>
+
 </div>
-</div>`;
+</div>
+  `;
   chat.appendChild(card);
   chat.scrollTop=chat.scrollHeight;
   // track count silently
